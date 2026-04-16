@@ -12,6 +12,8 @@ export default function ThemePage() {
   const [accentColor, setAccentColor] = useState('#fbbf24');
   const [borderRadius, setBorderRadius] = useState([20]);
   const [primaryFont, setPrimaryFont] = useState('Inter');
+  const [heroHeight, setHeroHeight] = useState(650);
+  const [containerWidth, setContainerWidth] = useState(1280);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +23,10 @@ export default function ThemePage() {
         setAccentColor(data.theme.accentColor || '#fbbf24');
         setBorderRadius([data.theme.borderRadius || 20]);
         setPrimaryFont(data.theme.primaryFont || 'Inter');
+      }
+      if (data?.dimensions) {
+        setHeroHeight(data.dimensions.heroHeight || 650);
+        setContainerWidth(data.dimensions.containerWidth || 1280);
       }
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -34,6 +40,10 @@ export default function ThemePage() {
           accentColor,
           borderRadius: borderRadius[0],
           primaryFont
+        },
+        dimensions: {
+          heroHeight,
+          containerWidth
         }
       });
       toast.success("Design System updated and saved successfully");
@@ -109,6 +119,29 @@ export default function ThemePage() {
                         className="font-black uppercase text-xs tracking-widest rounded-xl border-2"
                       />
                    </div>
+                </div>
+             </div>
+          </section>
+
+          {/* Layout & Dimensions */}
+          <section className="space-y-6">
+             <div className="flex items-center gap-3">
+                <Layout className="w-5 h-5 text-primary" />
+                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Layout & Dimensions</h2>
+             </div>
+             <div className="bg-card p-10 rounded-[32px] border-2 border-border space-y-8 shadow-sm">
+                <div className="space-y-4">
+                   <div className="flex justify-between items-center">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Main Hero Height: {heroHeight}px</Label>
+                   </div>
+                   <Slider value={[heroHeight]} onValueChange={(v) => setHeroHeight(v[0])} min={400} max={900} step={10} />
+                </div>
+                
+                <div className="space-y-4">
+                   <div className="flex justify-between items-center">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Container Max Width: {containerWidth}px</Label>
+                   </div>
+                   <Slider value={[containerWidth]} onValueChange={(v) => setContainerWidth(v[0])} min={1000} max={1600} step={20} />
                 </div>
              </div>
           </section>
