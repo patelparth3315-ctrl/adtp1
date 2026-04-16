@@ -1,21 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Save, RefreshCw, Check, Type, Palette, Layout, Smartphone, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
+import { settingsService } from '@/services/settings.service';
 
 export default function ThemePage() {
   const [primaryColor, setPrimaryColor] = useState('#000000');
   const [accentColor, setAccentColor] = useState('#fbbf24');
   const [borderRadius, setBorderRadius] = useState([20]);
   const [primaryFont, setPrimaryFont] = useState('Inter');
-  const [buttonStyle, setButtonStyle] = useState('rounded');
-  const [headerStyle, setHeaderStyle] = useState('full');
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = () => {
-    toast.success("Design System updated across all platforms");
+  useEffect(() => {
+    settingsService.get().then(data => {
+      if (data?.theme) {
+        setPrimaryColor(data.theme.primaryColor || '#000000');
+        setAccentColor(data.theme.accentColor || '#fbbf24');
+        setBorderRadius([data.theme.borderRadius || 20]);
+        setPrimaryFont(data.theme.primaryFont || 'Inter');
+      }
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await settingsService.update({
+        theme: {
+          primaryColor,
+          accentColor,
+          borderRadius: borderRadius[0],
+          primaryFont
+        }
+      });
+      toast.success("Design System updated and saved successfully");
+    } catch (err) {
+      toast.error("Failed to save theme settings");
+    }
   };
 
   return (
@@ -37,7 +61,12 @@ export default function ThemePage() {
          </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 relative">
+        {loading && (
+          <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-[40px]">
+             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        )}
         
         {/* Left Column: Controls */}
         <div className="lg:col-span-7 space-y-12">
@@ -143,7 +172,7 @@ export default function ThemePage() {
               >
                   {/* Mock Navbar */}
                   <div className="p-6 border-b flex items-center justify-between">
-                     <div className="font-black text-xl italic tracking-tighter" style={{ color: primaryColor }}>AVIAN</div>
+                     <div className="font-black text-xl italic tracking-tighter" style={{ color: primaryColor }}>YouthCamping</div>
                      <div className="flex gap-4">
                         <div className="w-6 h-1 bg-gray-200" />
                         <div className="w-6 h-1 bg-gray-200" />
