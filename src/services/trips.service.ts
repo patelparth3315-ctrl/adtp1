@@ -1,0 +1,28 @@
+import api from "./api";
+import type { Trip, TripFormData } from "@/types";
+
+export const tripsService = {
+  async getAll(): Promise<Trip[]> {
+    const res = await api.get("/trips");
+    return res.data.data;
+  },
+
+  async getById(id: string): Promise<Trip | undefined> {
+    const res = await api.get(`/trips/${id}`);
+    return res.data.data;
+  },
+
+  async create(data: TripFormData): Promise<Trip> {
+    const res = await api.post("/trips", data);
+    return res.data.data;
+  },
+
+  async update(id: string, data: Partial<TripFormData>): Promise<Trip> {
+    const res = await api.put(`/trips/${id}`, data);
+    return res.data.data;
+  },
+
+  async remove(id: string): Promise<void> {
+    await api.delete(`/trips/${id}`);
+  },
+};
