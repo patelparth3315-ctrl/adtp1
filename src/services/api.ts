@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.NEXT_PUBLIC_API_URL || "https://back-end-production-191d.up.railway.app/api";
-console.log("🚀 CRM API CONNECTING TO:", API_BASE);
+const API_BASE = "https://back-end-production-191d.up.railway.app/api";
+console.log("🚀 CRM API FORCED TO:", API_BASE);
 
 
 const api = axios.create({
