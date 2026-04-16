@@ -216,8 +216,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <header className="h-14 flex items-center border-b border-border px-4 bg-card shrink-0">
             <SidebarTrigger className="mr-4" />
-            <h2 className="font-semibold text-card-foreground capitalize truncate">
+            <h2 className="font-semibold text-card-foreground capitalize truncate flex items-center gap-2">
               {location.pathname === "/admin" || location.pathname === "/" ? "Dashboard" : location.pathname.split("/").pop()?.replace(/-/g, " ")}
+              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-black tracking-tighter">v2.0.4</span>
             </h2>
           </header>
           <main className="flex-1 overflow-auto p-1 lg:p-6 bg-muted/30">{children}</main>
