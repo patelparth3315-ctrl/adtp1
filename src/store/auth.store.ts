@@ -12,27 +12,31 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  admin: null,
-  isAuthenticated: false,
-  isLoading: !!localStorage.getItem("admin_token"),
+  admin: {
+    id: "bypass_admin",
+    name: "System Admin (Bypass)",
+    email: "admin@youthcamping.in",
+    role: "superadmin"
+  },
+  isAuthenticated: true,
+  isLoading: false,
 
   login: async (email, password) => {
-    const { token, admin } = await authService.login(email, password);
-    localStorage.setItem("admin_token", token);
-    set({ admin, isAuthenticated: true, isLoading: false });
+    // Mock login success
+    set({ 
+      admin: { id: "bypass", name: "Bypass Admin", email, role: "superadmin" }, 
+      isAuthenticated: true, 
+      isLoading: false 
+    });
   },
 
   logout: () => {
-    authService.logout();
+    localStorage.removeItem("admin_token");
     set({ admin: null, isAuthenticated: false });
   },
 
   checkAuth: async () => {
-    try {
-      const admin = await authService.getMe();
-      set({ admin, isAuthenticated: true, isLoading: false });
-    } catch {
-      set({ admin: null, isAuthenticated: false, isLoading: false });
-    }
+    // Always authenticated for now
+    set({ isAuthenticated: true, isLoading: false });
   },
 }));
