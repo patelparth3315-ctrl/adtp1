@@ -12,9 +12,9 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  admin: { id: "dev", name: "Dev Mode", email: "dev@local", role: "superadmin" },
-  isAuthenticated: true,
-  isLoading: false,
+  admin: null,
+  isAuthenticated: false,
+  isLoading: !!localStorage.getItem("admin_token"),
 
   login: async (email, password) => {
     const { token, admin } = await authService.login(email, password);

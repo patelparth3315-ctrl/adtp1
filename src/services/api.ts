@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_BASE = "https://back-end-production-191d.up.railway.app/api";
-console.log("🚀 CRM API FORCED TO:", API_BASE);
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8888/api";
+console.log("🚀 CRM API ROUTE:", API_BASE);
 
 
 const api = axios.create({
@@ -15,8 +15,29 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+const normalizeData = (data: any): any => {
+  if (!data || typeof data !== 'object') return data;
+  if (Array.isArray(data)) return data.map(normalizeData);
+  
+  const normalized: any = { ...data };
+  if (normalized._id && !normalized.id) {
+    normalized.id = normalized._id;
+  }
+  
+  Object.keys(normalized).forEach(key => {
+    normalized[key] = normalizeData(normalized[key]);
+  });
+  
+  return normalized;
+};
+
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    if (res.data && res.data.data) {
+      res.data.data = normalizeData(res.data.data);
+    }
+    return res;
+  },
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("admin_token");

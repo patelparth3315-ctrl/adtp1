@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Trip, TripFormData, ItineraryDay, FAQ } from "@/types";
-import { Plus, Trash2, CalendarDays, ImagePlus, X, HelpCircle, Star, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Trash2, CalendarDays, ImagePlus, X, HelpCircle, Star, CheckCircle, XCircle, FileText, Globe, Upload } from "lucide-react";
+import { settingsService } from "@/services/settings.service";
+import { ImageUpload } from "./ImageUpload";
+import api from "@/services/api";
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -20,14 +23,34 @@ const emptyDay = (day: number): ItineraryDay => ({
 
 const emptyFaq = (): FAQ => ({ question: "", answer: "" });
 
-const defaultForm: TripFormData = {
+const defaultForm: TripFormData & { customSections?: any[], seo?: any } = {
   title: "", slug: "", description: "", heroImage: "", price: 0, location: "",
   duration: "", category: "", images: [], itinerary: [], highlights: [],
   inclusions: [], exclusions: [], faqs: [], availableDates: [], 
   variants: [], travelOptions: [], roomOptions: [], addons: [], status: "draft",
+  maxGroupSize: 20, difficulty: "moderate", departureCity: "", ageLimit: "", bookingUrl: "",
+  customSections: [],
+  seo: {
+    metaTitle: "",
+    metaDescription: "",
+    focusKeyword: "",
+    ogImage: "",
+    canonicalUrl: "",
+    faqSchema: []
+  }
 };
 
-const CATEGORIES = ["Beach", "Adventure", "Cultural", "Wildlife", "Luxury", "City", "Backpacking", "Road Trip", "Trekking", "Pilgrimage", "Bike Expedition"];
+const CATEGORIES = ["Himalayan", "Beach", "Adventure", "Cultural", "Wildlife", "Luxury", "City", "Backpacking", "Road Trip", "Trekking", "Pilgrimage", "Bike Expedition", "Workation", "Spiritual"];
+
+const TabBtn = ({ value, label }: { value: string, label: string }) => (
+  <TabsTrigger 
+    value={value} 
+    className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all
+               data-[state=active]:bg-primary data-[state=active]:text-black data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20"
+  >
+    {label}
+  </TabsTrigger>
+);
 
 interface TripFormModalProps {
   open: boolean;
@@ -37,8 +60,10 @@ interface TripFormModalProps {
 }
 
 export default function TripFormModal({ open, onOpenChange, editing, onSave }: TripFormModalProps) {
-  const [form, setForm] = useState<TripFormData>(defaultForm);
+  const [form, setForm] = useState<any>(defaultForm);
   const [saving, setSaving] = useState(false);
+  const [customFields, setCustomFields] = useState([]);
+  
   const [newHighlight, setNewHighlight] = useState("");
   const [newInclusion, setNewInclusion] = useState("");
   const [newExclusion, setNewExclusion] = useState("");
@@ -46,32 +71,43 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
   const [repeatCount, setRepeatCount] = useState(4);
   const [repeatStartDate, setRepeatStartDate] = useState("");
 
-  // Sync form when editing changes
-  const [lastEditingId, setLastEditingId] = useState<string | null>(null);
-  if ((editing?.id ?? null) !== lastEditingId) {
-    setLastEditingId(editing?.id ?? null);
+  // 1. Fetch Global Custom Field Definitions
+  useEffect(() => {
+    settingsService.get().then(res => {
+      setCustomFields(res.tripCustomFields || []);
+    });
+  }, []);
+
+  // 2. Sync Form Data when Editing state changes
+  useEffect(() => {
     if (editing) {
       setForm({
-        title: editing.title, slug: editing.slug, description: editing.description,
-        heroImage: editing.heroImage || "", price: editing.price, location: editing.location,
-        duration: editing.duration, category: editing.category, images: editing.images,
-        itinerary: editing.itinerary || [], highlights: editing.highlights || [],
-        inclusions: editing.inclusions || [], exclusions: editing.exclusions || [],
-        faqs: editing.faqs || [], availableDates: editing.availableDates || [], 
-        variants: editing.variants || [], travelOptions: editing.travelOptions || [], roomOptions: editing.roomOptions || [],
+        ...editing,
+        highlights: editing.highlights || [],
+        inclusions: editing.inclusions || [],
+        exclusions: editing.exclusions || [],
+        faqs: editing.faqs || [],
+        availableDates: editing.availableDates || [],
+        variants: editing.variants || [],
         addons: editing.addons || [],
-        status: editing.status,
+        customSections: (editing as any).customSections || [],
+        seo: {
+          ...defaultForm.seo,
+          ...(editing as any).seo
+        }
       });
     } else {
       setForm(defaultForm);
     }
-  }
+  }, [editing, open]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       await onSave(form, editing?.id);
       onOpenChange(false);
+    } catch (err) {
+      console.error(err);
     } finally {
       setSaving(false);
     }
@@ -80,7 +116,6 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
   // List helpers
   const addToList = (field: "highlights" | "inclusions" | "exclusions", value: string, setter: (v: string) => void) => {
     if (!value.trim()) return;
-    // Split by newlines or commas for bulk add
     const items = value.split(/[,\n]/).map(s => s.trim().replace(/^[•\-\*]\s*/, "")).filter(Boolean);
     setForm({ ...form, [field]: [...form[field], ...items] });
     setter("");
@@ -90,10 +125,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
     setForm({ ...form, [field]: form[field].filter((_, i) => i !== index) });
   };
 
-  // Itinerary helpers
-  const addDay = () => {
-    setForm({ ...form, itinerary: [...form.itinerary, emptyDay(form.itinerary.length + 1)] });
-  };
+  const addDay = () => setForm({ ...form, itinerary: [...form.itinerary, emptyDay(form.itinerary.length + 1)] });
   const updateDay = (index: number, field: keyof ItineraryDay, value: any) => {
     const updated = [...form.itinerary];
     updated[index] = { ...updated[index], [field]: value };
@@ -116,7 +148,6 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
     setForm({ ...form, itinerary: updated });
   };
 
-  // FAQ helpers
   const addFaq = () => setForm({ ...form, faqs: [...form.faqs, emptyFaq()] });
   const updateFaq = (index: number, field: keyof FAQ, value: string) => {
     const updated = [...form.faqs];
@@ -129,24 +160,13 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
     if (!repeatStartDate) return;
     const start = new Date(repeatStartDate);
     const newDates = [{ date: repeatStartDate, capacity: 99, bookedCount: 0 }];
-    
     for (let i = 1; i < repeatCount; i++) {
       const next = new Date(start);
       if (repeatFreq === "weekly") next.setDate(start.getDate() + (i * 7));
       else if (repeatFreq === "monthly") next.setMonth(start.getMonth() + i);
-      
-      newDates.push({ 
-        date: next.toISOString().split('T')[0], 
-        capacity: 99, 
-        bookedCount: 0 
-      });
+      newDates.push({ date: next.toISOString().split('T')[0], capacity: 99, bookedCount: 0 });
     }
-    
-    setForm({ 
-      ...form, 
-      availableDates: [...new Set([...form.availableDates, ...newDates])]
-        .sort((a:any, b:any) => a.date.localeCompare(b.date))
-    });
+    setForm({ ...form, availableDates: [...new Set([...form.availableDates, ...newDates])].sort((a:any, b:any) => a.date.localeCompare(b.date)) });
   };
 
   return (
@@ -157,554 +177,515 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="w-full grid grid-cols-8">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="pricing">Pricing</TabsTrigger>
-            <TabsTrigger value="addons">Add-ons</TabsTrigger>
-            <TabsTrigger value="dates">Dates ({form.availableDates.length})</TabsTrigger>
-            <TabsTrigger value="itinerary">Itinerary</TabsTrigger>
-            <TabsTrigger value="highlights">Items</TabsTrigger>
-            <TabsTrigger value="inclexcl">I/E</TabsTrigger>
-            <TabsTrigger value="faqs">FAQs</TabsTrigger>
+          <TabsList className="w-full flex flex-wrap h-auto gap-1.5 p-1.5 bg-muted rounded-[20px] border">
+            <TabBtn value="details" label="Details" />
+            <TabBtn value="pricing" label="Pricing" />
+            <TabBtn value="addons" label="Add-ons" />
+            <TabBtn value="dates" label="Dates" />
+            <TabBtn value="itinerary" label="Itinerary" />
+            <TabBtn value="highlights" label="Items" />
+            <TabBtn value="inclexcl" label="I/E" />
+            <TabBtn value="faqs" label="FAQs" />
+            <TabBtn value="custom" label="Custom" />
+            <TabBtn value="seo" label="SEO" />
+            <TabBtn value="advanced" label="Adv" />
           </TabsList>
 
-          {/* PRICING & VARIANTS TAB */}
-          <TabsContent value="pricing">
-            <div className="space-y-6 pt-2">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Location Variants</Label>
-                  <Button variant="outline" size="sm" onClick={() => setForm({
-                    ...form,
-                    variants: [...form.variants, { location: "", duration: "", originalPrice: 0, discountedPrice: 0, image: "" }]
-                  })}>
-                    <Plus className="h-4 w-4 mr-1" />Add Variant
-                  </Button>
-                </div>
-                {form.variants.map((v, i) => (
-                  <div key={i} className="border border-border rounded-lg p-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input value={v.location} placeholder="Location (e.g. Ahmedabad)" onChange={(e) => {
-                        const updated = [...form.variants];
-                        updated[i].location = e.target.value;
-                        setForm({ ...form, variants: updated });
-                      }} />
-                      <Input value={v.duration} placeholder="Duration (e.g. 11 Days)" onChange={(e) => {
-                        const updated = [...form.variants];
-                        updated[i].duration = e.target.value;
-                        setForm({ ...form, variants: updated });
-                      }} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input type="number" value={v.originalPrice} placeholder="Original Price" onChange={(e) => {
-                        const updated = [...form.variants];
-                        updated[i].originalPrice = Number(e.target.value);
-                        setForm({ ...form, variants: updated });
-                      }} />
-                      <Input type="number" value={v.discountedPrice} placeholder="Discounted Price" onChange={(e) => {
-                        const updated = [...form.variants];
-                        updated[i].discountedPrice = Number(e.target.value);
-                        setForm({ ...form, variants: updated });
-                      }} />
-                    </div>
-                    <Input value={v.image} placeholder="Image URL" onChange={(e) => {
-                      const updated = [...form.variants];
-                      updated[i].image = e.target.value;
-                      setForm({ ...form, variants: updated });
-                    }} />
-                    <Button variant="ghost" size="sm" className="text-destructive w-full" onClick={() => setForm({
-                      ...form,
-                      variants: form.variants.filter((_, idx) => idx !== i)
-                    })}>
-                      <Trash2 className="h-3.5 w-3.5 mr-1" />Remove Variant
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-gray-100">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Travel Options</Label>
-                    <Button variant="outline" size="xs" className="h-7 px-2" onClick={() => setForm({
-                      ...form,
-                      travelOptions: [...form.travelOptions, { label: "", priceDelta: 0 }]
-                    })}>
-                      <Plus className="h-3 w-3 mr-1" />Add
-                    </Button>
-                  </div>
-                  {form.travelOptions.map((opt, i) => (
-                    <div key={i} className="border border-border rounded p-3 space-y-2">
-                      <div className="flex gap-2 items-center">
-                        <Input className="h-8 text-xs" value={opt.label} placeholder="e.g. AC Train" onChange={(e) => {
-                          const updated = [...form.travelOptions];
-                          updated[i].label = e.target.value;
-                          setForm({ ...form, travelOptions: updated });
-                        }} />
-                        <Input className="h-8 text-xs w-20" type="number" value={opt.priceDelta} placeholder="+Price" onChange={(e) => {
-                          const updated = [...form.travelOptions];
-                          updated[i].priceDelta = Number(e.target.value);
-                          setForm({ ...form, travelOptions: updated });
-                        }} />
-                        <button onClick={() => setForm({ ...form, travelOptions: form.travelOptions.filter((_, idx) => idx !== i) })}>
-                          <X className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                      </div>
-                      <Textarea className="h-12 text-[10px]" value={opt.description} placeholder="Travel description (Sub-package detail)" onChange={(e) => {
-                        const updated = [...form.travelOptions];
-                        updated[i].description = e.target.value;
-                        setForm({ ...form, travelOptions: updated });
-                      }} />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Room Options</Label>
-                    <Button variant="outline" size="xs" className="h-7 px-2" onClick={() => setForm({
-                      ...form,
-                      roomOptions: [...form.roomOptions, { label: "", priceDelta: 0 }]
-                    })}>
-                      <Plus className="h-3 w-3 mr-1" />Add
-                    </Button>
-                  </div>
-                  {form.roomOptions.map((opt, i) => (
-                    <div key={i} className="flex gap-2 items-center">
-                      <Input className="h-8 text-xs" value={opt.label} placeholder="e.g. Double" onChange={(e) => {
-                        const updated = [...form.roomOptions];
-                        updated[i].label = e.target.value;
-                        setForm({ ...form, roomOptions: updated });
-                      }} />
-                      <Input className="h-8 text-xs w-20" type="number" value={opt.priceDelta} placeholder="+Price" onChange={(e) => {
-                        const updated = [...form.roomOptions];
-                        updated[i].priceDelta = Number(e.target.value);
-                        setForm({ ...form, roomOptions: updated });
-                      }} />
-                      <button onClick={() => setForm({ ...form, roomOptions: form.roomOptions.filter((_, idx) => idx !== i) })}>
-                        <X className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ADD-ONS TAB */}
-          <TabsContent value="addons">
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">Extra Services (Add-ons)</Label>
-                <Button variant="outline" size="sm" onClick={() => setForm({
-                  ...form,
-                  addons: [...form.addons, { name: "", rate: 0, description: "", minQuantity: 1, maxQuantity: 99 }]
-                })}>
-                  <Plus className="h-4 w-4 mr-1" />Add Add-on
-                </Button>
-              </div>
-              {form.addons.map((addon, i) => (
-                <div key={i} className="border border-border rounded-lg p-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input value={addon.name} placeholder="Addon Name" onChange={(e) => {
-                      const updated = [...form.addons];
-                      updated[i].name = e.target.value;
-                      setForm({ ...form, addons: updated });
-                    }} />
-                    <Input type="number" value={addon.rate} placeholder="Rate (₹)" onChange={(e) => {
-                      const updated = [...form.addons];
-                      updated[i].rate = Number(e.target.value);
-                      setForm({ ...form, addons: updated });
-                    }} />
-                  </div>
-                  <Textarea value={addon.description} placeholder="Description (shown in booking)" onChange={(e) => {
-                    const updated = [...form.addons];
-                    updated[i].description = e.target.value;
-                    setForm({ ...form, addons: updated });
-                  }} rows={2} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-[10px]">Min</Label>
-                      <Input type="number" className="h-8" value={addon.minQuantity} onChange={(e) => {
-                        const updated = [...form.addons];
-                        updated[i].minQuantity = Number(e.target.value);
-                        setForm({ ...form, addons: updated });
-                      }} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-[10px]">Max</Label>
-                      <Input type="number" className="h-8" value={addon.maxQuantity} onChange={(e) => {
-                        const updated = [...form.addons];
-                        updated[i].maxQuantity = Number(e.target.value);
-                        setForm({ ...form, addons: updated });
-                      }} />
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-destructive w-full h-8" onClick={() => setForm({
-                    ...form,
-                    addons: form.addons.filter((_, idx) => idx !== i)
-                  })}>
-                    <Trash2 className="h-3 w-3 mr-1" />Remove
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
           <TabsContent value="details">
-            <div className="space-y-4 pt-2">
+            <div className="space-y-6 pt-4">
+              <ImageUpload 
+                label="Main Experience Image"
+                value={form.heroImage}
+                onUpload={(url) => setForm({ ...form, heroImage: url })}
+              />
               <div className="space-y-2">
-                <Label>Hero Image URL</Label>
-                <Input value={form.heroImage} onChange={(e) => setForm({ ...form, heroImage: e.target.value })} placeholder="Main banner image URL" />
-                {form.heroImage && <img src={form.heroImage} alt="Hero" className="h-32 w-full object-cover rounded-lg border border-border" />}
-              </div>
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: slugify(e.target.value) })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Slug</Label>
-                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+                <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest opacity-50">Trip Title</Label>
+                <Input id="title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: slugify(e.target.value) })} className="rounded-xl font-bold" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Price (₹)</Label>
-                  <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Base Price (₹)</Label>
+                  <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Location</Label>
-                  <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Location</Label>
+                  <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="rounded-xl" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Description</Label>
+                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} className="rounded-xl" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Duration</Label>
-                  <Input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="e.g. 7 Days / 6 Nights" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Duration</Label>
+                  <Input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} className="rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Category</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Category</Label>
                   <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
+                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                    <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={(v: "draft" | "published") => setForm({ ...form, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                  </SelectContent>
-                </Select>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="pricing">
+            <div className="space-y-6 pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">Location Variants</Label>
+                <Button variant="outline" size="sm" onClick={() => setForm({ ...form, variants: [...form.variants, { location: "", duration: "", originalPrice: 0, discountedPrice: 0, image: "" }] })} className="rounded-xl h-8 text-[10px] font-black uppercase">
+                  <Plus className="h-3 w-3 mr-1" />Add Variant
+                </Button>
+              </div>
+              <div className="space-y-4">
+                {form.variants?.map((v:any, i:number) => (
+                  <div key={i} className="border bg-muted/20 rounded-2xl p-4 space-y-3 relative group">
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => setForm({ ...form, variants: form.variants.filter((_:any, idx:number) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input value={v.location} placeholder="Location (e.g. Delhi)" onChange={(e) => { const updated = [...form.variants]; updated[i].location = e.target.value; setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                      <Input value={v.duration} placeholder="Duration (e.g. 5D/4N)" onChange={(e) => { const updated = [...form.variants]; updated[i].duration = e.target.value; setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input type="number" value={v.originalPrice} placeholder="Original Price" onChange={(e) => { const updated = [...form.variants]; updated[i].originalPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                      <Input type="number" value={v.discountedPrice} placeholder="Discounted Price" onChange={(e) => { const updated = [...form.variants]; updated[i].discountedPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </TabsContent>
 
-          {/* DATES TAB */}
+          <TabsContent value="addons">
+            <div className="space-y-6 pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">Trip Add-ons</Label>
+                <Button variant="outline" size="sm" onClick={() => setForm({ ...form, addons: [...(form.addons || []), { name: "", rate: 0, description: "", minQuantity: 1, maxQuantity: 99 }] })} className="rounded-xl h-8 text-[10px] font-black uppercase">
+                  <Plus className="h-3 w-3 mr-1" />Add Add-on
+                </Button>
+              </div>
+              <div className="space-y-4">
+                {form.addons?.map((addon:any, i:number) => (
+                  <div key={i} className="border bg-muted/20 rounded-2xl p-4 space-y-3 relative group">
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => setForm({ ...form, addons: form.addons.filter((_:any, idx:number) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>
+                    <Input value={addon.name} placeholder="Add-on Name (e.g. Rafting)" onChange={(e) => { const updated = [...form.addons]; updated[i].name = e.target.value; setForm({ ...form, addons: updated }); }} className="h-9 text-xs font-bold" />
+                    <div className="grid grid-cols-3 gap-3">
+                      <Input type="number" value={addon.rate} placeholder="Rate" onChange={(e) => { const updated = [...form.addons]; updated[i].rate = Number(e.target.value); setForm({ ...form, addons: updated }); }} className="h-9 text-xs" />
+                      <Input type="number" value={addon.minQuantity} placeholder="Min" onChange={(e) => { const updated = [...form.addons]; updated[i].minQuantity = Number(e.target.value); setForm({ ...form, addons: updated }); }} className="h-9 text-xs" />
+                      <Input type="number" value={addon.maxQuantity} placeholder="Max" onChange={(e) => { const updated = [...form.addons]; updated[i].maxQuantity = Number(e.target.value); setForm({ ...form, addons: updated }); }} className="h-9 text-xs" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="dates">
-            <div className="space-y-6 pt-2">
-              <div className="space-y-2">
-                <Label>Single Date Add</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    type="date"
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const newDateObj = { date: e.target.value, capacity: 99, bookedCount: 0 };
-                        setForm({ ...form, availableDates: [...form.availableDates, newDateObj].sort((a,b) => (a.date as any).localeCompare(b.date)) });
-                        e.target.value = "";
-                      }
-                    }} 
-                  />
+            <div className="space-y-6 pt-4">
+              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Bulk Generate Dates</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-[9px] uppercase font-black opacity-50">Start Date</Label>
+                    <Input type="date" value={repeatStartDate} onChange={(e) => setRepeatStartDate(e.target.value)} className="h-9 text-xs rounded-xl" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[9px] uppercase font-black opacity-50">Frequency</Label>
+                    <Select value={repeatFreq} onValueChange={setRepeatFreq}>
+                      <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-end gap-4">
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-[9px] uppercase font-black opacity-50">Repeat Count</Label>
+                    <Input type="number" value={repeatCount} onChange={(e) => setRepeatCount(Number(e.target.value))} className="h-9 text-xs rounded-xl" />
+                  </div>
+                  <Button variant="secondary" className="h-9 text-[10px] font-black uppercase rounded-xl" onClick={generateRepeatDates}>Generate</Button>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-gray-100 bg-gray-50/50 p-4 rounded-xl">
-                <Label className="text-xs font-bold uppercase text-primary">Date Recurrence (Repeat)</Label>
-                <div className="grid grid-cols-2 gap-3">
-                   <div className="space-y-1.5">
-                     <Label className="text-[10px]">Start Date</Label>
-                     <Input type="date" value={repeatStartDate} onChange={(e) => setRepeatStartDate(e.target.value)} className="h-8" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <Label className="text-[10px]">Frequency</Label>
-                     <Select value={repeatFreq} onValueChange={setRepeatFreq}>
-                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="weekly">Every Week</SelectItem>
-                          <SelectItem value="monthly">Every Month</SelectItem>
-                        </SelectContent>
-                     </Select>
-                   </div>
-                </div>
-                <div className="flex items-end gap-3">
-                   <div className="flex-1 space-y-1.5">
-                     <Label className="text-[10px]">Occurrence Count</Label>
-                     <Input type="number" value={repeatCount} onChange={(e) => setRepeatCount(Number(e.target.value))} className="h-8" />
-                   </div>
-                   <Button variant="secondary" size="sm" className="h-8" onClick={generateRepeatDates}>
-                     Generate
-                   </Button>
+              <div className="space-y-3">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">Available Departure Dates</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {form.availableDates?.map((d: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-xl border text-[10px] font-bold">
+                      {typeof d === 'string' ? new Date(d).toLocaleDateString() : new Date(d.date || d).toLocaleDateString()}
+                      <Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => {
+                        const updated = form.availableDates.filter((_:any, idx:number) => idx !== i);
+                        setForm({ ...form, availableDates: updated });
+                      }}><X className="h-3 w-3" /></Button>
+                    </div>
+                  ))}
+                  {form.availableDates?.length === 0 && <p className="col-span-full text-center py-8 text-[10px] font-medium opacity-50 italic">No dates selected</p>}
                 </div>
               </div>
+            </div>
+          </TabsContent>
 
-              {form.availableDates.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
-                  <CalendarDays className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No departure dates added yet</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {form.availableDates.map((dObj: any, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 bg-muted rounded-lg group">
-                      <div className="flex-1">
-                        <p className="text-xs font-bold">
-                          {new Date(dObj.date || dObj).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-[10px] text-muted-foreground italic">Seats:</Label>
+          <TabsContent value="itinerary">
+            <div className="space-y-4 pt-4">
+              {form.itinerary?.map((day:any, idx:number) => (
+                <div key={idx} className="border bg-muted/10 p-4 rounded-2xl space-y-3 relative group">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-black uppercase tracking-widest text-primary">Day {day.day}</Label>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => removeDay(idx)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                  <Input value={day.title} placeholder="Title (e.g. Arrival in Manali)" onChange={(e) => updateDay(idx, "title", e.target.value)} className="h-9 text-xs font-bold" />
+                  <Input value={day.location} placeholder="Location" onChange={(e) => updateDay(idx, "location", e.target.value)} className="h-9 text-xs" />
+                  <Textarea value={day.description} placeholder="What will happen today?" onChange={(e) => updateDay(idx, "description", e.target.value)} className="text-xs min-h-[80px]" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input value={day.stay} placeholder="Stay (e.g. Luxury Camp)" onChange={(e) => updateDay(idx, "stay", e.target.value)} className="h-8 text-[10px]" />
+                    <Input value={day.meals} placeholder="Meals (e.g. B, D)" onChange={(e) => updateDay(idx, "meals", e.target.value)} className="h-8 text-[10px]" />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[9px] uppercase opacity-50 font-black tracking-widest">Photos</Label>
+                      <div className="flex gap-2">
                         <Input 
-                          type="number" 
-                          className="h-8 w-16 text-xs" 
-                          value={dObj.capacity || 99} 
-                          onChange={(e) => {
-                            const updated = [...form.availableDates];
-                            (updated[i] as any).capacity = Number(e.target.value);
-                            setForm({ ...form, availableDates: updated });
+                          type="file" 
+                          id={`day-photo-${idx}`} 
+                          className="hidden" 
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const formData = new FormData();
+                            formData.append("image", file);
+                            const res = await api.post("/upload/single", formData, { headers: { "Content-Type": "multipart/form-data" } });
+                            if (res.data.success) {
+                              updateDay(idx, "photos", [...(day.photos || []), res.data.url]);
+                            }
                           }}
                         />
+                        <Label htmlFor={`day-photo-${idx}`} className="h-6 px-3 bg-primary/10 text-primary text-[8px] font-black uppercase rounded-lg flex items-center gap-1 cursor-pointer">
+                          <Upload className="w-2.5 h-2.5" /> Upload
+                        </Label>
+                        <Button variant="outline" size="sm" className="h-6 text-[8px] uppercase font-black rounded-lg" onClick={() => addDayPhoto(idx)}><Plus className="h-3 w-3 mr-1" />Link</Button>
                       </div>
-                      <button 
-                        onClick={() => setForm({ ...form, availableDates: form.availableDates.filter((_, idx) => idx !== i) })}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
                     </div>
-                  ))}
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {day.photos?.map((p: string, pIdx: number) => (
+                        <div key={pIdx} className="relative group shrink-0">
+                          <img src={p} className="h-16 w-16 rounded-lg object-cover border" />
+                          <button className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-0.5" onClick={() => removeDayPhoto(idx, pIdx)}><X className="h-2 w-2" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              )}
+              ))}
+              <Button onClick={addDay} className="w-full h-12 border-dashed rounded-2xl" variant="outline"><Plus className="h-4 w-4 mr-2" />Add Day to Itinerary</Button>
             </div>
           </TabsContent>
 
-          {/* ITINERARY TAB */}
-          <TabsContent value="itinerary">
-            <div className="space-y-4 pt-2">
-              {form.itinerary.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
-                  <CalendarDays className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No itinerary days added yet</p>
-                  <Button variant="outline" size="sm" className="mt-3" onClick={addDay}>
-                    <Plus className="h-4 w-4 mr-1" />Add Day 1
-                  </Button>
-                </div>
-              ) : (
-                <Accordion type="single" collapsible className="space-y-2">
-                  {form.itinerary.map((day, idx) => (
-                    <AccordionItem key={idx} value={`day-${idx}`} className="border border-border rounded-lg px-4">
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-3 text-left">
-                          <span className="flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">{day.day}</span>
-                          <span className="font-medium text-sm text-card-foreground">{day.title || `Day ${day.day}`}</span>
-                          {day.location && <span className="text-xs text-muted-foreground ml-2">📍 {day.location}</span>}
-                          {(day.photos || []).length > 0 && <span className="text-xs text-muted-foreground">📷 {day.photos.length}</span>}
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-3 pb-2">
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">Day Title</Label>
-                            <Input value={day.title} onChange={(e) => updateDay(idx, "title", e.target.value)} placeholder="e.g. Arrive in Manali" />
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Location</Label>
-                              <Input value={day.location || ""} onChange={(e) => updateDay(idx, "location", e.target.value)} placeholder="e.g. Manali" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Stay</Label>
-                              <Input value={day.stay || ""} onChange={(e) => updateDay(idx, "stay", e.target.value)} placeholder="e.g. Hotel / Camp" />
-                            </div>
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">Meals</Label>
-                            <Input value={day.meals || ""} onChange={(e) => updateDay(idx, "meals", e.target.value)} placeholder="e.g. Breakfast & Dinner" />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">Activities (comma-separated)</Label>
-                            <Input value={(day.activities || []).join(", ")} onChange={(e) => updateDay(idx, "activities", e.target.value.split(",").map(s => s.trim()).filter(Boolean))} placeholder="e.g. Trekking, Sightseeing, River Rafting" />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">Description</Label>
-                            <Textarea value={day.description || ""} onChange={(e) => updateDay(idx, "description", e.target.value)} placeholder="What happens on this day..." rows={2} />
-                          </div>
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-xs">Photos</Label>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => addDayPhoto(idx)}>
-                                <ImagePlus className="h-3.5 w-3.5 mr-1" />Add Photo
-                              </Button>
-                            </div>
-                            {(day.photos || []).length > 0 && (
-                              <div className="flex gap-2 flex-wrap">
-                                {(day.photos || []).map((photo, pi) => (
-                                  <div key={pi} className="relative group">
-                                    <img src={photo} alt="" className="h-16 w-20 rounded-lg object-cover border border-border" />
-                                    <button onClick={() => removeDayPhoto(idx, pi)} className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <Button variant="ghost" size="sm" className="text-destructive text-xs h-7" onClick={() => removeDay(idx)}>
-                            <Trash2 className="h-3.5 w-3.5 mr-1" />Remove Day
-                          </Button>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              )}
-              {form.itinerary.length > 0 && (
-                <Button variant="outline" size="sm" onClick={addDay} className="w-full">
-                  <Plus className="h-4 w-4 mr-1" />Add Day {form.itinerary.length + 1}
-                </Button>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* HIGHLIGHTS TAB */}
           <TabsContent value="highlights">
-            <div className="space-y-4 pt-2">
-              <div className="flex gap-2">
-                <Input value={newHighlight} onChange={(e) => setNewHighlight(e.target.value)} placeholder="e.g. Visit Pangong Lake"
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addToList("highlights", newHighlight, setNewHighlight))} />
-                <Button variant="outline" size="icon" onClick={() => addToList("highlights", newHighlight, setNewHighlight)}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              {form.highlights.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
-                  <Star className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No highlights added yet</p>
+            <div className="space-y-6 pt-4">
+              <div className="space-y-4">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">Trip Highlights</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="e.g. 5 High Altitude Passes" 
+                    value={newHighlight} 
+                    onChange={(e) => setNewHighlight(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addToList("highlights", newHighlight, setNewHighlight)}
+                    className="rounded-xl"
+                  />
+                  <Button onClick={() => addToList("highlights", newHighlight, setNewHighlight)} className="rounded-xl"><Plus className="h-4 w-4" /></Button>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {form.highlights.map((h, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
-                      <Star className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="text-sm flex-1">{h}</span>
-                      <button onClick={() => removeFromList("highlights", i)} className="text-muted-foreground hover:text-destructive">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                <div className="grid grid-cols-1 gap-2">
+                  {form.highlights?.map((h: string, i: number) => (
+                    <div key={i} className="flex items-center justify-between px-4 py-2 bg-muted/30 rounded-xl border text-xs">
+                      <span className="font-medium">{h}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeFromList("highlights", i)}><X className="h-3.5 w-3.5" /></Button>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
           </TabsContent>
 
-          {/* INCLUSIONS / EXCLUSIONS TAB */}
           <TabsContent value="inclexcl">
-            <div className="space-y-6 pt-2">
-              <div className="space-y-3">
-                <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <CheckCircle className="h-4 w-4 text-green-500" /> Inclusions
-                </Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-green-600">Inclusions</Label>
                 <div className="flex gap-2">
-                  <Input value={newInclusion} onChange={(e) => setNewInclusion(e.target.value)} placeholder="e.g. Meals included"
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addToList("inclusions", newInclusion, setNewInclusion))} />
-                  <Button variant="outline" size="icon" onClick={() => addToList("inclusions", newInclusion, setNewInclusion)}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <Input value={newInclusion} onChange={(e) => setNewInclusion(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addToList("inclusions", newInclusion, setNewInclusion)} className="rounded-xl h-9 text-xs" />
+                  <Button size="icon" onClick={() => addToList("inclusions", newInclusion, setNewInclusion)} className="rounded-xl h-9 w-9"><Plus className="h-4 w-4" /></Button>
                 </div>
-                {form.inclusions.map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-green-500/10 rounded-lg">
-                    <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                    <span className="text-sm flex-1">{item}</span>
-                    <button onClick={() => removeFromList("inclusions", i)} className="text-muted-foreground hover:text-destructive">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+                <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+                  {form.inclusions?.map((item: string, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-green-50/30 rounded-xl border border-green-100 text-[10px]">
+                      <span className="font-bold text-green-800">{item}</span>
+                      <X className="h-3 w-3 text-green-400 cursor-pointer" onClick={() => removeFromList("inclusions", i)} />
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <XCircle className="h-4 w-4 text-red-500" /> Exclusions
-                </Label>
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-red-600">Exclusions</Label>
                 <div className="flex gap-2">
-                  <Input value={newExclusion} onChange={(e) => setNewExclusion(e.target.value)} placeholder="e.g. Flight tickets"
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addToList("exclusions", newExclusion, setNewExclusion))} />
-                  <Button variant="outline" size="icon" onClick={() => addToList("exclusions", newExclusion, setNewExclusion)}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <Input value={newExclusion} onChange={(e) => setNewExclusion(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addToList("exclusions", newExclusion, setNewExclusion)} className="rounded-xl h-9 text-xs" />
+                  <Button size="icon" variant="destructive" onClick={() => addToList("exclusions", newExclusion, setNewExclusion)} className="rounded-xl h-9 w-9"><Plus className="h-4 w-4" /></Button>
                 </div>
-                {form.exclusions.map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-red-500/10 rounded-lg">
-                    <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                    <span className="text-sm flex-1">{item}</span>
-                    <button onClick={() => removeFromList("exclusions", i)} className="text-muted-foreground hover:text-destructive">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+                <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+                  {form.exclusions?.map((item: string, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-red-50/30 rounded-xl border border-red-100 text-[10px]">
+                      <span className="font-bold text-red-800">{item}</span>
+                      <X className="h-3 w-3 text-red-400 cursor-pointer" onClick={() => removeFromList("exclusions", i)} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </TabsContent>
 
-          {/* FAQS TAB */}
           <TabsContent value="faqs">
-            <div className="space-y-4 pt-2">
-              {form.faqs.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
-                  <HelpCircle className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No FAQs added yet</p>
-                  <Button variant="outline" size="sm" className="mt-3" onClick={addFaq}>
-                    <Plus className="h-4 w-4 mr-1" />Add FAQ
-                  </Button>
+            <div className="space-y-4 pt-4">
+              {form.faqs?.map((faq:any, i:number) => (
+                <div key={i} className="border bg-muted/10 p-4 rounded-2xl space-y-2 relative group">
+                  <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => removeFaq(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  <Input value={faq.question} placeholder="Question" onChange={(e) => updateFaq(i, "question", e.target.value)} className="h-9 text-xs font-bold" />
+                  <Textarea value={faq.answer} placeholder="Answer" onChange={(e) => updateFaq(i, "answer", e.target.value)} className="text-xs min-h-[60px]" />
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {form.faqs.map((faq, i) => (
-                    <div key={i} className="border border-border rounded-lg p-3 space-y-2">
-                      <div className="flex items-start gap-2">
-                        <HelpCircle className="h-4 w-4 text-primary mt-2.5 shrink-0" />
-                        <div className="flex-1 space-y-2">
-                          <Input value={faq.question} onChange={(e) => updateFaq(i, "question", e.target.value)} placeholder="Question" />
-                          <Textarea value={faq.answer} onChange={(e) => updateFaq(i, "answer", e.target.value)} placeholder="Answer" rows={2} />
-                        </div>
-                        <button onClick={() => removeFaq(i)} className="text-muted-foreground hover:text-destructive mt-2.5">
-                          <Trash2 className="h-4 w-4" />
+              ))}
+              <Button onClick={addFaq} className="w-full h-12 border-dashed rounded-2xl" variant="outline"><Plus className="h-4 w-4 mr-2" />Add New FAQ</Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="custom">
+            <div className="space-y-6 pt-4">
+               {customFields.length === 0 ? (
+                 <div className="text-center py-20 opacity-30 border-2 border-dashed rounded-[32px]">
+                   <p className="text-xs font-black uppercase tracking-widest">No custom sections defined</p>
+                 </div>
+               ) : (
+                 <div className="space-y-6">
+                   {customFields.map((field: any, idx: number) => {
+                     const existing = (form.customSections || []).find((s:any) => s.label === field.label);
+                     return (
+                       <div key={idx} className="space-y-2">
+                         <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 flex items-center gap-2">
+                           <FileText className="w-3 h-3 text-primary" /> {field.label}
+                         </Label>
+                         <Textarea 
+                           value={existing?.content || ""} 
+                           onChange={(e) => {
+                             const sections = [...(form.customSections || [])];
+                             const sIdx = sections.findIndex((s:any) => s.label === field.label);
+                             if (sIdx > -1) sections[sIdx].content = e.target.value;
+                             else sections.push({ label: field.label, content: e.target.value });
+                             setForm({ ...form, customSections: sections });
+                           }}
+                           placeholder={`Enter info for ${field.label}...`}
+                           className="rounded-2xl text-xs font-medium min-h-[120px]"
+                         />
+                       </div>
+                     );
+                   })}
+                 </div>
+               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="seo">
+            <div className="space-y-8 pt-6">
+               <div className="bg-primary/5 p-6 rounded-[32px] border border-primary/10 flex items-start gap-5">
+                  <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+                    <Globe className="w-6 h-6 text-black" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black uppercase tracking-tight">Search Engine Master</h4>
+                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest mt-1">Control how this trip appears on Google & Social Media</p>
+                  </div>
+               </div>
+
+               <div className="grid gap-6">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Meta Title</Label>
+                    <Input 
+                      value={form.seo?.metaTitle || ""} 
+                      onChange={(e) => setForm({ ...form, seo: { ...form.seo, metaTitle: e.target.value } })}
+                      className="rounded-2xl font-bold border-2 focus:border-primary h-12" 
+                    />
+                    <div className="flex justify-between items-center">
+                      <div className="text-[9px] font-black text-primary uppercase">{form.seo?.metaTitle?.length || 0}/60 Characters</div>
+                      <p className="text-[8px] font-bold text-muted-foreground uppercase">Ideal: 50-60</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Meta Description</Label>
+                    <Textarea 
+                      value={form.seo?.metaDescription || ""} 
+                      onChange={(e) => setForm({ ...form, seo: { ...form.seo, metaDescription: e.target.value } })}
+                      className="rounded-2xl font-medium min-h-[120px] border-2 focus:border-primary text-xs" 
+                    />
+                    <div className="flex justify-between items-center">
+                      <div className="text-[9px] font-black text-primary uppercase">{form.seo?.metaDescription?.length || 0}/160 Characters</div>
+                      <p className="text-[8px] font-bold text-muted-foreground uppercase">Ideal: 150-160</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Focus Keyword</Label>
+                       <Input value={form.seo?.focusKeyword || ""} onChange={(e) => setForm({ ...form, seo: { ...form.seo, focusKeyword: e.target.value } })} className="rounded-xl border-none bg-muted/50 h-10" />
+                    </div>
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">URL Slug</Label>
+                       <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })} className="rounded-xl border-none bg-muted/50 h-10" />
+                    </div>
+                  </div>
+               </div>
+
+               <div className="space-y-4 pt-6 border-t">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="text-[11px] font-black uppercase tracking-widest">JSON-LD FAQ Schema</h5>
+                      <p className="text-[9px] text-muted-foreground">Boost CTR with rich search results</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => {
+                        const schema = [...(form.seo?.faqSchema || []), { question: "", answer: "" }];
+                        setForm({ ...form, seo: { ...form.seo, faqSchema: schema } });
+                    }} className="rounded-xl h-8 text-[9px] font-black uppercase">Add FAQ Row</Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {(form.seo?.faqSchema || []).map((faq:any, idx:number) => (
+                      <div key={idx} className="p-4 bg-muted/30 rounded-2xl relative group border">
+                        <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" onClick={() => {
+                            const schema = form.seo.faqSchema.filter((_:any, i:number) => i !== idx);
+                            setForm({ ...form, seo: { ...form.seo, faqSchema: schema } });
+                        }}><X className="w-3 h-3" /></Button>
+                        <Input value={faq.question} onChange={(e) => {
+                          const schema = [...form.seo.faqSchema]; schema[idx].question = e.target.value; setForm({ ...form, seo: { ...form.seo, faqSchema: schema } });
+                        }} placeholder="Question" className="bg-transparent border-none font-bold mb-1 p-0 h-auto focus-visible:ring-0 text-xs" />
+                        <Textarea value={faq.answer} onChange={(e) => {
+                          const schema = [...form.seo.faqSchema]; schema[idx].answer = e.target.value; setForm({ ...form, seo: { ...form.seo, faqSchema: schema } });
+                        }} placeholder="Answer" className="bg-transparent border-none text-[10px] font-medium p-0 h-auto min-h-[40px] focus-visible:ring-0" />
+                      </div>
+                    ))}
+                  </div>
+               </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="advanced">
+            <div className="space-y-8 pt-4">
+               <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Departure City</Label>
+                    <Input value={form.departureCity} onChange={(e) => setForm({ ...form, departureCity: e.target.value })} placeholder="e.g. Ahmedabad" className="rounded-xl h-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Age Limit</Label>
+                    <Input value={form.ageLimit} onChange={(e) => setForm({ ...form, ageLimit: e.target.value })} placeholder="e.g. 15-35 Years" className="rounded-xl h-10" />
+                  </div>
+               </div>
+               <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Max Group Size</Label>
+                    <Input type="number" value={form.maxGroupSize} onChange={(e) => setForm({ ...form, maxGroupSize: Number(e.target.value) })} className="rounded-xl h-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Difficulty</Label>
+                    <Select value={form.difficulty} onValueChange={(v:any) => setForm({ ...form, difficulty: v })}>
+                      <SelectTrigger className="rounded-xl h-10"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="easy">Easy</SelectItem>
+                        <SelectItem value="moderate">Moderate</SelectItem>
+                        <SelectItem value="hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+               </div>
+               <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">External Booking URL</Label>
+                  <Input value={form.bookingUrl} onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })} placeholder="https://external-booking.com/..." className="rounded-xl h-10" />
+               </div>
+
+               <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Gallery Images</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="file" 
+                        id="gallery-upload-v2" 
+                        multiple 
+                        className="hidden" 
+                        onChange={async (e) => {
+                          const files = e.target.files;
+                          if (!files || files.length === 0) return;
+                          const formData = new FormData();
+                          for (let i = 0; i < files.length; i++) formData.append("images", files[i]);
+                          try {
+                            const res = await api.post("/upload/multiple", formData, { headers: { "Content-Type": "multipart/form-data" } });
+                            if (res.data.success) {
+                              setForm({ ...form, gallery: [...(form.gallery || []), ...res.data.urls] });
+                            }
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                      />
+                      <Label htmlFor="gallery-upload-v2" className="h-8 px-4 bg-primary/10 text-primary text-[10px] font-black uppercase rounded-xl flex items-center gap-2 cursor-pointer border hover:bg-primary/20 transition-all">
+                        <Upload className="w-3 h-3" /> Upload Multiple
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[300px] overflow-y-auto p-3 bg-muted/20 rounded-2xl border">
+                    {(form.gallery || []).map((url: string, i: number) => (
+                      <div key={i} className="relative group aspect-square">
+                        <img src={url} className="w-full h-full object-cover rounded-xl border-2 border-transparent group-hover:border-primary transition-all" alt={`Gallery ${i}`} />
+                        <button 
+                          className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" 
+                          onClick={() => setForm({ ...form, gallery: (form.gallery || []).filter((_:any, idx:number) => idx !== i) })}
+                        >
+                          <X className="h-2.5 w-2.5" />
                         </button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {form.faqs.length > 0 && (
-                <Button variant="outline" size="sm" onClick={addFaq} className="w-full">
-                  <Plus className="h-4 w-4 mr-1" />Add FAQ
-                </Button>
-              )}
+                    ))}
+                    {(form.gallery || []).length === 0 && (
+                      <div className="col-span-full py-12 text-center">
+                        <p className="text-[10px] opacity-30 uppercase font-black tracking-[0.2em]">No Gallery Images Uploaded</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-widest opacity-40">Or Paste Image URLs (One per line)</Label>
+                    <Textarea 
+                      value={form.gallery?.join("\n")} 
+                      onChange={(e) => setForm({ ...form, gallery: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
+                      placeholder="https://image1.jpg&#10;https://image2.jpg"
+                      className="rounded-2xl text-[10px] min-h-[100px] font-mono bg-muted/5 border-none focus:bg-muted/10"
+                    />
+                  </div>
+               </div>
             </div>
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-border mt-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving || !form.title}>
-            {saving ? "Saving..." : editing ? "Update" : "Create"}
+        <div className="flex justify-end gap-3 pt-6 border-t mt-6">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+          <Button onClick={async () => {
+            const { id, _id, createdAt, updatedAt, __v, ...cleanData } = form;
+            setSaving(true);
+            try {
+              await onSave(cleanData, editing?.id);
+              onOpenChange(false);
+            } finally {
+              setSaving(false);
+            }
+          }} disabled={saving || !form.title} className="rounded-xl px-8 font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20">
+            {saving ? "Processing..." : editing ? "Update Trip" : "Launch Trip"}
           </Button>
         </div>
       </DialogContent>

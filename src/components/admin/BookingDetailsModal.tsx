@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import type { Booking } from "@/types";
 import { StatusBadge, getBookingBadgeVariant } from "./StatusBadge";
-import { Calendar, User, Phone, Mail, MapPin, Users, CreditCard, Tag, FileText, Clock } from "lucide-react";
+import { Calendar, User, Phone, Mail, MapPin, Users, CreditCard, Tag, FileText, Clock, Train, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BookingDetailsModalProps {
@@ -154,6 +154,57 @@ export default function BookingDetailsModal({ open, onOpenChange, booking }: Boo
                     <p className="text-sm text-foreground/80">{booking.adminNotes}</p>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+          {/* Train Tickets */}
+          {booking.trainTickets && booking.trainTickets.length > 0 && (
+            <div className="space-y-4 pt-4 border-t border-border">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Train className="h-3 w-3" /> Train Tickets
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {booking.trainTickets.map((ticket, idx) => (
+                  <div key={idx} className="bg-muted/30 p-4 rounded-xl border border-border space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">PNR: {ticket.pnr || "N/A"}</p>
+                        <p className="text-sm font-black">{ticket.trainNo} {ticket.trainName}</p>
+                      </div>
+                      <StatusBadge variant={ticket.status === 'Confirmed' ? 'success' : ticket.status === 'Cancelled' ? 'destructive' : 'warning'}>
+                        {ticket.status}
+                      </StatusBadge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground">Journey</p>
+                        <p className="font-semibold">{ticket.from} ➜ {ticket.to}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground">Departure</p>
+                        <p className="font-semibold">{ticket.departureDate ? new Date(ticket.departureDate).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : "N/A"}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground">Coach / Seat</p>
+                        <p className="font-semibold">{ticket.coach} / {ticket.seat}</p>
+                      </div>
+                    </div>
+
+                    {ticket.ticketUrl && (
+                      <div className="pt-2 border-t border-border/50">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full h-8 text-[10px] gap-1"
+                          onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8888"}${ticket.ticketUrl}`, "_blank")}
+                        >
+                          <Download className="h-3 w-3" /> Download Ticket PDF
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}

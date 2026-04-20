@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import type { Booking, BookingFormData, Trip } from "@/types";
 import { tripsService } from "@/services/trips.service";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2, FileUp, ExternalLink } from "lucide-react";
+import type { Booking, BookingFormData, Trip, TrainTicket } from "@/types";
+import api from "@/services/api"; // Added api for upload
 
 interface BookingFormModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ const defaultForm: BookingFormData = {
   paymentStatus: "unpaid",
   notes: "",
   adminNotes: "",
+  trainTickets: [],
 };
 
 export default function BookingFormModal({ open, onOpenChange, editing, onSave }: BookingFormModalProps) {
@@ -60,6 +62,7 @@ export default function BookingFormModal({ open, onOpenChange, editing, onSave }
         paymentStatus: editing.paymentStatus || "unpaid",
         notes: editing.notes || "",
         adminNotes: editing.adminNotes || "",
+        trainTickets: editing.trainTickets || [],
       });
     } else {
       setForm(defaultForm);
@@ -98,6 +101,44 @@ export default function BookingFormModal({ open, onOpenChange, editing, onSave }
       onOpenChange(false);
     } finally {
       setSaving(false);
+    }
+  };
+  
+  const addTicket = () => {
+    setForm(prev => ({
+      ...prev,
+      trainTickets: [...(prev.trainTickets || []), { pnr: "", trainNo: "", trainName: "", from: "", to: "", departureDate: "", arrivalDate: "", coach: "", seat: "", status: "Confirmed" }]
+    }));
+  };
+
+  const updateTicket = (index: number, field: keyof TrainTicket, value: string) => {
+    setForm(prev => {
+      const tickets = [...(prev.trainTickets || [])];
+      tickets[index] = { ...tickets[index], [field]: value };
+      return { ...prev, trainTickets: tickets };
+    });
+  };
+
+  const removeTicket = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      trainTickets: prev.trainTickets?.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleTicketUpload = async (index: number, file: File) => {
+    const formData = new FormData();
+    formData.append("ticket", file);
+
+    try {
+      const res = await api.post("/upload/ticket", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res.data.success) {
+        updateTicket(index, "ticketUrl" as any, res.data.url);
+      }
+    } catch (error) {
+      console.error("Upload failed", error);
     }
   };
 
@@ -195,7 +236,110 @@ export default function BookingFormModal({ open, onOpenChange, editing, onSave }
             <Label htmlFor="adminNotes">Internal Admin Notes</Label>
             <Textarea id="adminNotes" value={form.adminNotes} onChange={e => setForm({...form, adminNotes: e.target.value})} placeholder="Payment details, special requests, etc." />
           </div>
+
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-semibold">Train Tickets</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addTicket}><Plus className="h-3 w-3 mr-1" />Add Ticket</Button>
+            </div>
+
+            {form.trainTickets && form.trainTickets.length > 0 ? (
+              <div className="space-y-4">
+                {form.trainTickets.map((ticket, idx) => (
+                  <div key={idx} className="p-3 border rounded-lg bg-muted/30 relative space-y-3">
+                    <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 text-destructive" onClick={() => removeTicket(idx)}><Trash2 className="h-4 w-4" /></Button>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">PNR Number</Label>
+                        <Input className="h-8" value={ticket.pnr} onChange={e => updateTicket(idx, "pnr", e.target.value)} placeholder="PNR" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Train No/Name</Label>
+                        <Input className="h-8" value={ticket.trainNo} onChange={e => updateTicket(idx, "trainNo", e.target.value)} placeholder="12903 / Golden Temple" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">From</Label>
+                        <Input className="h-8" value={ticket.from} onChange={e => updateTicket(idx, "from", e.target.value)} placeholder="ADI" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">To</Label>
+                        <Input className="h-8" value={ticket.to} onChange={e => updateTicket(idx, "to", e.target.value)} placeholder="BCT" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Departure Date/Time</Label>
+                        <Input className="h-8" type="datetime-local" value={ticket.departureDate ? new Date(ticket.departureDate).toISOString().slice(0, 16) : ""} onChange={e => updateTicket(idx, "departureDate", e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Status</Label>
+                        <Select value={ticket.status} onValueChange={v => updateTicket(idx, "status", v)}>
+                          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Confirmed">Confirmed</SelectItem>
+                            <SelectItem value="RAC">RAC</SelectItem>
+                            <SelectItem value="WL">WL</SelectItem>
+                            <SelectItem value="Cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Coach</Label>
+                        <Input className="h-8" value={ticket.coach} onChange={e => updateTicket(idx, "coach", e.target.value)} placeholder="B1" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Seat/Berth</Label>
+                        <Input className="h-8" value={ticket.seat} onChange={e => updateTicket(idx, "seat", e.target.value)} placeholder="24" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                      <Label className="text-xs">Ticket Document (PDF/Image)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="file" 
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          className="h-9 text-xs" 
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleTicketUpload(idx, file);
+                          }}
+                        />
+                        {ticket.ticketUrl && (
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-9 w-9 shrink-0"
+                            onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8888"}${ticket.ticketUrl}`, "_blank")}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      {ticket.ticketUrl && (
+                        <p className="text-[10px] text-green-600 font-medium flex items-center gap-1">
+                          <FileUp className="h-3 w-3" /> Ticket uploaded successfully
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic text-center py-2">No train tickets added yet.</p>
+            )}
+          </div>
         </div>
+
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

@@ -17,9 +17,15 @@ export default function TripsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const data = await tripsService.getAll();
-    setTrips(data);
-    setLoading(false);
+    try {
+      const data = await tripsService.getAll();
+      setTrips(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setTrips([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);

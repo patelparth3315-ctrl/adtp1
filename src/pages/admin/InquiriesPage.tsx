@@ -38,7 +38,8 @@ export default function InquiriesPage() {
   const updateInquiry = async (data: Partial<Inquiry>) => {
     if (!selected) return;
     try {
-      await inquiriesService.update(selected.id, data);
+      const updated = await inquiriesService.update(selected.id, data);
+      setSelected(updated);
       toast.success("CRM updated");
       load();
     } catch (error) {
@@ -139,7 +140,7 @@ export default function InquiriesPage() {
                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-500">Status</label>
                     <select 
                       value={selected.status}
-                      onChange={(e) => updateInquiry(selected, { status: e.target.value })}
+                      onChange={(e) => updateInquiry({ status: e.target.value as any })}
                       className="w-full bg-white border border-gray-100 rounded-2xl px-4 py-3 text-xs font-bold font-sans"
                     >
                       <option value="new">New Lead</option>
@@ -155,7 +156,7 @@ export default function InquiriesPage() {
                          type="number"
                          placeholder="Enter Amount"
                          defaultValue={selected.convertedAmount}
-                         onBlur={(e) => updateInquiry(selected, { convertedAmount: Number(e.target.value) })}
+                         onBlur={(e) => updateInquiry({ convertedAmount: Number(e.target.value) })}
                          className="w-full bg-white border border-gray-100 rounded-2xl px-4 py-3 text-xs font-bold"
                        />
                     </div>
@@ -167,13 +168,13 @@ export default function InquiriesPage() {
                      className="w-full bg-white border border-gray-100 rounded-2xl p-4 text-xs font-medium min-h-[100px]"
                      defaultValue={selected.adminNotes}
                      placeholder="Notes from call: customer budget, group dates..."
-                     onBlur={(e) => updateInquiry(selected, { adminNotes: e.target.value })}
+                     onBlur={(e) => updateInquiry({ adminNotes: e.target.value })}
                    />
                 </div>
               </div>
 
               <div className="flex gap-3">
-                 <Button className="flex-1 bg-black text-white hover:bg-gray-800 rounded-2xl py-6 font-black uppercase text-xs tracking-widest" onClick={() => { window.open(`tel:${selected.phone}`); updateInquiry(selected, { status: 'contacted' }); }}>
+                 <Button className="flex-1 bg-black text-white hover:bg-gray-800 rounded-2xl py-6 font-black uppercase text-xs tracking-widest" onClick={() => { window.open(`tel:${selected.phone}`); updateInquiry({ status: 'contacted' }); }}>
                    <Phone className="h-4 w-4 mr-2" /> Call Now
                  </Button>
                  <Button variant="outline" className="flex-1 border-gray-200 rounded-2xl py-6 font-black uppercase text-xs tracking-widest" onClick={() => { window.open(`mailto:${selected.email}`); }}>

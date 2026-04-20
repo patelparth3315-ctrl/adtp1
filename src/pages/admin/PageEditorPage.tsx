@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   ChevronLeft, Save, Globe, Plus, Trash2, GripVertical, 
-  ChevronUp, ChevronDown, Eye, Edit3, Settings, Play, EyeOff 
+  ChevronUp, ChevronDown, Eye, Edit3, Settings, Play, EyeOff, X
 } from 'lucide-react';
 import { pagesService } from '@/services/pages.service';
 import { toast } from 'sonner';
@@ -23,7 +23,18 @@ export default function PageEditorPage() {
     const loadPage = async () => {
       try {
         const res = await pagesService.getOne(id as string);
-        setPage(res.data);
+        const defaultSEO = {
+          metaTitle: "",
+          metaDescription: "",
+          focusKeyword: "",
+          ogImage: "",
+          canonicalUrl: "",
+          faqSchema: []
+        };
+        setPage({
+          ...res.data,
+          seo: { ...defaultSEO, ...res.data.seo }
+        });
         setSections(res.data.sections || []);
         setLoading(false);
       } catch (err) {
@@ -166,12 +177,99 @@ export default function PageEditorPage() {
 
         {/* Right: Property Panel */}
         <div className="w-96 border-l bg-card flex flex-col overflow-hidden">
-           <div className="p-4 border-b shrink-0 flex items-center gap-3">
-              <Settings className="w-4 h-4 text-primary" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Properties</span>
+           <div className="p-4 border-b shrink-0 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Settings className="w-4 h-4 text-primary" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Properties</span>
+              </div>
+              <Button variant="ghost" size="sm" className={`text-[10px] font-bold uppercase transition-all ${!activeSectionId ? "text-primary" : "text-muted-foreground"}`} onClick={() => setActiveSectionId(null)}>
+                 Page SEO
+              </Button>
            </div>
-           {activeSection ? (
-             <div className="flex-1 overflow-y-auto p-6 space-y-8">
+           {!activeSectionId ? (
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                 <div className="bg-primary/10 p-4 rounded-3xl flex items-center gap-3">
+                    <Globe className="w-5 h-5 text-primary" />
+                    <h4 className="text-sm font-black uppercase tracking-tight">Master Page SEO</h4>
+                 </div>
+
+                 <div className="space-y-4">
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Meta Title</Label>
+                       <Input 
+                         value={page.seo?.metaTitle || ''} 
+                         onChange={(e) => setPage({ ...page, seo: { ...page.seo, metaTitle: e.target.value } })}
+                         className="rounded-xl font-bold bg-muted/10 border-none"
+                       />
+                    </div>
+
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Meta Description</Label>
+                       <Textarea 
+                         value={page.seo?.metaDescription || ''} 
+                         onChange={(e) => setPage({ ...page, seo: { ...page.seo, metaDescription: e.target.value } })}
+                         className="rounded-xl font-medium min-h-[100px] bg-muted/10 border-none"
+                       />
+                    </div>
+
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Focus Keyword</Label>
+                       <Input value={page.seo?.focusKeyword || ""} onChange={(e) => setPage({ ...page, seo: { ...page.seo, focusKeyword: e.target.value } })} className="rounded-xl bg-muted/10 border-none font-bold" />
+                    </div>
+
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Canonical URL</Label>
+                       <Input value={page.seo?.canonicalUrl || ""} onChange={(e) => setPage({ ...page, seo: { ...page.seo, canonicalUrl: e.target.value } })} className="rounded-xl bg-muted/10 border-none" />
+                    </div>
+
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">OG Image URL</Label>
+                       <Input 
+                         value={page.seo?.ogImage || ''} 
+                         onChange={(e) => setPage({ ...page, seo: { ...page.seo, ogImage: e.target.value } })}
+                         className="rounded-xl font-medium bg-muted/10 border-none"
+                       />
+                       {page.seo?.ogImage && <img src={page.seo.ogImage} className="mt-4 rounded-xl border aspect-video object-cover" />}
+                    </div>
+
+                    {/* FAQ Schema */}
+                    <div className="space-y-4 pt-4 border-t">
+                       <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">FAQ Schema</Label>
+                          <Button variant="outline" size="sm" onClick={() => {
+                             const schema = [...(page.seo?.faqSchema || []), { question: "", answer: "" }];
+                             setPage({...page, seo: {...page.seo, faqSchema: schema}});
+                          }} className="h-6 text-[8px] font-black uppercase">Add</Button>
+                       </div>
+                       <div className="space-y-3">
+                          {(page.seo?.faqSchema || []).map((faq:any, idx:number) => (
+                             <div key={idx} className="p-3 bg-muted/10 rounded-xl relative group">
+                                <Button 
+                                  variant="ghost" size="icon" 
+                                  className="absolute top-1 right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => {
+                                     const schema = page.seo.faqSchema.filter((_:any, i:number) => i !== idx);
+                                     setPage({...page, seo: {...page.seo, faqSchema: schema}});
+                                  }}
+                                ><X className="w-3 h-3 text-destructive" /></Button>
+                                <Input value={faq.question} onChange={(e) => {
+                                   const schema = [...page.seo.faqSchema];
+                                   schema[idx].question = e.target.value;
+                                   setPage({...page, seo: {...page.seo, faqSchema: schema}});
+                                }} placeholder="Q" className="bg-transparent border-none font-bold text-xs p-0 h-auto mb-1" />
+                                <Textarea value={faq.answer} onChange={(e) => {
+                                   const schema = [...page.seo.faqSchema];
+                                   schema[idx].answer = e.target.value;
+                                   setPage({...page, seo: {...page.seo, faqSchema: schema}});
+                                }} placeholder="A" className="bg-transparent border-none text-[10px] p-0 h-auto min-h-[30px] focus-visible:ring-0" />
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            ) : activeSection ? (
+             <div className="flex-1 overflow-y-auto p-6 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                      <h4 className="text-sm font-black uppercase tracking-tight">{activeSection.type} Settings</h4>

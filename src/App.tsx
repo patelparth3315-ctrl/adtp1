@@ -19,6 +19,10 @@ import PageEditorPage from "./pages/admin/PageEditorPage.tsx";
 import ThemePage from "./pages/admin/ThemePage.tsx";
 import SeoCenterPage from "./pages/admin/SeoCenterPage.tsx";
 import InquiryFormPage from "./pages/admin/InquiryFormPage.tsx";
+import { 
+  CollectionsPage, PromotionsPage, DistributionPage, 
+  ReportsPage, BillingPage, CustomersPage 
+} from "./pages/admin/PlaceholderPages.tsx";
 import { AdminLayout } from "./components/admin/AdminLayout.tsx";
 
 const queryClient = new QueryClient();
@@ -34,10 +38,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/admin/login" element={<LoginPage />} />
           <Route path="/" element={<AdminRoute><DashboardPage /></AdminRoute>} />
           <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
           <Route path="/admin/trips" element={<AdminRoute><TripsPage /></AdminRoute>} />
           <Route path="/admin/bookings" element={<AdminRoute><BookingsPage /></AdminRoute>} />
+          <Route path="/admin/collections" element={<AdminRoute><CollectionsPage /></AdminRoute>} />
+          <Route path="/admin/promotions" element={<AdminRoute><PromotionsPage /></AdminRoute>} />
           <Route path="/admin/blogs" element={<AdminRoute><BlogsPage /></AdminRoute>} />
           <Route path="/admin/reviews" element={<AdminRoute><ReviewsPage /></AdminRoute>} />
           <Route path="/admin/pages" element={<AdminRoute><PagesPage /></AdminRoute>} />
@@ -48,6 +55,10 @@ const App = () => (
           <Route path="/admin/inquiries" element={<AdminRoute><InquiriesPage /></AdminRoute>} />
           <Route path="/admin/media" element={<AdminRoute><MediaPage /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+          <Route path="/admin/distribution" element={<AdminRoute><DistributionPage /></AdminRoute>} />
+          <Route path="/admin/reports" element={<AdminRoute><ReportsPage /></AdminRoute>} />
+          <Route path="/admin/billing" element={<AdminRoute><BillingPage /></AdminRoute>} />
+          <Route path="/admin/customers" element={<AdminRoute><CustomersPage /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

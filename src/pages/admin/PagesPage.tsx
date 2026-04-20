@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { pagesService } from '@/services/pages.service';
+import { settingsService } from '@/services/settings.service';
 import { toast } from 'sonner';
 import { 
   DropdownMenu, 
@@ -18,25 +19,28 @@ import {
 
 export default function PagesPage() {
   const [pages, setPages] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pages');
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchPages();
+    const init = async () => {
+      try {
+        const [pagesRes, settingsRes] = await Promise.all([
+          pagesService.getAll(),
+          settingsService.get()
+        ]);
+        setPages(pagesRes.data || []);
+        setSettings(settingsRes || {});
+      } catch (err) {
+        toast.error("Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
-
-  const fetchPages = async () => {
-    try {
-      const res = await pagesService.getAll();
-      setPages(res.data || []);
-    } catch (err) {
-      toast.error("Failed to load pages");
-      setPages([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreatePage = async () => {
     try {
@@ -51,6 +55,15 @@ export default function PagesPage() {
     }
   };
 
+  const saveGlobalSettings = async () => {
+    try {
+      await settingsService.update(settings);
+      toast.success("Global site settings updated");
+    } catch (err) {
+      toast.error("Failed to update settings");
+    }
+  };
+
   return (
     <div className="space-y-10">
       <div className="flex items-center justify-between">
@@ -58,7 +71,7 @@ export default function PagesPage() {
             <h1 className="text-3xl font-black uppercase tracking-tight text-foreground">Pages</h1>
             <p className="text-muted-foreground font-medium text-sm">Manage website structure, navigation, and global layout blocks.</p>
          </div>
-         <Button onClick={() => setActiveTab('pages')} className="rounded-xl font-black uppercase tracking-widest text-[10px] h-10 px-8">
+         <Button onClick={saveGlobalSettings} className="rounded-xl font-black uppercase tracking-widest text-[10px] h-10 px-8">
             <Save className="w-4 h-4 mr-2" />
             Save
           </Button>
@@ -104,8 +117,8 @@ export default function PagesPage() {
           </div>
         )}
 
-        {activeTab === 'header' && <HeaderNavigationManager />}
-        {activeTab === 'footer' && <FooterManager />}
+        {settings && activeTab === 'header' && <HeaderNavigationManager settings={settings} onUpdate={setSettings} />}
+        {settings && activeTab === 'footer' && <FooterManager settings={settings} onUpdate={setSettings} />}
       </div>
     </div>
   );
@@ -128,83 +141,179 @@ const PageCard = ({ page }: { page: any }) => (
   </div>
 );
 
-const HeaderNavigationManager = () => (
-  <div className="space-y-12">
-    <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 flex items-start gap-3">
-       <BarChart3 className="w-5 h-5 text-blue-500 shrink-0" />
-       <p className="text-sm font-medium text-blue-800 italic">Heads up! Any changes will lead to changes across all pages in the website.</p>
-    </div>
+const HeaderNavigationManager = ({ settings, onUpdate }: { settings: any, onUpdate: any }) => {
+  const links = settings.navigation?.headerLinks || [];
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
-       <div className="space-y-8">
-          <div className="space-y-4">
-             <Label className="text-xs font-black uppercase tracking-widest cursor-help underline decoration-dotted">Logo *</Label>
-             <div className="border-2 border-dashed border-border rounded-[32px] aspect-square w-48 flex flex-col items-center justify-center gap-3 bg-muted/10 cursor-pointer hover:bg-muted/30 transition-all">
-                <Input type="file" className="hidden" id="logo-upload" />
-                <label htmlFor="logo-upload" className="flex flex-col items-center gap-2 cursor-pointer">
-                   <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center">
-                      <Plus className="w-6 h-6 text-gray-400" />
-                   </div>
-                   <p className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">Upload from system</p>
-                </label>
-             </div>
-          </div>
+  const addLink = () => {
+    const label = prompt("Link Label");
+    const url = prompt("Link URL (e.g., /trips)");
+    if (!label || !url) return;
+    onUpdate({
+      ...settings,
+      navigation: {
+        ...settings.navigation,
+        headerLinks: [...links, { label, url, isExternal: false, items: [] }]
+      }
+    });
+  };
 
-          <div className="space-y-6">
-             {['Support email', 'Support phone', 'Support text'].map(field => (
-               <div key={field} className="space-y-2">
-                 <Label className="text-xs font-black uppercase tracking-widest cursor-help underline decoration-dotted">{field} *</Label>
-                 <Input className="rounded-xl h-12 border-2" defaultValue={field === 'Support phone' ? '+919924246267' : ''} />
-               </div>
-             ))}
-          </div>
-       </div>
+  const removeLink = (idx: number) => {
+    onUpdate({
+      ...settings,
+      navigation: {
+        ...settings.navigation,
+        headerLinks: links.filter((_:any, i:number) => i !== idx)
+      }
+    });
+  };
 
-       <div className="space-y-4">
-          <Label className="text-xs font-black uppercase tracking-widest">Add links</Label>
-          <div className="space-y-2">
-             {[
-               { name: 'Home', sub: [] },
-               { name: 'Upcoming Trips', sub: ['Manali', 'Kedarnath', 'Spiti'] },
-               { name: 'Contact Us', sub: [] },
-               { name: 'About Us', sub: [] },
-             ].map(link => (
-               <div key={link.name} className="flex items-center gap-3 p-4 bg-muted/20 border-2 border-border rounded-xl group">
-                  <GripVertical className="w-4 h-4 text-muted-foreground" />
-                  <span className="flex-1 font-bold text-sm uppercase">{link.name}</span>
-                  <div className="flex gap-2">
-                     <Button variant="ghost" size="icon" className="h-8 w-8"><Edit2 className="w-3 h-3" /></Button>
-                     <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500"><Trash2 className="w-3 h-3" /></Button>
-                  </div>
-               </div>
-             ))}
-          </div>
-          <Button variant="outline" className="w-full h-11 border-2 border-dashed rounded-xl font-bold uppercase text-[10px] tracking-widest">+ Add New link</Button>
-       </div>
-    </div>
-  </div>
-);
+  return (
+    <div className="space-y-12">
+      <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 flex items-start gap-3">
+         <BarChart3 className="w-5 h-5 text-blue-500 shrink-0" />
+         <p className="text-sm font-medium text-blue-800 italic">Heads up! Any changes will lead to changes across all pages in the website.</p>
+      </div>
 
-const FooterManager = () => (
-  <div className="space-y-12">
-    <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 flex items-start gap-3">
-       <BarChart3 className="w-5 h-5 text-blue-500 shrink-0" />
-       <p className="text-sm font-medium text-blue-800 italic">Heads up! Any changes will lead to changes across all pages in the website.</p>
-    </div>
-
-    <div className="space-y-4">
-       <div className="flex items-center justify-between">
-          <Label className="text-xs font-black uppercase tracking-widest">Columns</Label>
-          <Button variant="link" className="text-primary font-black uppercase text-[10px]">Reorder</Button>
-       </div>
-       <div className="space-y-2">
-          {['Company Info', 'Our Blogs', 'Address', 'Support Info'].map(col => (
-            <div key={col} className="p-6 border-2 border-border rounded-2xl bg-white flex items-center justify-between">
-               <span className="font-bold uppercase tracking-tight">{col}</span>
-               <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+         <div className="space-y-8">
+            <div className="space-y-4">
+               <Label className="text-xs font-black uppercase tracking-widest">Brand Logo URL *</Label>
+               <Input 
+                 value={settings.organization?.logo || ""} 
+                 onChange={(e) => onUpdate({ ...settings, organization: { ...settings.organization, logo: e.target.value } })}
+                 className="rounded-xl h-12 border-2" 
+                 placeholder="https://..."
+               />
+               {settings.organization?.logo && <img src={settings.organization.logo} className="h-12 w-auto object-contain" alt="Logo preview" />}
             </div>
-          ))}
-       </div>
+
+            <div className="space-y-6">
+               <div className="space-y-2">
+                 <Label className="text-xs font-black uppercase tracking-widest">Support Email</Label>
+                 <Input 
+                   value={settings.organization?.supportEmail || ""} 
+                   onChange={(e) => onUpdate({ ...settings, organization: { ...settings.organization, supportEmail: e.target.value } })}
+                   className="rounded-xl h-12 border-2" 
+                 />
+               </div>
+               <div className="space-y-2">
+                 <Label className="text-xs font-black uppercase tracking-widest">Support Phone</Label>
+                 <Input 
+                   value={settings.organization?.supportPhone || ""} 
+                   onChange={(e) => onUpdate({ ...settings, organization: { ...settings.organization, supportPhone: e.target.value } })}
+                   className="rounded-xl h-12 border-2" 
+                 />
+               </div>
+            </div>
+         </div>
+
+         <div className="space-y-4">
+            <Label className="text-xs font-black uppercase tracking-widest">Header Links</Label>
+            <div className="space-y-2">
+               {links.map((link:any, idx:number) => (
+                 <div key={idx} className="flex items-center gap-3 p-4 bg-muted/20 border-2 border-border rounded-xl group">
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <p className="font-bold text-sm uppercase">{link.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{link.url}</p>
+                    </div>
+                    <div className="flex gap-2">
+                       <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => removeLink(idx)}><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                 </div>
+               ))}
+            </div>
+            <Button variant="outline" onClick={addLink} className="w-full h-11 border-2 border-dashed rounded-xl font-bold uppercase text-[10px] tracking-widest">+ Add New link</Button>
+         </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+const FooterManager = ({ settings, onUpdate }: { settings: any, onUpdate: any }) => {
+  const columns = settings.footer?.columns || [];
+
+  const addColumn = () => {
+    onUpdate({
+      ...settings,
+      footer: {
+        ...settings.footer,
+        columns: [...columns, { title: "New Column", type: "links", content: "", links: [] }]
+      }
+    });
+  };
+
+  const removeColumn = (idx: number) => {
+    onUpdate({
+      ...settings,
+      footer: {
+        ...settings.footer,
+        columns: columns.filter((_:any, i:number) => i !== idx)
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-12">
+      <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 flex items-start gap-3">
+         <BarChart3 className="w-5 h-5 text-blue-500 shrink-0" />
+         <p className="text-sm font-medium text-blue-800 italic">Heads up! Any changes will lead to changes across all pages in the website.</p>
+      </div>
+
+      <div className="space-y-4">
+         <div className="flex items-center justify-between">
+            <Label className="text-xs font-black uppercase tracking-widest">Footer Columns</Label>
+            <Button variant="link" onClick={addColumn} className="text-primary font-black uppercase text-[10px]">Add Column</Button>
+         </div>
+         <div className="space-y-4">
+            {columns.map((col: any, idx: number) => (
+              <div key={idx} className="p-6 border-2 border-border rounded-2xl bg-white space-y-4">
+                 <div className="flex justify-between items-center">
+                    <Input 
+                      value={col.title} 
+                      onChange={(e) => {
+                         const cols = [...columns];
+                         cols[idx].title = e.target.value;
+                         onUpdate({ ...settings, footer: { ...settings.footer, columns: cols } });
+                      }}
+                      className="font-black uppercase tracking-tight border-none p-0 h-auto text-lg focus-visible:ring-0" 
+                    />
+                    <Button variant="ghost" size="icon" className="text-red-500" onClick={() => removeColumn(idx)}><Trash2 className="w-4 h-4" /></Button>
+                 </div>
+                 
+                 <div className="flex gap-4">
+                    <select 
+                      value={col.type} 
+                      onChange={(e) => {
+                        const cols = [...columns];
+                        cols[idx].type = e.target.value;
+                        onUpdate({ ...settings, footer: { ...settings.footer, columns: cols } });
+                      }}
+                      className="text-[10px] font-black uppercase tracking-widest border rounded px-2"
+                    >
+                       <option value="links">Links List</option>
+                       <option value="text">Rich Text</option>
+                       <option value="contact">Contact Info</option>
+                       <option value="social">Social Links</option>
+                    </select>
+                 </div>
+
+                 {col.type === 'text' && (
+                    <Textarea 
+                      value={col.content} 
+                      onChange={(e) => {
+                         const cols = [...columns];
+                         cols[idx].content = e.target.value;
+                         onUpdate({ ...settings, footer: { ...settings.footer, columns: cols } });
+                      }}
+                      placeholder="Column content..."
+                      className="text-sm font-medium"
+                    />
+                 )}
+              </div>
+            ))}
+         </div>
+      </div>
+    </div>
+  );
+};

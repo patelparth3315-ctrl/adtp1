@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&family=Dancing+Script:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,20 +6,21 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 0 0% 13%;
+    --background: 0 0% 96%;        /* #F5F5F5 - Klook Ghost Background */
+    --foreground: 0 0% 13%;        /* #212121 */
     --card: 0 0% 100%;
     --card-foreground: 0 0% 13%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 13%;
     
     /* KLOOK VIBRANT ORANGE */
-    --primary: 21 100% 50%;
+    --primary: 21 100% 50%;        /* #FF5B00 */
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 0 0% 10%;
+    --secondary: 181 100% 41%;     /* #00CBD0 Klook Cyan */
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 96%;
+
+    --muted: 0 0% 98%;
     --muted-foreground: 0 0% 46%;
     --accent: 21 100% 50%;
     --accent-foreground: 0 0% 100%;
@@ -29,12 +30,12 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --border: 0 0% 91%;
-    --input: 0 0% 91%;
+    --border: 0 0% 93%;
+    --input: 0 0% 100%;
     --ring: 21 100% 50%;
     --radius: 1rem;
     
-    /* SIDEBAR */
+    /* SIDEBAR - SLEEK DARK */
     --sidebar-background: 0 0% 0%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 21 100% 50%;
@@ -78,13 +79,19 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Montserrat', sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Montserrat', sans-serif !important;
   }
 }
 
 @layer utilities {
   .glass {
     @apply bg-card/80 backdrop-blur-sm border border-border;
+  }
+  .font-handwriting {
+    font-family: 'Dancing Script', cursive !important;
+  }
+  .klook-panel {
+    @apply bg-white border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.05)] rounded-[20px] p-6;
   }
 }

@@ -65,6 +65,7 @@ export interface Trip {
   duration: string;
   category: string;
   images: string[];
+  gallery?: string[];
   itinerary: ItineraryDay[];
   highlights: string[];
   inclusions: string[];
@@ -76,8 +77,27 @@ export interface Trip {
   roomOptions: RoomOption[];
   addons: TripAddon[];
   status: "draft" | "published";
+  maxGroupSize?: number;
+  difficulty?: "easy" | "moderate" | "hard";
+  departureCity?: string;
+  ageLimit?: string;
+  bookingUrl?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TrainTicket {
+  pnr: string;
+  trainNo: string;
+  trainName: string;
+  from: string;
+  to: string;
+  departureDate?: string;
+  arrivalDate?: string;
+  coach: string;
+  seat: string;
+  status: string;
+  ticketUrl?: string;
 }
 
 export interface Booking {
@@ -95,6 +115,7 @@ export interface Booking {
   paymentStatus: "unpaid" | "partial" | "paid";
   notes?: string;
   adminNotes?: string;
+  trainTickets?: TrainTicket[];
   createdAt: string;
   updatedAt: string;
 }
@@ -111,7 +132,27 @@ export interface Inquiry {
   date?: string;
   count?: number;
   read: boolean;
+  status: 'new' | 'contacted' | 'converted' | 'closed';
+  isDuplicate?: boolean;
+  convertedAmount?: number;
+  adminNotes?: string;
+  responseTimeMinutes?: number;
   createdAt: string;
+}
+
+export interface ThemeSettings {
+  primaryColor: string;
+  accentColor: string;
+  borderRadius: number;
+  primaryFont: string;
+  handwritingFont?: string;
+  headerTitle?: string;
+}
+
+export interface DimensionsSettings {
+  heroHeight: number;
+  containerWidth: number;
+  sectionSpacing: number;
 }
 
 export interface MediaItem {
@@ -138,7 +179,23 @@ export interface SiteSettings {
   };
   logo: string;
   favicon: string;
-  paymentGateway?: string;
+  theme: ThemeSettings;
+  dimensions: DimensionsSettings;
+  organization: {
+    name: string;
+    logo: string;
+    website: string;
+    supportEmail: string;
+    supportPhone: string;
+    mailingAddress: string;
+  };
+  smtp: {
+    host: string;
+    port: number;
+    user: string;
+    pass: string;
+    isEnabled: boolean;
+  };
 }
 
 export interface DashboardStats {
