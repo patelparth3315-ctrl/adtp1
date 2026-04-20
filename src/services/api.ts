@@ -1,8 +1,14 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8888/api";
-console.log("🚀 CRM API ROUTE:", API_BASE);
+let API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8888/api";
 
+// ── SELF-HEALING: Detect and fix common misconfigurations ──
+if (API_BASE.includes("github.com")) {
+  console.warn("⚠️ API URL misconfigured to GitHub. Redirecting to production backend...");
+  API_BASE = "https://back-end-production-191d.up.railway.app/api";
+}
+
+console.log("🚀 CRM API ROUTE:", API_BASE);
 
 const api = axios.create({
   baseURL: API_BASE,
