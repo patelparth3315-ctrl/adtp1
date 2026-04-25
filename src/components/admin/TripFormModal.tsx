@@ -1626,11 +1626,17 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
 
               // 4. Preserve Review IDs for Syncing (Re-map from original form)
               if (clean.reviews) {
-                clean.reviews = clean.reviews.map((rev: any, i: number) => ({
-                  ...rev,
-                  id: form.reviews[i].id || form.reviews[i]._id || undefined,
-                  _id: form.reviews[i]._id || form.reviews[i].id || undefined
-                }));
+                clean.reviews = clean.reviews
+                  .filter((rev: any) => rev.userName && rev.comment && String(rev.userName).trim() !== "" && String(rev.comment).trim() !== "")
+                  .map((rev: any) => {
+                    // Find the original review to get its ID
+                    const original = (form.reviews || []).find((r: any) => r.userName === rev.userName);
+                    return {
+                      ...rev,
+                      id: original?.id || original?._id || undefined,
+                      _id: original?._id || original?.id || undefined
+                    };
+                  });
               }
 
               return clean;
