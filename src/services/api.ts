@@ -3,9 +3,9 @@ import axios from "axios";
 let API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8888/api";
 
 // ── SELF-HEALING: Detect and fix common misconfigurations ──
-if (API_BASE.includes("github.com")) {
-  console.warn("⚠️ API URL misconfigured to GitHub. Redirecting to production backend...");
-  API_BASE = "https://back-end-production-191d.up.railway.app/api";
+if (API_BASE.includes("github.com") || !import.meta.env.VITE_API_URL) {
+  console.warn("⚠️ API URL fallback triggered");
+  API_BASE = "http://localhost:8888/api";
 }
 
 console.log("🚀 CRM API ROUTE:", API_BASE);
@@ -17,6 +17,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("admin_token");
+  console.log(`📡 API REQ: ${config.method?.toUpperCase()} ${config.url}`, token ? "(with token)" : "(no token)");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -45,9 +46,14 @@ api.interceptors.response.use(
     return res;
   },
   (err) => {
+    console.error("🚨 API ERR:", err.response?.status, err.config?.url);
     if (err.response?.status === 401) {
+      console.warn("🔐 401 Unauthorized - Clearing token and redirecting...");
       localStorage.removeItem("admin_token");
-      window.location.href = "/admin/login";
+      // Use window.location only if we're not already on login
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/admin/login";
+      }
     }
     return Promise.reject(err);
   }

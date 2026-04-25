@@ -24,6 +24,7 @@ export interface ItineraryDay {
 export interface FAQ {
   question: string;
   answer: string;
+  order?: number;
 }
 
 export interface TripVariant {
@@ -65,7 +66,9 @@ export interface Trip {
   duration: string;
   category: string;
   images: string[];
-  gallery?: string[];
+  gallery?: { url: string; alt: string; order: number }[];
+  stickyCardPrice?: number;
+  stickyCardLabel?: string;
   itinerary: ItineraryDay[];
   highlights: string[];
   inclusions: string[];
@@ -76,6 +79,31 @@ export interface Trip {
   travelOptions: TravelOption[];
   roomOptions: RoomOption[];
   addons: TripAddon[];
+  attractions?: { name: string; image: string; slug: string; description?: string }[];
+  activities?: { name: string; image: string; slug: string; description?: string }[];
+  accommodations?: { 
+    name: string; 
+    location: string;
+    nights: string;
+    type: string; 
+    starRating: string;
+    roomType: string;
+    meals: string;
+    image: string; 
+    gallery: string[];
+  }[];
+  route?: { label: string; icon: "plane" | "car" | "train" }[];
+  ageGroup?: string;
+  maxAltitude?: string;
+  tripType?: string;
+  startEnd?: string;
+  pickupMode?: string;
+  popupDetails?: {
+    cancellation: { label: string; val: string }[];
+    terms: string[];
+    carry: { label: string; val: string }[];
+    etiquette: { title: string; desc: string }[];
+  };
   status: "draft" | "published";
   maxGroupSize?: number;
   difficulty?: "easy" | "moderate" | "hard";
@@ -223,4 +251,4 @@ export interface Blog {
   createdAt: string;
 }
 
-export type BlogFormData = Omit<Blog, "id" | "slug" | "createdAt">;
+export type BlogFormData = Omit<Blog, "id" | "createdAt">;

@@ -9,5 +9,10 @@ export const settingsService = {
   async update(data: any) {
     const res = await api.put("/settings", data);
     return res.data.data;
+  },
+
+  async getDraft() {
+    const res = await api.get("/settings/draft");
+    return res.data.data;
   }
 };

@@ -72,10 +72,11 @@ const navGroups = [
   {
     label: "Website Content",
     items: [
-      { title: "Pages & Navigation", url: "/admin/pages", icon: FileText },
+      { title: "Page Builder", url: "/admin/page-builder", icon: FilePlus },
       { title: "Website Theme", url: "/admin/theme", icon: Paintbrush },
       { title: "Media Manager", url: "/admin/media", icon: Image },
-      { title: "Blog Journal", url: "/admin/blogs", icon: BookOpen },
+      { title: "Watch & Read", url: "/admin/blogs", icon: BookOpen },
+      { title: "Attractions", url: "/admin/attractions", icon: Map },
       { title: "Review Center", url: "/admin/reviews", icon: Star },
     ]
   },
@@ -98,10 +99,17 @@ const navGroups = [
   }
 ];
 
+interface NavItem {
+  title: string;
+  url: string;
+  icon: any;
+  badge?: string;
+}
+
 function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { logout } = useAuthStore();
+  const { logout, admin } = useAuthStore();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -124,38 +132,50 @@ function AdminSidebar() {
           )}
         </div>
 
-        {navGroups.map((group, gIdx) => (
-          <SidebarGroup key={gIdx} className="px-3">
-            {group.label && !collapsed && (
-              <SidebarGroupLabel className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2 px-3 mt-4">
-                {group.label}
-              </SidebarGroupLabel>
-            )}
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-1">
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className="h-12 rounded-xl transition-all duration-300">
-                      <NavLink
-                        to={item.url}
-                        className="flex items-center text-gray-400 hover:text-white hover:bg-white/5 px-4"
-                        activeClassName="bg-primary text-black font-black shadow-lg shadow-primary/10"
-                      >
-                        <item.icon className={`mr-3 h-5 w-5 ${collapsed ? 'mx-auto' : ''}`} />
-                        {!collapsed && <span className="text-[11px] font-black uppercase tracking-tight flex-1">{item.title}</span>}
-                        {!collapsed && item.badge && (
-                          <span className="bg-primary text-black text-[8px] font-black px-1.5 py-0.5 rounded-full ml-auto animate-pulse">
-                            {item.badge}
-                          </span>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {navGroups.map((group, gIdx) => {
+          const filteredItems = (group.items as NavItem[]).filter(item => {
+            if (admin?.role === 'agent') {
+              const restricted = ["/admin/page-builder", "/admin/settings", "/admin/seo", "/admin/pages", "/admin/theme"];
+              return !restricted.includes(item.url);
+            }
+            return true;
+          });
+
+          if (filteredItems.length === 0) return null;
+
+          return (
+            <SidebarGroup key={gIdx} className="px-3">
+              {group.label && !collapsed && (
+                <SidebarGroupLabel className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2 px-3 mt-4">
+                  {group.label}
+                </SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
+                  {filteredItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild className="h-12 rounded-xl transition-all duration-300">
+                        <NavLink
+                          to={item.url}
+                          className="flex items-center text-gray-400 hover:text-white hover:bg-white/5 px-4"
+                          activeClassName="bg-primary text-black font-black shadow-lg shadow-primary/10"
+                        >
+                          <item.icon className={`mr-3 h-5 w-5 ${collapsed ? 'mx-auto' : ''}`} />
+                          {!collapsed && <span className="text-[11px] font-black uppercase tracking-tight flex-1">{item.title}</span>}
+                          {!collapsed && item.badge && (
+                            <span className="bg-primary text-black text-[8px] font-black px-1.5 py-0.5 rounded-full ml-auto animate-pulse">
+                              {item.badge}
+                            </span>
+                          )}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
 
         <div className="mt-auto p-4 border-t border-white/5 space-y-4">
           <Button variant="ghost" size={collapsed ? "icon" : "default"} onClick={handleLogout}
@@ -175,20 +195,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (token && !isAuthenticated) {
-      checkAuth();
-    }
-  }, [isAuthenticated, checkAuth]);
+    checkAuth();
+  }, [checkAuth]);
 
   useEffect(() => {
-    // TEMPORARY: Bypassing login redirect for troubleshooting
+    // AUTH BYPASS: Removed redirect to login page
     /*
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !location.pathname.includes('/login')) {
       navigate("/admin/login");
     }
     */
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
   if (isLoading) {
     return (
@@ -241,7 +258,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                      </DropdownMenuItem>
                      <DropdownMenuItem onClick={() => navigate('/admin/blogs')} className="rounded-xl p-3 cursor-pointer">
                         <FilePlus className="w-4 h-4 mr-3 text-primary" />
-                        <span className="text-xs font-bold uppercase">Write Story</span>
+                        <span className="text-xs font-bold uppercase">Watch & Read</span>
                      </DropdownMenuItem>
                      <DropdownMenuSeparator className="my-2" />
                      <DropdownMenuItem onClick={() => navigate('/admin/settings')} className="rounded-xl p-3 cursor-pointer">
@@ -259,7 +276,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   />
                </div>
                <div className="flex items-center gap-3">
-                  <button className="relative p-2 text-gray-400 hover:text-black transition-colors">
+                  <button title="Notifications" className="relative p-2 text-gray-400 hover:text-black transition-colors">
                      <Bell className="w-5 h-5" />
                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
                   </button>

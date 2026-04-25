@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Trip, TripFormData, ItineraryDay, FAQ } from "@/types";
-import { Plus, Trash2, CalendarDays, ImagePlus, X, HelpCircle, Star, CheckCircle, XCircle, FileText, Globe, Upload } from "lucide-react";
+import { Plus, Trash2, CalendarDays, ImagePlus, X, HelpCircle, Star, CheckCircle, XCircle, FileText, Globe, Upload, Plane, Car, Train, ArrowUp, ArrowDown, MessageSquare } from "lucide-react";
 import { settingsService } from "@/services/settings.service";
 import { ImageUpload } from "./ImageUpload";
+import { attractionsService, Attraction } from "@/services/attractions.service";
 import api from "@/services/api";
 
 function slugify(s: string) {
@@ -23,13 +24,39 @@ const emptyDay = (day: number): ItineraryDay => ({
 
 const emptyFaq = (): FAQ => ({ question: "", answer: "" });
 
-const defaultForm: TripFormData & { customSections?: any[], seo?: any } = {
+interface CustomSection {
+  id: string;
+  type: string;
+  title: string;
+  content: any;
+}
+
+interface SEOData {
+  metaTitle: string;
+  metaDescription: string;
+  focusKeyword: string;
+  ogImage: string;
+  canonicalUrl: string;
+  faqSchema: any[];
+}
+
+const defaultForm: TripFormData & { customSections?: CustomSection[], seo?: SEOData } = {
   title: "", slug: "", description: "", heroImage: "", price: 0, location: "",
   duration: "", category: "", images: [], itinerary: [], highlights: [],
   inclusions: [], exclusions: [], faqs: [], availableDates: [], 
   variants: [], travelOptions: [], roomOptions: [], addons: [], status: "draft",
   maxGroupSize: 20, difficulty: "moderate", departureCity: "", ageLimit: "", bookingUrl: "",
   customSections: [],
+  attractions: [],
+  activities: [],
+  accommodations: [],
+  popupDetails: {
+    cancellation: [],
+    terms: [],
+    carry: [],
+    etiquette: []
+  },
+  route: [],
   seo: {
     metaTitle: "",
     metaDescription: "",
@@ -63,6 +90,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
   const [form, setForm] = useState<any>(defaultForm);
   const [saving, setSaving] = useState(false);
   const [customFields, setCustomFields] = useState([]);
+  const [globalAttractions, setGlobalAttractions] = useState<Attraction[]>([]);
   
   const [newHighlight, setNewHighlight] = useState("");
   const [newInclusion, setNewInclusion] = useState("");
@@ -75,6 +103,9 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
   useEffect(() => {
     settingsService.get().then(res => {
       setCustomFields(res.tripCustomFields || []);
+    });
+    attractionsService.getAll().then(res => {
+      setGlobalAttractions(res || []);
     });
   }, []);
 
@@ -90,7 +121,13 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
         availableDates: editing.availableDates || [],
         variants: editing.variants || [],
         addons: editing.addons || [],
+        travelOptions: editing.travelOptions || [],
+        roomOptions: editing.roomOptions || [],
         customSections: (editing as any).customSections || [],
+        activities: (editing as any).activities || [],
+        accommodations: (editing as any).accommodations || [],
+        reviews: (editing as any).reviews || [],
+        reels: (editing as any).reels || [],
         seo: {
           ...defaultForm.seo,
           ...(editing as any).seo
@@ -111,6 +148,14 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
     } finally {
       setSaving(false);
     }
+  };
+
+  const formatUrl = (url: string | undefined) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    const apiBase = api.defaults.baseURL || "http://localhost:8888/api";
+    const serverBase = apiBase.split('/api')[0];
+    return `${serverBase}${url}`;
   };
 
   // List helpers
@@ -186,8 +231,15 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
             <TabBtn value="highlights" label="Items" />
             <TabBtn value="inclexcl" label="I/E" />
             <TabBtn value="faqs" label="FAQs" />
+            <TabBtn value="attractions" label="Attractions" />
+            <TabBtn value="activities" label="Activities" />
+            <TabBtn value="stay" label="Stay" />
+            <TabBtn value="policies" label="Policies" />
+            <TabBtn value="videos" label="Videos" />
             <TabBtn value="custom" label="Custom" />
             <TabBtn value="seo" label="SEO" />
+            <TabBtn value="reels" label="Reels" />
+            <TabBtn value="reviews" label="Reviews" />
             <TabBtn value="advanced" label="Adv" />
           </TabsList>
 
@@ -223,10 +275,96 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Category</Label>
-                  <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                    <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                  </Select>
+                  <Input 
+                    value={form.category} 
+                    onChange={(e) => setForm({ ...form, category: e.target.value })} 
+                    list="trip-categories"
+                    className="rounded-xl"
+                    placeholder="Type or select category..."
+                  />
+                  <datalist id="trip-categories">
+                    {CATEGORIES.map((c) => <option key={c} value={c} />)}
+                  </datalist>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Age Group</Label>
+                  <Input value={form.ageGroup || ""} onChange={(e) => setForm({ ...form, ageGroup: e.target.value })} placeholder="18-35" className="rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Max Altitude</Label>
+                  <Input value={form.maxAltitude || ""} onChange={(e) => setForm({ ...form, maxAltitude: e.target.value })} placeholder="14,000 ft" className="rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Trip Type</Label>
+                  <Input value={form.tripType || ""} onChange={(e) => setForm({ ...form, tripType: e.target.value })} placeholder="Group Trip" className="rounded-xl" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Start / End</Label>
+                  <Input value={form.startEnd || ""} onChange={(e) => setForm({ ...form, startEnd: e.target.value })} placeholder="Manali to Manali" className="rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Pickup Mode</Label>
+                  <Input value={form.pickupMode || ""} onChange={(e) => setForm({ ...form, pickupMode: e.target.value })} placeholder="Volvo / Traveler" className="rounded-xl" />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t space-y-4">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">Full Circuit / Route Summary</Label>
+                <div className="flex gap-2">
+                  <div className="flex-1 flex gap-2">
+                    <Input 
+                      id="new-route-stop"
+                      placeholder="Add Stop (e.g. Ahmedabad)" 
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const input = e.currentTarget as HTMLInputElement;
+                          if (input.value) {
+                            setForm({ ...form, route: [...(form.route || []), { label: input.value, icon: "car" }] });
+                            input.value = "";
+                          }
+                        }
+                      }}
+                      className="rounded-xl h-10 text-xs" 
+                    />
+                    <div className="flex gap-1">
+                       {['plane', 'car', 'train'].map(icon => (
+                         <Button 
+                            key={icon}
+                            variant="outline" 
+                            size="icon" 
+                            className="h-10 w-10 rounded-xl"
+                            onClick={() => {
+                              const input = document.getElementById("new-route-stop") as HTMLInputElement;
+                              if (input.value) {
+                                setForm({ ...form, route: [...(form.route || []), { label: input.value, icon }] });
+                                input.value = "";
+                              }
+                            }}
+                         >
+                           {icon === 'plane' && <Plane className="w-3.5 h-3.5" />}
+                           {icon === 'car' && <Car className="w-3.5 h-3.5" />}
+                           {icon === 'train' && <Train className="w-3.5 h-3.5" />}
+                         </Button>
+                       ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {(form.route || []).map((stop: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-lg border border-primary/20 text-[10px] font-bold">
+                      {stop.icon === 'plane' && <Plane className="w-3 h-3" />}
+                      {stop.icon === 'car' && <Car className="w-3 h-3" />}
+                      {stop.icon === 'train' && <Train className="w-3 h-3" />}
+                      {stop.label}
+                      <X className="w-3 h-3 cursor-pointer hover:text-destructive" onClick={() => setForm({ ...form, route: form.route.filter((_:any, idx:number) => idx !== i) })} />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -242,18 +380,107 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
               </div>
               <div className="space-y-4">
                 {form.variants?.map((v:any, i:number) => (
-                  <div key={i} className="border bg-muted/20 rounded-2xl p-4 space-y-3 relative group">
-                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => setForm({ ...form, variants: form.variants.filter((_:any, idx:number) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input value={v.location} placeholder="Location (e.g. Delhi)" onChange={(e) => { const updated = [...form.variants]; updated[i].location = e.target.value; setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
-                      <Input value={v.duration} placeholder="Duration (e.g. 5D/4N)" onChange={(e) => { const updated = [...form.variants]; updated[i].duration = e.target.value; setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input type="number" value={v.originalPrice} placeholder="Original Price" onChange={(e) => { const updated = [...form.variants]; updated[i].originalPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
-                      <Input type="number" value={v.discountedPrice} placeholder="Discounted Price" onChange={(e) => { const updated = [...form.variants]; updated[i].discountedPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
-                    </div>
-                  </div>
+                   <div key={i} className="border bg-muted/20 rounded-2xl p-4 space-y-3 relative group">
+                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => setForm({ ...form, variants: form.variants.filter((_:any, idx:number) => idx !== i) })}><Trash2 className="h-3 w-3" /></Button>
+                     
+                     <div className="flex gap-4">
+                       <div className="w-24 shrink-0">
+                         <ImageUpload 
+                           value={v.image}
+                           onUpload={(url) => {
+                             const updated = [...form.variants];
+                             updated[i].image = url;
+                             setForm({ ...form, variants: updated });
+                           }}
+                         />
+                       </div>
+                       
+                       <div className="flex-1 space-y-3">
+                         <div className="grid grid-cols-2 gap-3">
+                           <Input value={v.location} placeholder="Location (e.g. Delhi)" onChange={(e) => { const updated = [...form.variants]; updated[i].location = e.target.value; setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                           <Input value={v.duration} placeholder="Duration (e.g. 5D/4N)" onChange={(e) => { const updated = [...form.variants]; updated[i].duration = e.target.value; setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                         </div>
+                         <div className="grid grid-cols-2 gap-3">
+                           <Input type="number" value={v.originalPrice} placeholder="Original Price" onChange={(e) => { const updated = [...form.variants]; updated[i].originalPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                           <Input type="number" value={v.discountedPrice} placeholder="Discounted Price" onChange={(e) => { const updated = [...form.variants]; updated[i].discountedPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                         </div>
+                       </div>
+                     </div>
+                   </div>
                 ))}
+              </div>
+
+              {/* Travel Options Section */}
+              <div className="pt-6 border-t space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <Plane className="w-3 h-3" /> Travelling Options
+                  </Label>
+                  <Button variant="outline" size="sm" onClick={() => setForm({ ...form, travelOptions: [...(form.travelOptions || []), { label: "", priceDelta: 0, description: "" }] })} className="h-7 text-[9px] font-black uppercase">Add Option</Button>
+                </div>
+                <div className="space-y-3">
+                   {(form.travelOptions || []).map((opt: any, i: number) => (
+                     <div key={i} className="bg-muted/30 p-4 rounded-xl space-y-2 relative group border border-transparent hover:border-primary/20">
+                       <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.travelOptions.filter((_:any, idx:number) => idx !== i);
+                          setForm({ ...form, travelOptions: updated });
+                       }}><Trash2 className="h-3 w-3" /></Button>
+                       <div className="grid grid-cols-2 gap-2">
+                          <Input value={opt.label} placeholder="Label (e.g. AC Sleeper)" onChange={(e) => {
+                            const updated = [...form.travelOptions]; updated[i].label = e.target.value; setForm({ ...form, travelOptions: updated });
+                          }} className="h-8 text-xs font-bold" />
+                          <Input type="number" value={opt.priceDelta} placeholder="Price Delta (+)" onChange={(e) => {
+                            const updated = [...form.travelOptions]; updated[i].priceDelta = Number(e.target.value); setForm({ ...form, travelOptions: updated });
+                          }} className="h-8 text-xs" />
+                       </div>
+                       <Input value={opt.description} placeholder="Short Description" onChange={(e) => {
+                          const updated = [...form.travelOptions]; updated[i].description = e.target.value; setForm({ ...form, travelOptions: updated });
+                       }} className="h-7 text-[10px] bg-background" />
+                     </div>
+                   ))}
+                </div>
+              </div>
+
+              {/* Room Options Section */}
+              <div className="pt-6 border-t space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <Star className="w-3 h-3" /> Room Sharing Options
+                  </Label>
+                  <Button variant="outline" size="sm" onClick={() => setForm({ ...form, roomOptions: [...(form.roomOptions || []), { label: "", priceDelta: 0 }] })} className="h-7 text-[9px] font-black uppercase">Add Option</Button>
+                </div>
+                <div className="space-y-3">
+                   {(form.roomOptions || []).map((opt: any, i: number) => (
+                     <div key={i} className="bg-muted/30 p-3 rounded-xl flex gap-3 items-center relative group">
+                        <Input value={opt.label} placeholder="e.g. Triple Sharing" onChange={(e) => {
+                          const updated = [...form.roomOptions]; updated[i].label = e.target.value; setForm({ ...form, roomOptions: updated });
+                        }} className="h-8 text-xs font-bold" />
+                        <Input type="number" value={opt.priceDelta} placeholder="+ Price" onChange={(e) => {
+                          const updated = [...form.roomOptions]; updated[i].priceDelta = Number(e.target.value); setForm({ ...form, roomOptions: updated });
+                        }} className="h-8 text-xs w-24" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.roomOptions.filter((_:any, idx:number) => idx !== i);
+                          setForm({ ...form, roomOptions: updated });
+                        }}><Trash2 className="h-3 w-3" /></Button>
+                     </div>
+                   ))}
+                </div>
+              </div>
+
+              <div className="pt-6 border-t space-y-4">
+                <Label className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                  <Star className="w-3 h-3" /> Sticky Action Card
+                </Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] uppercase font-black opacity-50">Sticky Price (₹)</Label>
+                    <Input type="number" value={form.stickyCardPrice || 0} onChange={(e) => setForm({ ...form, stickyCardPrice: Number(e.target.value) })} className="rounded-xl h-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] uppercase font-black opacity-50">Sticky Label</Label>
+                    <Input value={form.stickyCardLabel || ""} onChange={(e) => setForm({ ...form, stickyCardLabel: e.target.value })} placeholder="e.g. per person" className="rounded-xl h-10" />
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -347,32 +574,15 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <Label className="text-[9px] uppercase opacity-50 font-black tracking-widest">Photos</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          type="file" 
-                          id={`day-photo-${idx}`} 
-                          className="hidden" 
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const formData = new FormData();
-                            formData.append("image", file);
-                            const res = await api.post("/upload/single", formData, { headers: { "Content-Type": "multipart/form-data" } });
-                            if (res.data.success) {
-                              updateDay(idx, "photos", [...(day.photos || []), res.data.url]);
-                            }
-                          }}
+                        <ImageUpload 
+                          label="Add Photo" 
+                          onUpload={url => updateDay(idx, "photos", [...(day.photos || []), url])} 
                         />
-                        <Label htmlFor={`day-photo-${idx}`} className="h-6 px-3 bg-primary/10 text-primary text-[8px] font-black uppercase rounded-lg flex items-center gap-1 cursor-pointer">
-                          <Upload className="w-2.5 h-2.5" /> Upload
-                        </Label>
-                        <Button variant="outline" size="sm" className="h-6 text-[8px] uppercase font-black rounded-lg" onClick={() => addDayPhoto(idx)}><Plus className="h-3 w-3 mr-1" />Link</Button>
-                      </div>
                     </div>
                     <div className="flex gap-2 overflow-x-auto pb-1">
                       {day.photos?.map((p: string, pIdx: number) => (
                         <div key={pIdx} className="relative group shrink-0">
-                          <img src={p} className="h-16 w-16 rounded-lg object-cover border" />
+                          <img src={formatUrl(p)} className="h-16 w-16 rounded-lg object-cover border" />
                           <button className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-0.5" onClick={() => removeDayPhoto(idx, pIdx)}><X className="h-2 w-2" /></button>
                         </div>
                       ))}
@@ -456,6 +666,418 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                 </div>
               ))}
               <Button onClick={addFaq} className="w-full h-12 border-dashed rounded-2xl" variant="outline"><Plus className="h-4 w-4 mr-2" />Add New FAQ</Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="attractions">
+            <div className="space-y-6 pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">Local Attractions</Label>
+                <div className="flex gap-2">
+                  <Select onValueChange={(slug) => {
+                    const found = globalAttractions.find(a => a.slug === slug);
+                    if (found) {
+                      setForm({ ...form, attractions: [...(form.attractions || []), { name: found.name, image: found.image, slug: found.slug, description: found.description, order: form.attractions?.length || 0 }] });
+                    }
+                  }}>
+                    <SelectTrigger className="w-[180px] h-8 text-[10px] font-black uppercase tracking-widest rounded-xl bg-muted/50 border-none">
+                      <SelectValue placeholder="PULL FROM LIBRARY" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {globalAttractions.map(a => <SelectItem key={a.slug} value={a.slug}>{a.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setForm({ ...form, attractions: [...(form.attractions || []), { name: "", image: "", slug: "", description: "", order: form.attractions?.length || 0 }] })} className="rounded-xl h-8 text-[10px] font-black uppercase">
+                    <Plus className="h-3 w-3 mr-1" />Custom
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {(form.attractions || []).map((item: any, i: number) => (
+                  <div key={i} className="border bg-muted/20 rounded-2xl p-6 space-y-4 relative group">
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => {
+                        if (i === 0) return;
+                        const updated = [...form.attractions];
+                        [updated[i-1], updated[i]] = [updated[i], updated[i-1]];
+                        setForm({ ...form, attractions: updated });
+                      }} disabled={i === 0}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => {
+                        if (i === form.attractions.length - 1) return;
+                        const updated = [...form.attractions];
+                        [updated[i], updated[i+1]] = [updated[i+1], updated[i]];
+                        setForm({ ...form, attractions: updated });
+                      }} disabled={i === form.attractions.length - 1}><ArrowDown className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setForm({ ...form, attractions: form.attractions.filter((_:any, idx:number) => idx !== i) })}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    </div>
+                    <div className="flex gap-4">
+                       <ImageUpload 
+                         value={item.image} 
+                         onUpload={url => {
+                            const updated = [...form.attractions];
+                            updated[i].image = url;
+                            setForm({ ...form, attractions: updated });
+                         }}
+                       />
+                       <div className="flex-1 space-y-3">
+                          <Input value={item.name} placeholder="Attraction Name" onChange={(e) => {
+                            const updated = [...form.attractions];
+                            updated[i].name = e.target.value;
+                            updated[i].slug = slugify(e.target.value);
+                            setForm({ ...form, attractions: updated });
+                          }} className="h-10 text-xs font-bold" />
+                           <Textarea 
+                             value={item.description} 
+                             placeholder="Short details..." 
+                             onChange={(e) => {
+                               const updated = [...form.attractions];
+                               updated[i].description = e.target.value;
+                               setForm({ ...form, attractions: updated });
+                             }}
+                             className="h-20 text-[10px] font-medium"
+                           />
+                           <Input value={item.slug} placeholder="Slug" readOnly className="h-8 text-[10px] bg-muted/50" />
+                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="activities">
+            <div className="space-y-6 pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">Trip Activities</Label>
+                <div className="flex gap-2">
+                  <Select onValueChange={(slug) => {
+                    const found = globalAttractions.find(a => a.slug === slug);
+                    if (found) {
+                      setForm({ ...form, activities: [...(form.activities || []), { name: found.name, image: found.image, slug: found.slug, description: found.description, order: form.activities?.length || 0 }] });
+                    }
+                  }}>
+                    <SelectTrigger className="w-[180px] h-8 text-[10px] font-black uppercase tracking-widest rounded-xl bg-muted/50 border-none">
+                      <SelectValue placeholder="PULL FROM LIBRARY" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {globalAttractions.map(a => <SelectItem key={a.slug} value={a.slug}>{a.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setForm({ ...form, activities: [...(form.activities || []), { name: "", image: "", slug: "", description: "", order: form.activities?.length || 0 }] })} className="rounded-xl h-8 text-[10px] font-black uppercase">
+                    <Plus className="h-3 w-3 mr-1" />Custom
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {(form.activities || []).map((item: any, i: number) => (
+                  <div key={i} className="border bg-muted/20 rounded-2xl p-6 space-y-4 relative group">
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => {
+                        if (i === 0) return;
+                        const updated = [...form.activities];
+                        [updated[i-1], updated[i]] = [updated[i], updated[i-1]];
+                        setForm({ ...form, activities: updated });
+                      }} disabled={i === 0}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={() => {
+                        if (i === form.activities.length - 1) return;
+                        const updated = [...form.activities];
+                        [updated[i], updated[i+1]] = [updated[i+1], updated[i]];
+                        setForm({ ...form, activities: updated });
+                      }} disabled={i === form.activities.length - 1}><ArrowDown className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => setForm({ ...form, activities: form.activities.filter((_:any, idx:number) => idx !== i) })}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    </div>
+                    <div className="flex gap-4">
+                       <ImageUpload 
+                         value={item.image} 
+                         onUpload={url => {
+                            const updated = [...form.activities];
+                            updated[i].image = url;
+                            setForm({ ...form, activities: updated });
+                         }}
+                       />
+                       <div className="flex-1 space-y-3">
+                          <Input value={item.name} placeholder="Activity Name" onChange={(e) => {
+                            const updated = [...form.activities];
+                            updated[i].name = e.target.value;
+                            updated[i].slug = slugify(e.target.value);
+                            setForm({ ...form, activities: updated });
+                          }} className="h-10 text-xs font-bold" />
+                           <Textarea 
+                             value={item.description} 
+                             placeholder="Short details..." 
+                             onChange={(e) => {
+                               const updated = [...form.activities];
+                               updated[i].description = e.target.value;
+                               setForm({ ...form, activities: updated });
+                             }}
+                             className="h-20 text-[10px] font-medium"
+                           />
+                           <Input value={item.slug} placeholder="Slug" readOnly className="h-8 text-[10px] bg-muted/50" />
+                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="stay">
+            <div className="space-y-6 pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">Accommodation Strategy</Label>
+                <Button variant="outline" size="sm" onClick={() => setForm({ ...form, accommodations: [...(form.accommodations || []), { name: "", location: "", nights: "", type: "", starRating: "", roomType: "", meals: "", image: "", gallery: [] }] })} className="rounded-xl h-8 text-[10px] font-black uppercase">
+                  <Plus className="h-3 w-3 mr-1" />Define Stay
+                </Button>
+              </div>
+              <div className="space-y-6">
+                {(form.accommodations || []).map((item: any, i: number) => (
+                  <div key={i} className="border bg-muted/20 rounded-[32px] p-8 space-y-6 relative group transition-all hover:bg-muted/30">
+                    <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-8 w-8 text-destructive opacity-0 group-hover:opacity-100" onClick={() => setForm({ ...form, accommodations: form.accommodations.filter((_:any, idx:number) => idx !== i) })}><Trash2 className="h-4 w-4" /></Button>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                       <div className="space-y-4">
+                          <ImageUpload 
+                            label="Primary Visual"
+                            value={item.image} 
+                            onUpload={url => {
+                               const updated = [...form.accommodations];
+                               updated[i].image = url;
+                               setForm({ ...form, accommodations: updated });
+                            }}
+                          />
+                          <div className="space-y-6 pt-4">
+                             {['Exterior', 'Interior', 'Premium Room', 'Bathroom', 'Swimming Pool', 'Dining'].map(cat => (
+                               <div key={cat} className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">{cat}</Label>
+                                     <ImageUpload 
+                                       multiple
+                                       label={`Upload ${cat}`}
+                                       onUpload={urls => {
+                                          const updated = [...form.accommodations];
+                                          const newImgs = (Array.isArray(urls) ? urls : [urls]).map(url => ({ url, category: cat }));
+                                          updated[i].gallery = [...(updated[i].gallery || []), ...newImgs];
+                                          setForm({ ...form, accommodations: updated });
+                                       }}
+                                     />
+                                  </div>
+                                  <div className="grid grid-cols-4 md:grid-cols-6 gap-3 p-4 bg-zinc-50 rounded-2xl border border-dashed">
+                                     {(item.gallery || []).filter((img: any) => img.category === cat).map((img: any, gidx: number) => {
+                                       // Find absolute index in main gallery array for deletion
+                                       const absoluteIndex = item.gallery.findIndex((g:any) => g === img);
+                                       return (
+                                         <div key={gidx} className="relative aspect-square rounded-xl overflow-hidden border bg-white group">
+                                            <img src={img.url} className="w-full h-full object-cover" />
+                                            <button 
+                                              onClick={() => {
+                                                const updated = [...form.accommodations];
+                                                updated[i].gallery = updated[i].gallery.filter((_:any, idx:number) => idx !== absoluteIndex);
+                                                setForm({ ...form, accommodations: updated });
+                                              }} 
+                                              className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all"
+                                            >
+                                              <X className="w-2.5 h-2.5" />
+                                            </button>
+                                         </div>
+                                       );
+                                     })}
+                                     {(!item.gallery || item.gallery.filter((img: any) => img.category === cat).length === 0) && (
+                                       <div className="col-span-full py-4 text-center">
+                                          <p className="text-[9px] font-bold text-zinc-300 uppercase italic">No {cat} photos</p>
+                                       </div>
+                                     )}
+                                  </div>
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+
+                       <div className="md:col-span-2 space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Nights in Location</Label>
+                                <Input value={item.nights} placeholder="e.g. 2 Nights in Havelock" onChange={(e) => {
+                                   const updated = [...form.accommodations];
+                                   updated[i].nights = e.target.value;
+                                   setForm({ ...form, accommodations: updated });
+                                }} className="rounded-xl h-10 text-xs font-bold" />
+                             </div>
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Property Name</Label>
+                                <Input value={item.name} placeholder="e.g. Sandy Waves Resort" onChange={(e) => {
+                                   const updated = [...form.accommodations];
+                                   updated[i].name = e.target.value;
+                                   setForm({ ...form, accommodations: updated });
+                                }} className="rounded-xl h-10 text-xs font-bold" />
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4">
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Star Rating / Type</Label>
+                                <Input value={item.starRating} placeholder="e.g. 4 Star Resort" onChange={(e) => {
+                                   const updated = [...form.accommodations];
+                                   updated[i].starRating = e.target.value;
+                                   setForm({ ...form, accommodations: updated });
+                                }} className="rounded-xl h-10 text-xs" />
+                             </div>
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Room Category</Label>
+                                <Input value={item.roomType} placeholder="e.g. Premium Room" onChange={(e) => {
+                                   const updated = [...form.accommodations];
+                                   updated[i].roomType = e.target.value;
+                                   setForm({ ...form, accommodations: updated });
+                                }} className="rounded-xl h-10 text-xs" />
+                             </div>
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Inclusions (Meals)</Label>
+                                <Input value={item.meals} placeholder="e.g. Breakfast" onChange={(e) => {
+                                   const updated = [...form.accommodations];
+                                   updated[i].meals = e.target.value;
+                                   setForm({ ...form, accommodations: updated });
+                                }} className="rounded-xl h-10 text-xs" />
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="policies">
+            <div className="space-y-8 pt-4">
+              {/* Cancellation */}
+              <div className="space-y-4">
+                 <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Cancellation Policy Rules</Label>
+                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, cancellation: [...(form.popupDetails?.cancellation || []), { label: "", val: "" }] } })} className="h-7 text-[9px] font-black uppercase">Add Rule</Button>
+                 </div>
+                 <div className="space-y-2">
+                    {(form.popupDetails?.cancellation || []).map((c: any, i: number) => (
+                      <div key={i} className="flex gap-2 group">
+                        <Input value={c.label} placeholder="Timeline (e.g. 30+ Days)" onChange={(e) => {
+                          const updated = [...form.popupDetails.cancellation]; updated[i].label = e.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, cancellation: updated } });
+                        }} className="h-8 text-xs" />
+                        <Input value={c.val} placeholder="Deduction (e.g. 10%)" onChange={(e) => {
+                          const updated = [...form.popupDetails.cancellation]; updated[i].val = e.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, cancellation: updated } });
+                        }} className="h-8 text-xs w-32" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.popupDetails.cancellation.filter((_:any, idx:number) => idx !== i);
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, cancellation: updated } });
+                        }}><X className="h-3 w-3" /></Button>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+
+              {/* Carry */}
+              <div className="space-y-4 pt-4 border-t">
+                 <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Things to Carry</Label>
+                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, carry: [...(form.popupDetails?.carry || []), { label: "", val: "" }] } })} className="h-7 text-[9px] font-black uppercase">Add Item</Button>
+                 </div>
+                 <div className="space-y-2">
+                    {(form.popupDetails?.carry || []).map((c: any, i: number) => (
+                      <div key={i} className="flex gap-2 group">
+                        <Input value={c.label} placeholder="Category (e.g. Clothing)" onChange={(e) => {
+                          const updated = [...form.popupDetails.carry]; updated[i].label = e.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                        }} className="h-8 text-xs font-bold" />
+                        <Input value={c.val} placeholder="Items" onChange={(e) => {
+                          const updated = [...form.popupDetails.carry]; updated[i].val = e.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                        }} className="h-8 text-xs flex-1" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.popupDetails.carry.filter((_:any, idx:number) => idx !== i);
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                        }}><Trash2 className="h-3 w-3" /></Button>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+
+              {/* Terms */}
+              <div className="space-y-4 pt-4 border-t">
+                 <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Terms & Conditions</Label>
+                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, terms: [...(form.popupDetails?.terms || []), ""] } })} className="h-7 text-[9px] font-black uppercase">Add Term</Button>
+                 </div>
+                 <div className="space-y-2">
+                    {(form.popupDetails?.terms || []).map((t: string, i: number) => (
+                      <div key={i} className="flex gap-2 group">
+                        <Textarea value={t} placeholder="Enter term..." onChange={(e) => {
+                          const updated = [...form.popupDetails.terms]; updated[i] = e.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, terms: updated } });
+                        }} className="text-xs min-h-[40px] flex-1" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.popupDetails.terms.filter((_:any, idx:number) => idx !== i);
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, terms: updated } });
+                        }}><Trash2 className="h-3 w-3" /></Button>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+
+              {/* Etiquette */}
+              <div className="space-y-4 pt-4 border-t">
+                 <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Local Etiquette & Rules</Label>
+                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, etiquette: [...(form.popupDetails?.etiquette || []), { title: "", desc: "" }] } })} className="h-7 text-[9px] font-black uppercase">Add Rule</Button>
+                 </div>
+                 <div className="space-y-3">
+                    {(form.popupDetails?.etiquette || []).map((e: any, i: number) => (
+                      <div key={i} className="bg-muted/30 p-3 rounded-xl space-y-2 relative group">
+                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.popupDetails.etiquette.filter((_:any, idx:number) => idx !== i);
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, etiquette: updated } });
+                        }}><Trash2 className="h-3 w-3" /></Button>
+                        <Input value={e.title} placeholder="Title" onChange={(val) => {
+                          const updated = [...form.popupDetails.etiquette]; updated[i].title = val.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, etiquette: updated } });
+                        }} className="h-8 text-xs font-bold" />
+                        <Textarea value={e.desc} placeholder="Description" onChange={(val) => {
+                          const updated = [...form.popupDetails.etiquette]; updated[i].desc = val.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, etiquette: updated } });
+                        }} className="text-[10px] min-h-[50px]" />
+                      </div>
+                    ))}
+                 </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="videos">
+            <div className="space-y-6 pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-black uppercase tracking-widest opacity-50">YouTube Video Gallery</Label>
+                <Button variant="outline" size="sm" onClick={() => setForm({ ...form, videos: [...(form.videos || []), { id: "", title: "" }] })} className="rounded-xl h-8 text-[10px] font-black uppercase">
+                  <Plus className="h-3 w-3 mr-1" />Add Video
+                </Button>
+              </div>
+              <div className="space-y-4">
+                {(form.videos || []).map((video: any, i: number) => (
+                  <div key={i} className="border bg-muted/20 rounded-2xl p-4 space-y-3 relative group">
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => setForm({ ...form, videos: form.videos.filter((_:any, idx:number) => idx !== i) })}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    <div className="flex gap-4">
+                       <div className="w-24 aspect-video bg-black rounded-lg overflow-hidden shrink-0">
+                          {video.id && <img src={`https://img.youtube.com/vi/${video.id}/default.jpg`} className="w-full h-full object-cover" />}
+                       </div>
+                       <div className="flex-1 space-y-2">
+                          <Input value={video.id} placeholder="YouTube Video ID (e.g. j6hb-iOZalE)" onChange={(e) => {
+                            const updated = [...form.videos]; updated[i].id = e.target.value; setForm({ ...form, videos: updated });
+                          }} className="h-8 text-[10px] font-bold" />
+                          <Input value={video.title} placeholder="Video Title" onChange={(e) => {
+                            const updated = [...form.videos]; updated[i].title = e.target.value; setForm({ ...form, videos: updated });
+                          }} className="h-8 text-[10px]" />
+                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
 
@@ -625,7 +1247,9 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                           const formData = new FormData();
                           for (let i = 0; i < files.length; i++) formData.append("images", files[i]);
                           try {
-                            const res = await api.post("/upload/multiple", formData, { headers: { "Content-Type": "multipart/form-data" } });
+                            const res = await api.post("/upload/multiple", formData, {
+                              headers: { "Content-Type": "multipart/form-data" }
+                            });
                             if (res.data.success) {
                               setForm({ ...form, gallery: [...(form.gallery || []), ...res.data.urls] });
                             }
@@ -640,16 +1264,21 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[300px] overflow-y-auto p-3 bg-muted/20 rounded-2xl border">
-                    {(form.gallery || []).map((url: string, i: number) => (
-                      <div key={i} className="relative group aspect-square">
-                        <img src={url} className="w-full h-full object-cover rounded-xl border-2 border-transparent group-hover:border-primary transition-all" alt={`Gallery ${i}`} />
-                        <button 
-                          className="absolute -top-1.5 -right-1.5 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" 
-                          onClick={() => setForm({ ...form, gallery: (form.gallery || []).filter((_:any, idx:number) => idx !== i) })}
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
+                  <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto p-3 bg-muted/20 rounded-2xl border">
+                    {(form.gallery || []).map((img: any, i: number) => (
+                      <div key={i} className="flex gap-4 items-center bg-background p-3 rounded-xl border relative group">
+                        <img src={formatUrl(img.url)} className="h-12 w-12 rounded-lg object-cover" />
+                        <div className="flex-1 grid grid-cols-2 gap-2">
+                          <Input value={img.alt || ""} placeholder="Alt text" onChange={(e) => {
+                            const updated = [...form.gallery]; updated[i].alt = e.target.value; setForm({ ...form, gallery: updated });
+                          }} className="h-8 text-[10px]" />
+                          <Input type="number" value={img.order || 0} placeholder="Order" onChange={(e) => {
+                            const updated = [...form.gallery]; updated[i].order = Number(e.target.value); setForm({ ...form, gallery: updated });
+                          }} className="h-8 text-[10px]" />
+                        </div>
+                        <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => setForm({ ...form, gallery: form.gallery.filter((_:any, idx:number) => idx !== i) })}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     ))}
                     {(form.gallery || []).length === 0 && (
@@ -659,27 +1288,359 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase tracking-widest opacity-40">Or Paste Image URLs (One per line)</Label>
-                    <Textarea 
-                      value={form.gallery?.join("\n")} 
-                      onChange={(e) => setForm({ ...form, gallery: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
-                      placeholder="https://image1.jpg&#10;https://image2.jpg"
-                      className="rounded-2xl text-[10px] min-h-[100px] font-mono bg-muted/5 border-none focus:bg-muted/10"
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Quick Add Images</Label>
+                    <ImageUpload 
+                      onUpload={(url) => {
+                        const next = [...(form.gallery || []), { url, alt: "", order: (form.gallery || []).length }];
+                        setForm({ ...form, gallery: next });
+                      }}
                     />
                   </div>
                </div>
             </div>
+          </TabsContent>
+          <TabsContent value="reels" className="space-y-6 pt-6">
+             <div className="flex items-center justify-between">
+               <div className="space-y-1">
+                 <h3 className="text-xl font-black text-navy uppercase italic">Traveler Reels</h3>
+                 <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Add vertical videos to showcase real moments</p>
+               </div>
+               <Button 
+                 onClick={() => setForm({ ...form, reels: [...(form.reels || []), { url: "", thumbnail: "", caption: "" }] })}
+                 className="rounded-xl font-black uppercase text-[10px] tracking-widest px-6"
+               >
+                 <Plus className="w-3 h-3 mr-2" /> Add Reel
+               </Button>
+             </div>
+             
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+               {(form.reels || []).map((reel: any, idx: number) => (
+                 <div key={idx} className="bg-zinc-50 rounded-[32px] p-8 border border-zinc-100 relative group transition-all hover:border-primary/30">
+                    <button 
+                      onClick={() => {
+                        const updated = [...form.reels];
+                        updated.splice(idx, 1);
+                        setForm({ ...form, reels: updated });
+                      }}
+                      className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-all z-10"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <div className="space-y-6">
+                       <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Reel URL (YouTube/Insta/MP4)</Label>
+                          <Input 
+                            value={reel.url} 
+                            onChange={e => {
+                              const updated = [...form.reels];
+                              updated[idx].url = e.target.value;
+                              setForm({ ...form, reels: updated });
+                            }}
+                            placeholder="Enter video link..."
+                            className="rounded-2xl font-bold bg-white h-11"
+                          />
+                       </div>
+
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                             <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Cover Image</Label>
+                             <div className="flex flex-col gap-3">
+                                {reel.thumbnail && (
+                                  <div className="aspect-[9/16] w-full rounded-2xl overflow-hidden border shadow-inner bg-black flex items-center justify-center">
+                                     <img src={reel.thumbnail} className="w-full h-full object-cover" />
+                                  </div>
+                                )}
+                                <ImageUpload 
+                                  onUpload={url => {
+                                     const updated = [...form.reels];
+                                     updated[idx].thumbnail = url;
+                                     setForm({ ...form, reels: updated });
+                                  }}
+                                />
+                             </div>
+                          </div>
+
+                          <div className="space-y-2 flex flex-col">
+                             <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Caption</Label>
+                             <Textarea 
+                               value={reel.caption} 
+                               onChange={e => {
+                                 const updated = [...form.reels];
+                                 updated[idx].caption = e.target.value;
+                                 setForm({ ...form, reels: updated });
+                               }}
+                               placeholder="Brief moment description..."
+                               className="rounded-2xl font-bold flex-1 resize-none bg-white p-4"
+                             />
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+               ))}
+               {(!form.reels || form.reels.length === 0) && (
+                 <div className="col-span-full py-24 text-center border-2 border-dashed rounded-[40px] border-zinc-100 bg-zinc-50/50">
+                    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mx-auto mb-4 shadow-sm">
+                       <Upload className="w-6 h-6 text-zinc-300" />
+                    </div>
+                    <p className="text-zinc-400 font-black uppercase italic text-[10px] tracking-widest">Share the magic! Add your first traveler reel.</p>
+                 </div>
+               )}
+             </div>
+          </TabsContent>
+          <TabsContent value="reviews" className="space-y-6 pt-6">
+             <div className="flex items-center justify-between">
+               <div className="space-y-1">
+                 <h3 className="text-xl font-black text-navy uppercase italic">Trip Testimonials</h3>
+                 <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Manage authentic feedback for this expedition</p>
+               </div>
+               <Button 
+                 onClick={() => setForm({ ...form, reviews: [...(form.reviews || []), { userName: "", city: "", comment: "", rating: 5, userImage: "", photos: [], tripType: "Joined Group Trip" }] })}
+                 className="rounded-xl font-black uppercase text-[10px] tracking-widest px-6 shadow-lg shadow-primary/20"
+               >
+                 <Plus className="w-3 h-3 mr-2" /> Add Review
+               </Button>
+             </div>
+             
+             <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar pb-20">
+               {(form.reviews || []).map((rev: any, idx: number) => (
+                 <div key={idx} className="bg-white border border-zinc-100 rounded-[40px] p-8 relative group transition-all hover:shadow-xl hover:border-primary/20">
+                    {!rev.userName || !rev.comment ? (
+                      <div className="absolute top-4 left-8 bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border border-amber-200 animate-pulse">
+                         Incomplete - Fill name & comment to save
+                      </div>
+                    ) : null}
+                    <button 
+                      onClick={() => {
+                        const updated = [...form.reviews];
+                        updated.splice(idx, 1);
+                        setForm({ ...form, reviews: updated });
+                      }}
+                      className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-2 shadow-xl opacity-0 group-hover:opacity-100 transition-all z-10"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                       {/* Left side: Basic Info */}
+                       <div className="space-y-6">
+                          <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Reviewer Name</Label>
+                                <Input 
+                                  value={rev.userName} 
+                                  onChange={e => {
+                                    const updated = [...form.reviews];
+                                    updated[idx].userName = e.target.value;
+                                    setForm({ ...form, reviews: updated });
+                                  }}
+                                  placeholder="e.g. Deep Bhuvar"
+                                  className="rounded-xl font-bold bg-zinc-50 h-11"
+                                />
+                             </div>
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">City</Label>
+                                <Input 
+                                  value={rev.city} 
+                                  onChange={e => {
+                                    const updated = [...form.reviews];
+                                    updated[idx].city = e.target.value;
+                                    setForm({ ...form, reviews: updated });
+                                  }}
+                                  placeholder="e.g. Ahmedabad"
+                                  className="rounded-xl font-bold bg-zinc-50 h-11"
+                                />
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Trip Type Label</Label>
+                                <Input 
+                                  value={rev.tripType} 
+                                  onChange={e => {
+                                    const updated = [...form.reviews];
+                                    updated[idx].tripType = e.target.value;
+                                    setForm({ ...form, reviews: updated });
+                                  }}
+                                  placeholder="e.g. Joined Group Trip"
+                                  className="rounded-xl font-bold bg-zinc-50 h-11"
+                                />
+                             </div>
+                             <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Rating (1-5)</Label>
+                                <div className="flex gap-1 h-11 items-center px-4 bg-zinc-50 rounded-xl border border-input">
+                                   {[1,2,3,4,5].map(star => (
+                                     <Star 
+                                       key={star} 
+                                       onClick={() => {
+                                          const updated = [...form.reviews];
+                                          updated[idx].rating = star;
+                                          setForm({ ...form, reviews: updated });
+                                       }}
+                                       className={`w-4 h-4 cursor-pointer transition-all ${star <= rev.rating ? "fill-yellow-400 text-yellow-400" : "text-zinc-300 hover:text-yellow-200"}`} 
+                                     />
+                                   ))}
+                                </div>
+                             </div>
+                          </div>
+
+                          <div className="space-y-2">
+                             <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 flex items-center justify-between">
+                                Feedback / Comment
+                                <span className="text-[8px] text-primary-orange">Required</span>
+                             </Label>
+                             <Textarea 
+                               value={rev.comment} 
+                               onChange={e => {
+                                 const updated = [...form.reviews];
+                                 updated[idx].comment = e.target.value;
+                                 setForm({ ...form, reviews: updated });
+                               }}
+                               placeholder="Write the testimonial here..."
+                               className="rounded-2xl font-medium leading-relaxed bg-zinc-50 h-32 p-4"
+                             />
+                          </div>
+                       </div>
+
+                       {/* Right side: Photos */}
+                       <div className="space-y-6">
+                          <div className="space-y-3">
+                             <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Reviewer Image</Label>
+                             <div className="flex items-center gap-4">
+                                {rev.userImage && (
+                                  <div className="w-12 h-12 rounded-full overflow-hidden border shadow-sm">
+                                     <img src={rev.userImage} className="w-full h-full object-cover" />
+                                  </div>
+                                )}
+                                <ImageUpload 
+                                  onUpload={url => {
+                                     const updated = [...form.reviews];
+                                     updated[idx].userImage = url;
+                                     setForm({ ...form, reviews: updated });
+                                  }}
+                                />
+                             </div>
+                          </div>
+
+                          <div className="space-y-3">
+                             <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Review Gallery (Up to 4)</Label>
+                             <div className="grid grid-cols-4 gap-2 mb-2">
+                                {(rev.photos || []).map((p: string, pidx: number) => (
+                                  <div key={pidx} className="relative aspect-square rounded-lg overflow-hidden border bg-zinc-100 group/img">
+                                     <img src={p} className="w-full h-full object-cover" />
+                                     <button 
+                                       onClick={() => {
+                                          const updated = [...form.reviews];
+                                          updated[idx].photos = updated[idx].photos.filter((_:any, pi:number) => pi !== pidx);
+                                          setForm({ ...form, reviews: updated });
+                                       }}
+                                       className="absolute top-1 right-1 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover/img:opacity-100 transition-all"
+                                     >
+                                        <X className="w-2 h-2" />
+                                     </button>
+                                  </div>
+                                ))}
+                             </div>
+                             <ImageUpload 
+                               multiple
+                               onUpload={urls => {
+                                  const updated = [...form.reviews];
+                                  const newPhotos = [...(updated[idx].photos || []), ...(Array.isArray(urls) ? urls : [urls])].slice(0, 4);
+                                  updated[idx].photos = newPhotos;
+                                  setForm({ ...form, reviews: updated });
+                               }}
+                             />
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+               ))}
+               {(!form.reviews || form.reviews.length === 0) && (
+                 <div className="py-20 text-center border-2 border-dashed rounded-[40px] border-zinc-100 bg-zinc-50/20">
+                    <MessageSquare className="w-12 h-12 text-zinc-200 mx-auto mb-4" />
+                    <p className="text-zinc-400 font-bold uppercase italic text-[10px] tracking-widest">No reviews added for this trip yet</p>
+                 </div>
+               )}
+             </div>
           </TabsContent>
         </Tabs>
 
         <div className="flex justify-end gap-3 pt-6 border-t mt-6">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
           <Button onClick={async () => {
-            const { id, _id, createdAt, updatedAt, __v, ...cleanData } = form;
+            // Direct Data Normalization to ensure schema compliance
+            const normalize = (data: any) => {
+              // 1. Recursive cleaner for internal fields
+              const cleanDoc = (obj: any): any => {
+                if (Array.isArray(obj)) return obj.map(cleanDoc);
+                if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
+                  const { _id, id, createdAt, updatedAt, __v, ...rest } = obj;
+                  const result: any = {};
+                  for (const key in rest) {
+                    result[key] = cleanDoc(rest[key]);
+                  }
+                  return result;
+                }
+                return obj;
+              };
+
+              const clean = cleanDoc(data);
+              
+              // 2. Fix Enums & Specific Types
+              if (clean.difficulty) clean.difficulty = clean.difficulty.toLowerCase();
+              if (clean.status) clean.status = clean.status.toLowerCase();
+              if (clean.price) clean.price = Number(clean.price);
+              if (clean.maxGroupSize) clean.maxGroupSize = Number(clean.maxGroupSize);
+
+              // 3. Normalize Specific Arrays
+              if (clean.availableDates) {
+                clean.availableDates = clean.availableDates.map((d: any) => ({
+                  date: d.date || d,
+                  capacity: Number(d.capacity || 20),
+                  bookedCount: Number(d.bookedCount || 0)
+                }));
+              }
+
+              if (clean.gallery) {
+                clean.gallery = clean.gallery.map((img: any, i: number) => ({
+                  url: typeof img === 'string' ? img : img.url,
+                  alt: img.alt || "",
+                  order: Number(img.order || i)
+                }));
+              }
+
+              if (clean.accommodations) {
+                clean.accommodations = clean.accommodations.map((acc: any) => ({
+                  ...acc,
+                  gallery: (acc.gallery || []).map((g: any) => {
+                    if (typeof g === 'string') return { url: g, category: 'All' };
+                    return {
+                      url: g.url || "",
+                      category: g.category || "All"
+                    };
+                  }).filter((g: any) => g.url)
+                }));
+              }
+
+              // 4. Preserve Review IDs for Syncing (Re-map from original form)
+              if (clean.reviews) {
+                clean.reviews = clean.reviews.map((rev: any, i: number) => ({
+                  ...rev,
+                  id: form.reviews[i].id || form.reviews[i]._id || undefined,
+                  _id: form.reviews[i]._id || form.reviews[i].id || undefined
+                }));
+              }
+
+              return clean;
+            };
+
+            const cleanData = normalize(form);
             setSaving(true);
             try {
-              await onSave(cleanData, editing?.id);
+              const editingId = editing?.id || (editing as any)?._id;
+              await onSave(cleanData, editingId);
               onOpenChange(false);
             } finally {
               setSaving(false);

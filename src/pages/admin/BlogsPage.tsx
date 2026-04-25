@@ -36,16 +36,19 @@ export default function BlogsPage() {
 
   const handleSave = async (data: BlogFormData, editingId?: string) => {
     try {
-      if (editingId) {
-        await blogsService.update(editingId, data);
+      if (editingId || (editing as any)?._id) {
+        await blogsService.update(editingId || (editing as any)._id, data);
         toast.success("Blog updated");
       } else {
         await blogsService.create(data);
         toast.success("Blog created");
       }
       load();
-    } catch (error) {
-      toast.error("Failed to save blog");
+      setModalOpen(false);
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Failed to save blog";
+      toast.error(msg);
+      console.error("Save Blog Error:", error);
     }
   };
 
@@ -105,8 +108,8 @@ export default function BlogsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Watch & Read (Blogs)</h1>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add Blog</Button>
+        <h1 className="text-xl font-bold text-foreground italic uppercase tracking-tighter">Watch & Read</h1>
+        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add New Story</Button>
       </div>
 
       <DataTable

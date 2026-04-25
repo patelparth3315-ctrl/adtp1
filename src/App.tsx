@@ -19,6 +19,9 @@ import PageEditorPage from "./pages/admin/PageEditorPage.tsx";
 import ThemePage from "./pages/admin/ThemePage.tsx";
 import SeoCenterPage from "./pages/admin/SeoCenterPage.tsx";
 import InquiryFormPage from "./pages/admin/InquiryFormPage.tsx";
+import PageBuilderPage from "./pages/admin/PageBuilderPage.tsx";
+import PreviewPage from "./pages/admin/PreviewPage.tsx";
+import AttractionsPage from "./pages/admin/AttractionsPage.tsx";
 import { 
   CollectionsPage, PromotionsPage, DistributionPage, 
   ReportsPage, BillingPage, CustomersPage 
@@ -46,12 +49,15 @@ const App = () => (
           <Route path="/admin/collections" element={<AdminRoute><CollectionsPage /></AdminRoute>} />
           <Route path="/admin/promotions" element={<AdminRoute><PromotionsPage /></AdminRoute>} />
           <Route path="/admin/blogs" element={<AdminRoute><BlogsPage /></AdminRoute>} />
+          <Route path="/admin/attractions" element={<AdminRoute><AttractionsPage /></AdminRoute>} />
           <Route path="/admin/reviews" element={<AdminRoute><ReviewsPage /></AdminRoute>} />
           <Route path="/admin/pages" element={<AdminRoute><PagesPage /></AdminRoute>} />
           <Route path="/admin/pages/:id" element={<AdminRoute><PageEditorPage /></AdminRoute>} />
           <Route path="/admin/theme" element={<AdminRoute><ThemePage /></AdminRoute>} />
           <Route path="/admin/seo" element={<AdminRoute><SeoCenterPage /></AdminRoute>} />
           <Route path="/admin/inquiry-form" element={<AdminRoute><InquiryFormPage /></AdminRoute>} />
+          <Route path="/admin/page-builder" element={<AdminRoute><PageBuilderPage /></AdminRoute>} />
+          <Route path="/admin/preview" element={<AdminRoute><PreviewPage /></AdminRoute>} />
           <Route path="/admin/inquiries" element={<AdminRoute><InquiriesPage /></AdminRoute>} />
           <Route path="/admin/media" element={<AdminRoute><MediaPage /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />

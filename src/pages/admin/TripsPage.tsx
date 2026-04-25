@@ -33,7 +33,17 @@ export default function TripsPage() {
   const filtered = statusFilter === "all" ? trips : trips.filter((t) => t.status === statusFilter);
 
   const openCreate = () => { setEditing(null); setModalOpen(true); };
-  const openEdit = (t: Trip) => { setEditing(t); setModalOpen(true); };
+  const openEdit = async (t: Trip) => { 
+    try {
+      const fullTrip = await tripsService.getById(t.id);
+      setEditing(fullTrip || t);
+      setModalOpen(true); 
+    } catch (error) {
+      toast.error("Failed to load full trip details");
+      setEditing(t);
+      setModalOpen(true);
+    }
+  };
 
   const handleSave = async (data: TripFormData, editingId?: string) => {
     if (editingId) {

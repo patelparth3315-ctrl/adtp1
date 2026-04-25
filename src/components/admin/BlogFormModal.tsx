@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import type { Blog, BlogFormData } from "@/types";
 
 const defaultForm: BlogFormData = {
@@ -15,7 +16,8 @@ const defaultForm: BlogFormData = {
   image: "",
   readTime: "5 MIN READ",
   hasVideo: false,
-  status: "draft"
+  status: "draft",
+  slug: ""
 };
 
 interface BlogFormModalProps {
@@ -41,7 +43,8 @@ export default function BlogFormModal({ open, onOpenChange, editing, onSave }: B
         image: editing.image,
         readTime: editing.readTime,
         hasVideo: editing.hasVideo,
-        status: editing.status
+        status: editing.status,
+        slug: editing.slug || ""
       });
     } else {
       setForm(defaultForm);
@@ -72,23 +75,11 @@ export default function BlogFormModal({ open, onOpenChange, editing, onSave }: B
 
         <div className="p-10 space-y-8">
           <div className="space-y-3">
-            <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-1">Hero Story Image URL</Label>
-            <div className="relative group">
-              <Input 
-                value={form.image} 
-                onChange={(e) => setForm({ ...form, image: e.target.value })} 
-                placeholder="https://..." 
-                className="rounded-2xl h-14 border-2 focus:border-primary pl-6 font-medium"
-              />
-              {form.image && (
-                <div className="mt-4 rounded-[32px] overflow-hidden border-4 border-white shadow-xl aspect-video relative group-hover:scale-[1.02] transition-transform duration-500">
-                  <img src={form.image} alt="Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-                    <p className="text-white text-[10px] font-black uppercase tracking-widest">Live Cover Preview</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ImageUpload 
+              label="Featured Story Image" 
+              value={form.image} 
+              onUpload={(url) => setForm({ ...form, image: url })} 
+            />
           </div>
 
           <div className="space-y-3">
@@ -98,6 +89,16 @@ export default function BlogFormModal({ open, onOpenChange, editing, onSave }: B
               onChange={(e) => setForm({ ...form, title: e.target.value })} 
               placeholder="The Ultimate Guide to Spiti..." 
               className="rounded-2xl h-16 font-black text-xl border-2 focus:border-primary px-8"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-1">URL Slug (For matching attractions)</Label>
+            <Input 
+              value={form.slug} 
+              onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/ /g, '-') })} 
+              placeholder="e.g. key-monastery" 
+              className="rounded-xl h-10 border-none bg-muted/50 px-6 text-xs font-bold"
             />
           </div>
 
