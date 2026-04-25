@@ -46,14 +46,31 @@ export default function TripsPage() {
   };
 
   const handleSave = async (data: TripFormData, editingId?: string) => {
-    if (editingId) {
-      await tripsService.update(editingId, data);
-      toast.success("Trip updated");
-    } else {
-      await tripsService.create(data);
-      toast.success("Trip created");
+    // ── DATA SANITIZATION: Ensure all required fields exist ──
+    const payload = {
+      ...data,
+      title: data.title || "Untitled Trip",
+      location: data.location || "TBD",
+      price: data.price || 0,
+      duration: data.duration || "TBD",
+      description: data.description || "No description provided.",
+      status: data.status || "draft",
+    };
+
+    try {
+      if (editingId) {
+        await tripsService.update(editingId, payload);
+        toast.success("Trip updated successfully");
+      } else {
+        await tripsService.create(payload);
+        toast.success("New trip created");
+      }
+      load();
+    } catch (error: any) {
+      console.error("❌ SAVE ERROR:", error);
+      const msg = error.response?.data?.message || "Failed to save trip";
+      toast.error(msg);
     }
-    load();
   };
 
   const handleDelete = async (id: string) => {

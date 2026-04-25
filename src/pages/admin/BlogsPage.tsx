@@ -35,20 +35,31 @@ export default function BlogsPage() {
   const openEdit = (b: Blog) => { setEditing(b); setModalOpen(true); };
 
   const handleSave = async (data: BlogFormData, editingId?: string) => {
+    // ── DATA SANITIZATION: Ensure all required fields exist ──
+    const payload = {
+      ...data,
+      title: data.title || "Untitled Story",
+      content: data.content || "Start writing your story here...",
+      image: data.image || "https://images.unsplash.com/photo-1452421822248-d4c2b47f0c6c",
+      author: data.author || "Expedition Team",
+      status: data.status || "draft",
+    };
+
     try {
-      if (editingId || (editing as any)?._id) {
-        await blogsService.update(editingId || (editing as any)._id, data);
-        toast.success("Blog updated");
+      const id = editingId || (editing as any)?._id || (editing as any)?.id;
+      if (id) {
+        await blogsService.update(id, payload);
+        toast.success("Story updated successfully");
       } else {
-        await blogsService.create(data);
-        toast.success("Blog created");
+        await blogsService.create(payload);
+        toast.success("New story shared");
       }
       load();
       setModalOpen(false);
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Failed to save blog";
+      console.error("❌ SAVE BLOG ERROR:", error);
+      const msg = error.response?.data?.message || "Failed to save blog post";
       toast.error(msg);
-      console.error("Save Blog Error:", error);
     }
   };
 

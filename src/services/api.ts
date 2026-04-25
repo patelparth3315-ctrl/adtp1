@@ -1,11 +1,10 @@
 import axios from "axios";
 
-let API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8888/api";
+let API_BASE = import.meta.env.VITE_API_URL || "";
 
 // ── SELF-HEALING: Detect and fix common misconfigurations ──
-if (API_BASE.includes("github.com") || !import.meta.env.VITE_API_URL) {
-  console.warn("⚠️ API URL fallback triggered");
-  API_BASE = "http://localhost:8888/api";
+if (!API_BASE || API_BASE.includes("localhost")) {
+  console.warn("⚠️ API URL fallback or misconfiguration detected");
 }
 
 console.log("🚀 CRM API ROUTE:", API_BASE);
