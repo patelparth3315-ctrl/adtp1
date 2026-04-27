@@ -224,7 +224,9 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="w-full flex flex-wrap h-auto gap-1.5 p-1.5 bg-muted rounded-[20px] border">
             <TabBtn value="details" label="Details" />
+            <TabBtn value="gallery" label="Gallery" />
             <TabBtn value="pricing" label="Pricing" />
+
             <TabBtn value="addons" label="Add-ons" />
             <TabBtn value="dates" label="Dates" />
             <TabBtn value="itinerary" label="Itinerary" />
@@ -1232,9 +1234,15 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                   <Input value={form.bookingUrl} onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })} placeholder="https://external-booking.com/..." className="rounded-xl h-10" />
                </div>
 
-               <div className="space-y-4 pt-4 border-t">
+          </TabsContent>
+          <TabsContent value="gallery">
+            <div className="space-y-8 pt-4">
+               <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Gallery Images</Label>
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-black text-navy uppercase italic">Experience Gallery</h3>
+                      <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Manage high-resolution images for this trip</p>
+                    </div>
                     <div className="flex gap-2">
                       <Input 
                         type="file" 
@@ -1258,46 +1266,83 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                           }
                         }}
                       />
-                      <Label htmlFor="gallery-upload-v2" className="h-8 px-4 bg-primary/10 text-primary text-[10px] font-black uppercase rounded-xl flex items-center gap-2 cursor-pointer border hover:bg-primary/20 transition-all">
-                        <Upload className="w-3 h-3" /> Upload Multiple
+                      <Label htmlFor="gallery-upload-v2" className="h-10 px-6 bg-primary text-black text-[10px] font-black uppercase rounded-xl flex items-center gap-2 cursor-pointer border hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                        <Upload className="w-3.5 h-3.5" /> Upload Photos
                       </Label>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto p-3 bg-muted/20 rounded-2xl border">
+                  <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto p-4 bg-zinc-50 rounded-[32px] border border-zinc-100">
                     {(form.gallery || []).map((img: any, i: number) => (
-                      <div key={i} className="flex gap-4 items-center bg-background p-3 rounded-xl border relative group">
-                        <img src={formatUrl(img.url)} className="h-12 w-12 rounded-lg object-cover" />
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          <Input value={img.alt || ""} placeholder="Alt text" onChange={(e) => {
-                            const updated = [...form.gallery]; updated[i].alt = e.target.value; setForm({ ...form, gallery: updated });
-                          }} className="h-8 text-[10px]" />
-                          <Input type="number" value={img.order || 0} placeholder="Order" onChange={(e) => {
-                            const updated = [...form.gallery]; updated[i].order = Number(e.target.value); setForm({ ...form, gallery: updated });
-                          }} className="h-8 text-[10px]" />
+                      <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-zinc-100 relative group hover:shadow-md transition-all">
+                        <div className="relative h-16 w-16 rounded-xl overflow-hidden shadow-inner border bg-zinc-100">
+                          <img src={formatUrl(img.url)} className="w-full h-full object-cover" />
                         </div>
-                        <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => setForm({ ...form, gallery: form.gallery.filter((_:any, idx:number) => idx !== i) })}>
-                          <Trash2 className="h-3.5 w-3.5" />
+                        <div className="flex-1 grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                             <Label className="text-[8px] font-black uppercase opacity-40">Alt Description</Label>
+                             <Input value={img.alt || ""} placeholder="e.g. Campfire in Manali" onChange={(e) => {
+                               const updated = [...form.gallery]; updated[i].alt = e.target.value; setForm({ ...form, gallery: updated });
+                             }} className="h-9 text-xs font-bold bg-zinc-50 border-none" />
+                          </div>
+                          <div className="space-y-1">
+                             <Label className="text-[8px] font-black uppercase opacity-40">Sort Order</Label>
+                             <Input type="number" value={img.order || 0} placeholder="Order" onChange={(e) => {
+                               const updated = [...form.gallery]; updated[i].order = Number(e.target.value); setForm({ ...form, gallery: updated });
+                             }} className="h-9 text-xs font-bold bg-zinc-50 border-none" />
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="text-destructive h-10 w-10 hover:bg-destructive/10 rounded-full" onClick={() => setForm({ ...form, gallery: form.gallery.filter((_:any, idx:number) => idx !== i) })}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     ))}
                     {(form.gallery || []).length === 0 && (
-                      <div className="col-span-full py-12 text-center">
-                        <p className="text-[10px] opacity-30 uppercase font-black tracking-[0.2em]">No Gallery Images Uploaded</p>
+                      <div className="py-24 text-center">
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                          <ImagePlus className="w-6 h-6 text-zinc-200" />
+                        </div>
+                        <p className="text-[10px] opacity-40 uppercase font-black tracking-[0.2em]">Your experience gallery is empty</p>
                       </div>
                     )}
                   </div>
-
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Quick Add Images</Label>
-                    <ImageUpload 
-                      onUpload={(url) => {
-                        const next = [...(form.gallery || []), { url, alt: "", order: (form.gallery || []).length }];
-                        setForm({ ...form, gallery: next });
-                      }}
-                    />
+               </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="advanced">
+            <div className="space-y-8 pt-4">
+               <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Departure City</Label>
+                    <Input value={form.departureCity} onChange={(e) => setForm({ ...form, departureCity: e.target.value })} placeholder="e.g. Ahmedabad" className="rounded-xl h-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Age Limit</Label>
+                    <Input value={form.ageLimit} onChange={(e) => setForm({ ...form, ageLimit: e.target.value })} placeholder="e.g. 15-35 Years" className="rounded-xl h-10" />
                   </div>
                </div>
+               <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Max Group Size</Label>
+                    <Input type="number" value={form.maxGroupSize} onChange={(e) => setForm({ ...form, maxGroupSize: Number(e.target.value) })} className="rounded-xl h-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Difficulty</Label>
+                    <Select value={form.difficulty} onValueChange={(v:any) => setForm({ ...form, difficulty: v })}>
+                      <SelectTrigger className="rounded-xl h-10"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="easy">Easy</SelectItem>
+                        <SelectItem value="moderate">Moderate</SelectItem>
+                        <SelectItem value="hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+               </div>
+               <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">External Booking URL</Label>
+                  <Input value={form.bookingUrl} onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })} placeholder="https://external-booking.com/..." className="rounded-xl h-10" />
+               </div>
+
             </div>
           </TabsContent>
           <TabsContent value="reels" className="space-y-6 pt-6">
