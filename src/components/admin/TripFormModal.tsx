@@ -1234,8 +1234,10 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                   <Input value={form.bookingUrl} onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })} placeholder="https://external-booking.com/..." className="rounded-xl h-10" />
                </div>
 
+               </div>
           </TabsContent>
           <TabsContent value="gallery">
+
             <div className="space-y-8 pt-4">
                <div className="space-y-4">
                   <div className="flex items-center justify-between">
