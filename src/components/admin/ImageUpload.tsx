@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Upload, Loader2, Image as ImageIcon, X, RefreshCw } from "lucide-react";
 import api from "@/services/api";
 
 interface ImageUploadProps {
@@ -12,26 +12,45 @@ interface ImageUploadProps {
   multiple?: boolean;
 }
 
+/**
+ * Converts a relative upload path to a full URL for display.
+ * Handles: /uploads/... paths, full http URLs, and empty values.
+ */
+const formatUrl = (url: string | undefined): string => {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("blob:")) return url;
+  // Build absolute URL from the API base
+  const apiBase = api.defaults.baseURL || "http://localhost:8888/api";
+  const serverBase = apiBase.replace('/api', '');
+  return `${serverBase}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export function ImageUpload({ onUpload, label, value, multiple = false }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const [id] = useState(() => Math.random().toString(36).substring(7));
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
 
     if (multiple) {
        const formData = new FormData();
+       let validCount = 0;
        for (let i = 0; i < files.length; i++) {
-         if (files[i].size > 5 * 1024 * 1024) {
-           alert(`File ${files[i].name} exceeds 5MB limit`);
+         if (files[i].size > 10 * 1024 * 1024) {
+           alert(`File ${files[i].name} exceeds 10MB limit`);
            continue;
          }
          formData.append("images", files[i]);
+         validCount++;
        }
+       if (validCount === 0) return;
        
        setUploading(true);
+       setImgError(false);
        try {
           const res = await api.post("/upload/multiple", formData, {
             headers: { "Content-Type": "multipart/form-data" },
@@ -41,24 +60,27 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
           });
           if (res.data.success) {
             res.data.urls.forEach((url: string) => onUpload(url));
+          } else {
+            alert("Upload failed: " + (res.data.message || "Unknown error"));
           }
-       } catch (err) {
+       } catch (err: any) {
          console.error("Upload failed:", err);
-         alert("Upload failed. Please try again.");
+         alert("Upload failed: " + (err.response?.data?.message || err.message || "Network error"));
        } finally {
          setUploading(false);
          setProgress(0);
        }
     } else {
        const file = files[0];
-       if (file.size > 5 * 1024 * 1024) {
-         alert("File size exceeds 5MB limit");
+       if (file.size > 10 * 1024 * 1024) {
+         alert("File size exceeds 10MB limit");
          return;
        }
        const formData = new FormData();
        formData.append("image", file);
        
        setUploading(true);
+       setImgError(false);
        try {
          const res = await api.post("/upload/single", formData, {
             headers: { "Content-Type": "multipart/form-data" },
@@ -67,11 +89,14 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
             }
          });
          if (res.data.success) {
+           console.log("[ImageUpload] ✅ Upload success:", res.data.url);
            onUpload(res.data.url);
+         } else {
+           alert("Upload failed: " + (res.data.message || "Unknown error"));
          }
-       } catch (err) {
+       } catch (err: any) {
          console.error("Upload failed:", err);
-         alert("Upload failed. Please try again.");
+         alert("Upload failed: " + (err.response?.data?.message || err.message || "Network error"));
        } finally {
          setUploading(false);
          setProgress(0);
@@ -80,7 +105,30 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) handleFiles(e.target.files);
+    if (e.target.files) {
+      handleFiles(e.target.files);
+      // Reset the input so the same file can be re-selected
+      e.target.value = '';
+    }
+  };
+
+  const handleReplace = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemove = async () => {
+    if (!value) return;
+    
+    // Only attempt server delete for local uploads
+    if (value.startsWith('/uploads/')) {
+      try {
+        await api.delete("/upload/photo", { data: { url: value } });
+        console.log("[ImageUpload] ✅ Server file deleted:", value);
+      } catch (err) {
+        console.warn("[ImageUpload] ⚠️ Server delete failed (continuing):", err);
+      }
+    }
+    onUpload("");
   };
 
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -101,18 +149,23 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
     }
   }, [multiple]);
 
-  const formatUrl = (url: string | undefined) => {
-    if (!url) return "";
-    if (url.startsWith("http") || url.startsWith("data:")) return url;
-    const apiBase = api.defaults.baseURL || "http://localhost:8888/api";
-    const serverBase = apiBase.split('/api')[0];
-    return `${serverBase}${url}`;
-  };
+  const displayUrl = formatUrl(value);
 
   return (
     <div className="space-y-2">
       {label && <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">{label}</Label>}
       
+      {/* Hidden file input for replace functionality */}
+      <Input 
+        ref={fileInputRef}
+        type="file" 
+        accept="image/png, image/jpeg, image/webp" 
+        multiple={multiple}
+        onChange={handleFileChange} 
+        className="hidden" 
+        id={`file-replace-${id}`}
+      />
+
       <div 
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -123,18 +176,48 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
       >
         {value && !multiple ? (
           <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5">
-            <img src={formatUrl(value)} className="w-full h-full object-contain" alt="Uploaded preview" />
-            <Button 
-              variant="destructive" 
-              size="icon" 
-              className="absolute top-2 right-2 w-8 h-8 rounded-full shadow-lg"
-              onClick={(e) => {
-                e.stopPropagation();
-                onUpload("");
-              }}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            {!imgError ? (
+              <img 
+                src={displayUrl} 
+                className="w-full h-full object-contain" 
+                alt="Uploaded preview"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
+                <ImageIcon className="w-8 h-8 mb-2 opacity-30" />
+                <p className="text-[10px] font-bold uppercase opacity-50">Image failed to load</p>
+                <p className="text-[8px] opacity-30 mt-1 max-w-[200px] truncate">{value}</p>
+              </div>
+            )}
+            
+            {/* Action buttons */}
+            <div className="absolute top-2 right-2 flex gap-1.5">
+              <Button 
+                variant="secondary" 
+                size="icon" 
+                className="w-8 h-8 rounded-full shadow-lg bg-white/90 hover:bg-white"
+                title="Replace image"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleReplace();
+                }}
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-primary" />
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="icon" 
+                className="w-8 h-8 rounded-full shadow-lg"
+                title="Remove image"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemove();
+                }}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="text-center space-y-2">
@@ -144,7 +227,7 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
             <div>
               <p className="text-xs font-bold">Drag & drop your {multiple ? 'images' : 'image'} here</p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
-                JPG, PNG, WEBP • Max 5MB
+                JPG, PNG, WEBP • Max 10MB
               </p>
             </div>
           </div>

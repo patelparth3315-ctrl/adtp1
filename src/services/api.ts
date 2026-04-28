@@ -3,7 +3,7 @@ import axios from "axios";
 let API_BASE = import.meta.env.VITE_API_URL || "https://youthcamping-api.onrender.com/api";
 
 // ── SELF-HEALING: Detect and fix common misconfigurations ──
-if (!API_BASE || API_BASE.includes("localhost") || API_BASE === "") {
+if (!API_BASE || API_BASE === "") {
   console.warn("⚠️ API URL fallback triggered - Using production Render API");
   API_BASE = "https://youthcamping-api.onrender.com/api";
 }
