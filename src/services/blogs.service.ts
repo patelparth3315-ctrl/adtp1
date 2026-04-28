@@ -1,19 +1,5 @@
 import api from "./api";
-
-export interface Blog {
-  _id: string;
-  title: string;
-  slug: string;
-  author: string;
-  content: string;
-  image: string;
-  readTime: string;
-  hasVideo: boolean;
-  status: "draft" | "published";
-  createdAt: string;
-}
-
-export type BlogFormData = Omit<Blog, "_id" | "slug" | "createdAt">;
+import type { Blog, BlogFormData } from "@/types";
 
 export const blogsService = {
   getAll: async () => {

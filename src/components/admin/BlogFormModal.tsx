@@ -158,7 +158,7 @@ export default function BlogFormModal({ open, onOpenChange, editing, onSave }: B
 
         <div className="p-10 border-t bg-muted/20 flex justify-end gap-4">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl h-12 px-8 font-black uppercase text-[10px] tracking-widest">Discard</Button>
-          <Button onClick={handleSave} disabled={saving || !form.title || !form.content} className="rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-primary/20">
+          <Button onClick={handleSave} disabled={saving || !form.title || !form.content || !form.image} className="rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-primary/20">
             {saving ? "Publishing..." : editing ? "Update Story" : "Launch Story"}
           </Button>
         </div>
