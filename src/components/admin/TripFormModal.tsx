@@ -1046,27 +1046,57 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                  </div>
               </div>
 
-              {/* Gears */}
+              {/* Gears (Categorical) */}
               <div className="space-y-4 pt-4 border-t">
                  <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Rented Gears</Label>
-                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, gears: [...(form.popupDetails?.gears || []), { item: "", price: "" }] } })} className="h-7 text-[9px] font-black uppercase">Add Gear</Button>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Rented Gears (Categorical)</Label>
+                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, gears: [...(form.popupDetails?.gears || []), { category: "", items: [] }] } })} className="h-7 text-[9px] font-black uppercase">Add Gear Category</Button>
                  </div>
-                 <div className="space-y-2">
-                    {(form.popupDetails?.gears || []).map((g: any, i: number) => (
-                      <div key={i} className="flex gap-2 group">
-                        <Input value={g.item} placeholder="Gear (e.g. Trekking Shoes)" onChange={(e) => {
-                          const updated = [...form.popupDetails.gears]; updated[i].item = e.target.value;
+                 <div className="space-y-6">
+                    {(form.popupDetails?.gears || []).map((cat: any, catIdx: number) => (
+                      <div key={catIdx} className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-4 relative group">
+                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.popupDetails.gears.filter((_:any, idx:number) => idx !== catIdx);
                           setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
-                        }} className="h-8 text-xs font-bold" />
-                        <Input value={g.price} placeholder="Rent Price" onChange={(e) => {
-                          const updated = [...form.popupDetails.gears]; updated[i].price = e.target.value;
-                          setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
-                        }} className="h-8 text-xs w-32" />
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
-                          const updated = form.popupDetails.gears.filter((_:any, idx:number) => idx !== i);
-                          setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
-                        }}><X className="h-3 w-3" /></Button>
+                        }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase opacity-40">Category Name</Label>
+                          <Input value={cat.category} placeholder="e.g. Trekking Essentials" onChange={(e) => {
+                            const updated = [...form.popupDetails.gears]; updated[catIdx].category = e.target.value;
+                            setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
+                          }} className="h-9 text-xs font-bold" />
+                        </div>
+
+                        <div className="space-y-2 pl-4 border-l-2 border-primary/20">
+                          <div className="flex items-center justify-between mb-2">
+                             <Label className="text-[8px] font-black uppercase opacity-40">Items & Pricing</Label>
+                             <Button variant="ghost" size="sm" onClick={() => {
+                               const updated = [...form.popupDetails.gears];
+                               updated[catIdx].items = [...(updated[catIdx].items || []), { item: "", price: "" }];
+                               setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
+                             }} className="h-5 text-[8px] font-black uppercase">+ Add Item</Button>
+                          </div>
+                          <div className="space-y-2">
+                            {(cat.items || []).map((item: any, itemIdx: number) => (
+                              <div key={itemIdx} className="flex gap-2 items-start">
+                                <Input value={item.item} placeholder="Gear Item" onChange={(e) => {
+                                  const updated = [...form.popupDetails.gears]; updated[catIdx].items[itemIdx].item = e.target.value;
+                                  setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
+                                }} className="h-8 text-[10px] flex-1" />
+                                <Input value={item.price} placeholder="Price" onChange={(e) => {
+                                  const updated = [...form.popupDetails.gears]; updated[catIdx].items[itemIdx].price = e.target.value;
+                                  setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
+                                }} className="h-8 text-[10px] w-24" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
+                                  const updated = [...form.popupDetails.gears];
+                                  updated[catIdx].items = updated[catIdx].items.filter((_:any, idx:number) => idx !== itemIdx);
+                                  setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
+                                }}><X className="h-3 w-3" /></Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     ))}
                  </div>
