@@ -993,24 +993,80 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
               {/* Carry */}
               <div className="space-y-4 pt-4 border-t">
                  <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Things to Carry</Label>
-                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, carry: [...(form.popupDetails?.carry || []), { label: "", val: "" }] } })} className="h-7 text-[9px] font-black uppercase">Add Item</Button>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Things to Carry (Categorical)</Label>
+                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, carry: [...(form.popupDetails?.carry || []), { category: "", items: [] }] } })} className="h-7 text-[9px] font-black uppercase">Add Category</Button>
+                 </div>
+                 <div className="space-y-6">
+                    {(form.popupDetails?.carry || []).map((cat: any, catIdx: number) => (
+                      <div key={catIdx} className="bg-muted/20 p-4 rounded-2xl border border-zinc-100 space-y-4 relative group">
+                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.popupDetails.carry.filter((_:any, idx:number) => idx !== catIdx);
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                        }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase opacity-40">Category Name</Label>
+                          <Input value={cat.category} placeholder="e.g. Mandatory Requirements" onChange={(e) => {
+                            const updated = [...form.popupDetails.carry]; updated[catIdx].category = e.target.value;
+                            setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                          }} className="h-9 text-xs font-bold" />
+                        </div>
+
+                        <div className="space-y-2 pl-4 border-l-2 border-zinc-100">
+                          <div className="flex items-center justify-between mb-2">
+                             <Label className="text-[8px] font-black uppercase opacity-40">Items</Label>
+                             <Button variant="ghost" size="sm" onClick={() => {
+                               const updated = [...form.popupDetails.carry];
+                               updated[catIdx].items = [...(updated[catIdx].items || []), { text: "", link: "", linkText: "" }];
+                               setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                             }} className="h-5 text-[8px] font-black uppercase">+ Add Item</Button>
+                          </div>
+                          <div className="space-y-2">
+                            {(cat.items || []).map((item: any, itemIdx: number) => (
+                              <div key={itemIdx} className="flex gap-2 items-start">
+                                <Input value={item.text} placeholder="Item text" onChange={(e) => {
+                                  const updated = [...form.popupDetails.carry]; updated[catIdx].items[itemIdx].text = e.target.value;
+                                  setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                                }} className="h-8 text-[10px] flex-1" />
+                                <Input value={item.linkText} placeholder="Link Text" onChange={(e) => {
+                                  const updated = [...form.popupDetails.carry]; updated[catIdx].items[itemIdx].linkText = e.target.value;
+                                  setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                                }} className="h-8 text-[10px] w-24" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
+                                  const updated = [...form.popupDetails.carry];
+                                  updated[catIdx].items = updated[catIdx].items.filter((_:any, idx:number) => idx !== itemIdx);
+                                  setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                                }}><X className="h-3 w-3" /></Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+
+              {/* Gears */}
+              <div className="space-y-4 pt-4 border-t">
+                 <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Rented Gears</Label>
+                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, gears: [...(form.popupDetails?.gears || []), { item: "", price: "" }] } })} className="h-7 text-[9px] font-black uppercase">Add Gear</Button>
                  </div>
                  <div className="space-y-2">
-                    {(form.popupDetails?.carry || []).map((c: any, i: number) => (
+                    {(form.popupDetails?.gears || []).map((g: any, i: number) => (
                       <div key={i} className="flex gap-2 group">
-                        <Input value={c.label} placeholder="Category (e.g. Clothing)" onChange={(e) => {
-                          const updated = [...form.popupDetails.carry]; updated[i].label = e.target.value;
-                          setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
+                        <Input value={g.item} placeholder="Gear (e.g. Trekking Shoes)" onChange={(e) => {
+                          const updated = [...form.popupDetails.gears]; updated[i].item = e.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
                         }} className="h-8 text-xs font-bold" />
-                        <Input value={c.val} placeholder="Items" onChange={(e) => {
-                          const updated = [...form.popupDetails.carry]; updated[i].val = e.target.value;
-                          setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
-                        }} className="h-8 text-xs flex-1" />
+                        <Input value={g.price} placeholder="Rent Price" onChange={(e) => {
+                          const updated = [...form.popupDetails.gears]; updated[i].price = e.target.value;
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
+                        }} className="h-8 text-xs w-32" />
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
-                          const updated = form.popupDetails.carry.filter((_:any, idx:number) => idx !== i);
-                          setForm({ ...form, popupDetails: { ...form.popupDetails, carry: updated } });
-                        }}><Trash2 className="h-3 w-3" /></Button>
+                          const updated = form.popupDetails.gears.filter((_:any, idx:number) => idx !== i);
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, gears: updated } });
+                        }}><X className="h-3 w-3" /></Button>
                       </div>
                     ))}
                  </div>
