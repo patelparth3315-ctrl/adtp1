@@ -232,6 +232,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editing ? "Edit Trip" : "Create Trip"}</DialogTitle>
+          <p className="text-xs text-muted-foreground">Fill in the details below to {editing ? "update the" : "create a new"} expedition.</p>
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
