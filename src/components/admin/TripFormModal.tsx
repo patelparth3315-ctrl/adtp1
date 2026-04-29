@@ -1119,6 +1119,39 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                     ))}
                  </div>
               </div>
+              
+              {/* Custom Policies */}
+              <div className="space-y-4 pt-4 border-t">
+                 <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Custom Policy Sections</Label>
+                    <Button variant="outline" size="sm" onClick={() => setForm({ ...form, popupDetails: { ...form.popupDetails, customPolicies: [...(form.popupDetails?.customPolicies || []), { label: "", type: "simple", content: "" }] } })} className="h-7 text-[9px] font-black uppercase">Add Custom Section</Button>
+                 </div>
+                 <div className="space-y-4">
+                    {(form.popupDetails?.customPolicies || []).map((cp: any, i: number) => (
+                      <div key={i} className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3 relative group">
+                        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100" onClick={() => {
+                          const updated = form.popupDetails.customPolicies.filter((_:any, idx:number) => idx !== i);
+                          setForm({ ...form, popupDetails: { ...form.popupDetails, customPolicies: updated } });
+                        }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase opacity-40">Section Title</Label>
+                          <Input value={cp.label} placeholder="e.g. Health & Safety" onChange={(val) => {
+                            const updated = [...form.popupDetails.customPolicies]; updated[i].label = val.target.value;
+                            setForm({ ...form, popupDetails: { ...form.popupDetails, customPolicies: updated } });
+                          }} className="h-9 text-xs font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase opacity-40">Content (Simple List - One per line)</Label>
+                          <Textarea value={Array.isArray(cp.content) ? cp.content.join('\n') : cp.content} placeholder="Enter points..." onChange={(val) => {
+                            const updated = [...form.popupDetails.customPolicies]; 
+                            updated[i].content = val.target.value.split('\n').filter(Boolean);
+                            setForm({ ...form, popupDetails: { ...form.popupDetails, customPolicies: updated } });
+                          }} className="text-xs min-h-[100px]" />
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+              </div>
             </div>
           </TabsContent>
 
