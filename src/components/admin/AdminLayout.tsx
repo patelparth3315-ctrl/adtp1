@@ -21,6 +21,7 @@ import {
   CalendarCheck,
   MessageSquare,
   Image,
+  Layout,
   Settings,
   LogOut,
   Loader2,
@@ -78,6 +79,7 @@ const navGroups = [
       { title: "Watch & Read", url: "/admin/blogs", icon: BookOpen },
       { title: "Attractions", url: "/admin/attractions", icon: Map },
       { title: "Review Center", url: "/admin/reviews", icon: Star },
+      { title: "Footer Management", url: "/admin/footer", icon: Layout },
     ]
   },
   {

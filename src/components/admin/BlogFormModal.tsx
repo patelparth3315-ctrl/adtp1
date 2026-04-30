@@ -12,6 +12,7 @@ import type { Blog, BlogFormData } from "@/types";
 const defaultForm: BlogFormData = {
   title: "",
   author: "Expedition Team",
+  authorImage: "",
   content: "",
   image: "",
   readTime: "5 MIN READ",
@@ -39,6 +40,7 @@ export default function BlogFormModal({ open, onOpenChange, editing, onSave }: B
       setForm({
         title: editing.title,
         author: editing.author,
+        authorImage: editing.authorImage || "",
         content: editing.content,
         image: editing.image,
         readTime: editing.readTime,
@@ -103,13 +105,22 @@ export default function BlogFormModal({ open, onOpenChange, editing, onSave }: B
           </div>
 
           <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-1">Author / Explorer</Label>
-              <Input 
-                value={form.author} 
-                onChange={(e) => setForm({ ...form, author: e.target.value })} 
-                className="rounded-2xl h-14 border-2 focus:border-primary pl-6 font-bold"
-              />
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-1">Author / Explorer</Label>
+                <Input 
+                  value={form.author} 
+                  onChange={(e) => setForm({ ...form, author: e.target.value })} 
+                  className="rounded-2xl h-14 border-2 focus:border-primary pl-6 font-bold"
+                />
+              </div>
+              <div className="space-y-3">
+                <ImageUpload 
+                  label="Publisher's Photo" 
+                  value={form.authorImage || ""} 
+                  onUpload={(url) => setForm({ ...form, authorImage: url })} 
+                />
+              </div>
             </div>
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-1">Reading Depth</Label>

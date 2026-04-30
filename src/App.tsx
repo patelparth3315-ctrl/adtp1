@@ -22,6 +22,7 @@ import InquiryFormPage from "./pages/admin/InquiryFormPage.tsx";
 import PageBuilderPage from "./pages/admin/PageBuilderPage.tsx";
 import PreviewPage from "./pages/admin/PreviewPage.tsx";
 import AttractionsPage from "./pages/admin/AttractionsPage.tsx";
+import FooterPage from "./pages/admin/FooterPage.tsx";
 import { 
   CollectionsPage, PromotionsPage, DistributionPage, 
   ReportsPage, BillingPage, CustomersPage 
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/admin/preview" element={<AdminRoute><PreviewPage /></AdminRoute>} />
           <Route path="/admin/inquiries" element={<AdminRoute><InquiriesPage /></AdminRoute>} />
           <Route path="/admin/media" element={<AdminRoute><MediaPage /></AdminRoute>} />
+          <Route path="/admin/footer" element={<AdminRoute><FooterPage /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
           <Route path="/admin/distribution" element={<AdminRoute><DistributionPage /></AdminRoute>} />
           <Route path="/admin/reports" element={<AdminRoute><ReportsPage /></AdminRoute>} />

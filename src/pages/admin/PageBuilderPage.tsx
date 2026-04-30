@@ -186,7 +186,7 @@ const DEFAULT_HOME_LAYOUT = [
 ];
 
 export default function PageBuilderPage() {
-  const [pages, setPages] = useState<string[]>(['home', 'about', 'contact']);
+  const [pages, setPages] = useState<string[]>(['home', 'about-us', 'contact-us']);
   const [currentPage, setCurrentPage] = useState('home');
   const [sections, setSections] = useState<any[]>([]);
   const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
@@ -1727,6 +1727,47 @@ export default function PageBuilderPage() {
                       </div>
                       <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
                         <p className="text-[10px] font-bold text-primary uppercase tracking-widest text-center">Note: The review cards are pulled automatically from your verified database.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedSection.type === 'rich_text' && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div className="space-y-4">
+                        <Label className="text-xs font-black uppercase tracking-widest">Section Title (Optional)</Label>
+                        <Input 
+                          value={selectedSection.draft.title || ''} 
+                          onChange={e => updateSelectedSection({ title: e.target.value })} 
+                          className="text-xl font-bold h-14 rounded-2xl border-2" 
+                          placeholder="e.g. Our Story" 
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <Label className="text-xs font-black uppercase tracking-widest text-primary">Content Paragraphs (Rich Text)</Label>
+                        <RichTextEditor 
+                          content={selectedSection.draft.body || ''} 
+                          onChange={val => updateSelectedSection({ body: val })} 
+                        />
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">Tip: Use Shift+Enter for single line breaks. Paste your content here.</p>
+                      </div>
+                      <div className="space-y-4 pt-4 border-t border-border">
+                        <Label className="text-xs font-black uppercase tracking-widest">Content Width Control</Label>
+                        <div className="grid grid-cols-3 gap-4">
+                          {[
+                            { label: 'Narrow (Reading)', value: 'narrow' },
+                            { label: 'Standard (Medium)', value: 'standard' },
+                            { label: 'Full Width', value: 'full' }
+                          ].map(opt => (
+                            <Button 
+                              key={opt.value}
+                              variant={selectedSection.draft.maxWidth === opt.value ? 'default' : 'outline'}
+                              onClick={() => updateSelectedSection({ maxWidth: opt.value })}
+                              className="text-[10px] font-bold h-12 rounded-xl border-2"
+                            >
+                              {opt.label}
+                            </Button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
