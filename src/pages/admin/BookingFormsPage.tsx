@@ -98,7 +98,10 @@ export default function BookingFormsPage() {
   };
 
   const getInternalBookingUrl = (form: BookingFormRecord) => {
-    const baseUrl = window.location.origin.replace('8080', '3000'); // Assuming frontend on 3000
+    // Try to get frontend URL from env, fallback to port replacement for local dev
+    const envFrontendUrl = import.meta.env.VITE_FRONTEND_URL;
+    const baseUrl = envFrontendUrl || window.location.origin.replace('8080', '3000');
+    
     const params = new URLSearchParams({
       trip: form.tripName,
       date: form.date
