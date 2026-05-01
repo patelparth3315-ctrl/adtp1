@@ -41,7 +41,8 @@ import {
   ExternalLink,
   Building2,
   Banknote,
-  Link2
+  Link2,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,8 @@ const navGroups = [
     items: [
       { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
       { title: "Bookings", url: "/admin/bookings", icon: CalendarCheck },
+      { title: "Quotations", url: "/admin/quotations", icon: FileText, badge: "NEW" },
+      { title: "AI Itinerary", url: "/admin/ai-itinerary", icon: Sparkles, badge: "AI" },
       { title: "Inquiries", url: "/admin/inquiries", icon: MessageSquare, badge: "NEW" },
     ]
   },

@@ -320,3 +320,50 @@ export interface TripVendorSummary {
   pendingVendorPayments: number;
   count: number;
 }
+
+export interface QuotationHotel {
+  id: string;
+  name: string;
+  location: string;
+  rating: number;
+  description: string;
+  roomType: string;
+  photos: string[];
+}
+
+export interface QuotationDay {
+  id: string;
+  day: number;
+  title: string;
+  description: string;
+  activities: string[];
+  photos: string[];
+}
+
+export interface QuotationCustomSection {
+  id: string;
+  heading: string;
+  description: string;
+  image?: string;
+  isVisible: boolean;
+}
+
+export interface Quotation {
+  id: string;
+  _id?: string;
+  slug: string;
+  clientName: string;
+  destination: string;
+  pax: number;
+  travelDates: {
+    from: string;
+    to: string;
+  };
+  duration: string;
+  lowLevelPrice: number;
+  highLevelPrice: number;
+  status: "Draft" | "Published" | "Sent" | "Cancelled";
+  data: any;
+  createdAt: string;
+  updatedAt: string;
+}
