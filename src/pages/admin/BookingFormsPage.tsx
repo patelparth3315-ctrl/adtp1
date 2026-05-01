@@ -37,6 +37,8 @@ export default function BookingFormsPage() {
   const [shareFormUrl, setShareFormUrl] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [formToDelete, setFormToDelete] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [formToEdit, setFormToEdit] = useState<BookingFormRecord | null>(null);
 
   const [formData, setFormData] = useState({
     tripName: "",
