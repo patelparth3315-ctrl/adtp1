@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
-  Link2, Plus, Trash2, ExternalLink, Copy, Share2,
+  Link2, Plus, Trash2, ExternalLink, Copy, Share2, Pencil,
   FileSpreadsheet, ClipboardCheck, Loader2, MessageCircle,
   CalendarDays, MapPin, Send
 } from "lucide-react";
