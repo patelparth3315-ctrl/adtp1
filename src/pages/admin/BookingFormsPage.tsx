@@ -149,6 +149,30 @@ export default function BookingFormsPage() {
     }
   };
 
+  const handleUpdate = async () => {
+    if (!formToEdit) return;
+    setGenerating(true);
+    try {
+      await bookingFormsService.update(formToEdit.id || formToEdit._id!, {
+        sheetUrl: formToEdit.sheetUrl,
+        tripName: formToEdit.tripName,
+        date: formToEdit.date
+      });
+      toast.success("Link updated!");
+      setEditOpen(false);
+      load();
+    } catch {
+      toast.error("Failed to update");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const openEdit = (form: BookingFormRecord) => {
+    setFormToEdit({ ...form });
+    setEditOpen(true);
+  };
+
   const openWhatsApp = () => {
     const url = `https://wa.me/?text=${encodeURIComponent(shareMsg)}`;
     window.open(url, "_blank");
@@ -274,17 +298,31 @@ export default function BookingFormsPage() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    confirmDelete(form.id || form._id!);
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEdit(form);
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDelete(form.id || form._id!);
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+
               </div>
 
               {/* Action Buttons */}
@@ -491,8 +529,63 @@ export default function BookingFormsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* ─── EDIT MODAL ─── */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="font-black uppercase tracking-tight text-lg">
+              Edit Booking Form Link
+            </DialogTitle>
+          </DialogHeader>
+
+          {formToEdit && (
+            <div className="space-y-5 py-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  Trip Name
+                </label>
+                <Input
+                  value={formToEdit.tripName}
+                  onChange={(e) => setFormToEdit({ ...formToEdit, tripName: e.target.value })}
+                  className="h-12 rounded-xl font-bold"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  Google Sheet URL
+                </label>
+                <Input
+                  placeholder="Paste Google Sheet URL here..."
+                  value={formToEdit.sheetUrl}
+                  onChange={(e) => setFormToEdit({ ...formToEdit, sheetUrl: e.target.value })}
+                  className="h-12 rounded-xl"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1 px-1">
+                  If the automatic creation failed, you can manually paste the link here.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)} className="rounded-xl">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdate}
+              disabled={generating}
+              className="rounded-xl font-black uppercase text-xs tracking-widest gap-2"
+            >
+              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ─── DELETE CONFIRMATION ─── */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+
         <AlertDialogContent className="rounded-3xl border-2">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-black uppercase tracking-tight text-xl">

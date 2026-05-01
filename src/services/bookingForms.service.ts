@@ -42,7 +42,13 @@ export const bookingFormsService = {
     await api.delete(`/booking-forms/${id}`);
   },
 
+  async update(id: string, data: Partial<BookingFormRecord>): Promise<BookingFormRecord> {
+    const res = await api.put(`/booking-forms/${id}`, data);
+    return res.data.data;
+  },
+
   async getShareMessage(tripName: string, date: string, formUrl: string): Promise<string> {
+
     const res = await api.post("/booking-forms/share-message", { tripName, date, formUrl });
     return res.data.message;
   },
