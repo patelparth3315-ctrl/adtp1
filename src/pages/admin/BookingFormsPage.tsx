@@ -297,14 +297,23 @@ export default function BookingFormsPage() {
                 >
                   <Link2 className="h-3.5 w-3.5 text-primary" /> Open Link
                 </a>
-                <a
-                  href={form.sheetUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 h-10 rounded-xl border-2 border-border bg-muted/30 text-xs font-bold uppercase tracking-wider hover:bg-muted/60 transition-colors"
+                <Button
+                  variant="ghost"
+                  asChild
+                  disabled={!form.sheetUrl || !form.sheetUrl.startsWith('http')}
+                  className={`flex items-center justify-center gap-2 h-10 rounded-xl border-2 border-border bg-muted/30 text-xs font-bold uppercase tracking-wider transition-colors ${(!form.sheetUrl || !form.sheetUrl.startsWith('http')) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted/60'}`}
                 >
-                  <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> View Sheet
-                </a>
+                  {form.sheetUrl && form.sheetUrl.startsWith('http') ? (
+                    <a href={form.sheetUrl} target="_blank" rel="noreferrer">
+                      <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> View Sheet
+                    </a>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <FileSpreadsheet className="h-3.5 w-3.5 text-slate-400" /> No Sheet
+                    </div>
+                  )}
+                </Button>
+
               </div>
 
               {/* Share Row */}
