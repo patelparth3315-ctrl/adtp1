@@ -23,6 +23,8 @@ import PageBuilderPage from "./pages/admin/PageBuilderPage.tsx";
 import PreviewPage from "./pages/admin/PreviewPage.tsx";
 import AttractionsPage from "./pages/admin/AttractionsPage.tsx";
 import FooterPage from "./pages/admin/FooterPage.tsx";
+import VendorsPage from "./pages/admin/VendorsPage.tsx";
+import BookingFormsPage from "./pages/admin/BookingFormsPage.tsx";
 import { 
   CollectionsPage, PromotionsPage, DistributionPage, 
   ReportsPage, BillingPage, CustomersPage 
@@ -62,6 +64,8 @@ const App = () => (
           <Route path="/admin/inquiries" element={<AdminRoute><InquiriesPage /></AdminRoute>} />
           <Route path="/admin/media" element={<AdminRoute><MediaPage /></AdminRoute>} />
           <Route path="/admin/footer" element={<AdminRoute><FooterPage /></AdminRoute>} />
+          <Route path="/admin/vendors" element={<AdminRoute><VendorsPage /></AdminRoute>} />
+          <Route path="/admin/booking-forms" element={<AdminRoute><BookingFormsPage /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
           <Route path="/admin/distribution" element={<AdminRoute><DistributionPage /></AdminRoute>} />
           <Route path="/admin/reports" element={<AdminRoute><ReportsPage /></AdminRoute>} />

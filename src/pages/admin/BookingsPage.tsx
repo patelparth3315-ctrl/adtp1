@@ -117,7 +117,7 @@ export default function BookingsPage() {
       />
 
       <BookingFormModal open={modalOpen} onOpenChange={setModalOpen} editing={editing} onSave={handleSave} />
-      <BookingDetailsModal open={viewOpen} onOpenChange={setViewOpen} booking={selected} />
+      <BookingDetailsModal open={viewOpen} onOpenChange={setViewOpen} booking={selected} onPaymentAdded={load} />
     </div>
   );
 }

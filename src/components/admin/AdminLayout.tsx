@@ -38,7 +38,10 @@ import {
   Bell,
   Search,
   HelpCircle,
-  ExternalLink
+  ExternalLink,
+  Building2,
+  Banknote,
+  Link2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +69,7 @@ const navGroups = [
     label: "Inventory",
     items: [
       { title: "Trips & Tours", url: "/admin/trips", icon: Map },
+      { title: "Vendors", url: "/admin/vendors", icon: Building2 },
       { title: "Collections", url: "/admin/collections", icon: LayoutDashboard },
       { title: "Promotions", url: "/admin/promotions", icon: Star },
     ]
@@ -87,6 +91,7 @@ const navGroups = [
     items: [
       { title: "SEO Center", url: "/admin/seo", icon: Globe },
       { title: "Inquiry Form", url: "/admin/inquiry-form", icon: MessageSquare },
+      { title: "Booking Forms", url: "/admin/booking-forms", icon: Link2 },
       { title: "Distribution", url: "/admin/distribution", icon: Share2 },
     ]
   },

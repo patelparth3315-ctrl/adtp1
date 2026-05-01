@@ -231,7 +231,13 @@ export interface DashboardStats {
   totalBookings: number;
   totalRevenue: number;
   totalInquiries: number;
-  recentBookings: Booking[];
+  pendingPayments: number;
+  totalVendorCost: number;
+  totalVendorPaid: number;
+  pendingVendorPayments: number;
+  totalProfit: number;
+  upcomingTrips: { id: string; title: string; location: string; duration: string; nextDate?: string }[];
+  recentBookings: (Booking & { paidAmount?: number; paymentStatus?: string })[];
   monthlyRevenue: { month: string; revenue: number }[];
   bookingsByStatus: { status: string; count: number }[];
 }
@@ -253,3 +259,55 @@ export interface Blog {
 }
 
 export type BlogFormData = Omit<Blog, "id" | "createdAt">;
+
+export interface Payment {
+  id: string;
+  _id?: string;
+  bookingId: string;
+  amount: number;
+  paymentMode: 'UPI' | 'Cash' | 'Bank Transfer' | 'Card' | 'Other';
+  paymentDate: string;
+  reference?: string;
+  notes?: string;
+  recordedBy?: string;
+  createdAt: string;
+}
+
+export interface PaymentSummary {
+  totalAmount: number;
+  totalPaid: number;
+  pending: number;
+  count: number;
+}
+
+export interface Vendor {
+  id: string;
+  _id?: string;
+  name: string;
+  type: 'hotel' | 'transport' | 'guide' | 'meals' | 'equipment' | 'other';
+  phone?: string;
+  email?: string;
+  location?: string;
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface TripVendor {
+  id: string;
+  _id?: string;
+  tripId: string;
+  vendorId: Vendor | string;
+  agreedCost: number;
+  paymentStatus: 'pending' | 'partial' | 'paid';
+  paidAmount: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface TripVendorSummary {
+  totalVendorCost: number;
+  totalPaidToVendors: number;
+  pendingVendorPayments: number;
+  count: number;
+}

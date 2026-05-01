@@ -5,8 +5,9 @@ import { StatusBadge, getTripBadgeVariant } from "@/components/admin/StatusBadge
 import { Button } from "@/components/ui/button";
 import TripFormModal from "@/components/admin/TripFormModal";
 import type { Trip, TripFormData } from "@/types";
-import { Plus, Pencil, Trash2, Map, CalendarDays } from "lucide-react";
+import { Plus, Pencil, Trash2, Map, CalendarDays, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import TripVendorsPanel from "@/components/admin/TripVendorsPanel";
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -14,6 +15,7 @@ export default function TripsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Trip | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [vendorTrip, setVendorTrip] = useState<Trip | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -113,6 +115,9 @@ export default function TripsPage() {
     )},
     { key: "actions", header: "", render: (t: Trip) => (
       <div className="flex gap-1">
+        <Button variant="ghost" size="icon" onClick={() => setVendorTrip(t)} title="Manage Vendors">
+          <Building2 className="h-4 w-4 text-blue-600" />
+        </Button>
         <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
         <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
       </div>
@@ -135,6 +140,16 @@ export default function TripsPage() {
       />
 
       <TripFormModal open={modalOpen} onOpenChange={setModalOpen} editing={editing} onSave={handleSave} />
+
+      {vendorTrip && (
+        <TripVendorsPanel
+          tripId={vendorTrip.id}
+          tripTitle={vendorTrip.title}
+          tripPrice={vendorTrip.price}
+          open={!!vendorTrip}
+          onOpenChange={(open) => { if (!open) setVendorTrip(null); }}
+        />
+      )}
     </div>
   );
 }
