@@ -99,13 +99,15 @@ export default function TripsPage() {
         </div>
       </div>
     )},
-    { key: "category", header: "Category" },
+    { key: "category", header: "Category", render: (t: Trip) => (
+      <span className="capitalize">{t.category?.replace(/-/g, ' ')}</span>
+    )},
     { key: "price", header: "Price", render: (t: Trip) => `₹${t.price.toLocaleString()}` },
-    { key: "duration", header: "Duration" },
+    { key: "duration", header: "Duration", render: (t: Trip) => t.duration || "N/A" },
     { key: "itinerary", header: "Days", render: (t: Trip) => (
-      <span className="flex items-center gap-1 text-muted-foreground">
+      <span className="flex items-center gap-1 text-muted-foreground font-bold">
         <CalendarDays className="h-3.5 w-3.5" />
-        {t.itinerary?.length || 0}
+        {t.itinerary?.length || "0"}
       </span>
     )},
     { key: "status", header: "Status", render: (t: Trip) => (

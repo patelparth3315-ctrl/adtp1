@@ -42,6 +42,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Monthly Revenue Chart */}
         <div className="lg:col-span-2 rounded-[32px] border-2 border-border bg-card p-8">
           <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-8">Monthly Revenue</h3>
           <ResponsiveContainer width="100%" height={320}>
@@ -55,28 +56,32 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
+        {/* Sales Leaderboard */}
         <div className="rounded-[32px] border-2 border-border bg-card p-8 flex flex-col">
-          <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-8">Booking Mix</h3>
-          <div className="flex-1 flex items-center justify-center min-h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={stats?.bookingsByStatus ?? []} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} innerRadius={60} stroke="none" paddingAngle={5}>
-                  {stats?.bookingsByStatus?.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex flex-col gap-3 mt-6">
-            {stats?.bookingsByStatus?.map((s, i) => (
-              <div key={s.status} className="flex items-center justify-between p-3 rounded-2xl bg-muted/30">
+          <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-6 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" /> Sales Performance
+          </h3>
+          <div className="flex flex-col gap-4 overflow-y-auto max-h-[300px] pr-2">
+            {stats?.leaderboard?.map((s, i) => (
+              <div key={s.name} className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-transparent hover:border-primary/20 transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                  <span className="text-[10px] font-black uppercase tracking-tight">{s.status}</span>
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                    {i + 1}
+                  </div>
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-tight">{s.name}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold">{s.conversion}% conversion</p>
+                  </div>
                 </div>
-                <span className="text-xs font-black">{s.count}</span>
+                <div className="text-right">
+                  <p className="text-xs font-black">₹{s.revenue.toLocaleString()}</p>
+                  <p className="text-[9px] text-muted-foreground uppercase font-black">{s.accepted}/{s.total} Bookings</p>
+                </div>
               </div>
             ))}
+            {(!stats?.leaderboard || stats.leaderboard.length === 0) && (
+              <div className="text-center py-10 text-muted-foreground text-xs italic">No sales data yet</div>
+            )}
           </div>
         </div>
       </div>

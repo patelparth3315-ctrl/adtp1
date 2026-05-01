@@ -9,7 +9,7 @@ import { paymentsService } from "@/services/payments.service";
 import {
   Calendar, User, Phone, Mail, MapPin, Users, CreditCard, Tag, FileText,
   Clock, Train, Download, Plus, Trash2, Banknote, ArrowDownRight, CheckCircle2,
-  AlertTriangle, IndianRupee
+  AlertTriangle, IndianRupee, RefreshCcw, Send, MessageCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -130,11 +130,60 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onPay
         )}>
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span className="text-lg font-black uppercase tracking-tight">Booking #{booking.id.slice(-6)}</span>
-              <StatusBadge variant={getBookingBadgeVariant(booking.status)}>{booking.status}</StatusBadge>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-black uppercase tracking-tight">Booking #{booking.id.slice(-6)}</span>
+                  <div className={cn(
+                    "px-2 py-0.5 rounded text-[8px] font-black uppercase",
+                    booking.syncStatus === 'synced' ? "bg-emerald-100 text-emerald-700" :
+                    booking.syncStatus === 'failed' ? "bg-red-100 text-red-700 animate-pulse" : "bg-slate-100 text-slate-500"
+                  )}>
+                    {booking.syncStatus === 'synced' ? "Cloud Synced" : booking.syncStatus === 'failed' ? "Sync Failed" : "Sync Pending"}
+                  </div>
+                </div>
+                {booking.bookingId && <span className="text-[10px] font-mono text-muted-foreground">{booking.bookingId}</span>}
+              </div>
+              <div className="flex gap-2 items-center">
+                {booking.syncStatus === 'failed' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 text-[9px] font-bold border-red-200 text-red-600 hover:bg-red-50"
+                    onClick={async () => {
+                      const { bookingsService } = await import("@/services/bookings.service");
+                      await bookingsService.retrySync(booking.id);
+                      toast.success("Sync retried successfully");
+                      onPaymentAdded?.();
+                    }}
+                  >
+                    <RefreshCcw className="h-3 w-3 mr-1" /> Retry Sync
+                  </Button>
+                )}
+                <StatusBadge variant={getBookingBadgeVariant(booking.status)}>{booking.status}</StatusBadge>
+              </div>
             </DialogTitle>
           </DialogHeader>
         </div>
+
+        {booking.status === 'pending' && (
+          <div className="px-8 pt-6 pb-2">
+            <Button 
+              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs gap-2 rounded-2xl shadow-lg shadow-emerald-200"
+              onClick={async () => {
+                try {
+                  const { bookingsService } = await import("@/services/bookings.service");
+                  await bookingsService.updateStatus(booking.id, "accepted");
+                  toast.success("Booking Accepted & Synced to Google Sheets!");
+                  onPaymentAdded?.(); // Refresh
+                } catch (err) {
+                  toast.error("Failed to accept booking");
+                }
+              }}
+            >
+              <CheckCircle2 className="h-4 w-4" /> Accept & Sync to Google Sheets
+            </Button>
+          </div>
+        )}
 
         <div className="px-8 pb-8 space-y-6">
           {/* ─── Payment Progress Bar ─── */}
@@ -143,13 +192,30 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onPay
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
                 <IndianRupee className="h-3.5 w-3.5" /> Payment Progress
               </h4>
-              <span className={cn(
-                "text-xs font-black uppercase px-3 py-1 rounded-full",
-                paymentPercent >= 100 ? "bg-emerald-100 text-emerald-700" :
-                paymentPercent > 0 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
-              )}>
-                {paymentPercent >= 100 ? "Fully Paid" : paymentPercent > 0 ? "Partial" : "Unpaid"}
-              </span>
+              <div className="flex gap-2">
+                <span className={cn(
+                  "text-xs font-black uppercase px-3 py-1 rounded-full",
+                  paymentPercent >= 100 ? "bg-emerald-100 text-emerald-700" :
+                  paymentPercent > 0 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                )}>
+                  {paymentPercent >= 100 ? "Fully Paid" : paymentPercent > 0 ? "Partial" : "Unpaid"}
+                </span>
+                {paymentPercent < 100 && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 text-[9px] font-bold text-emerald-600 hover:bg-emerald-50"
+                    onClick={async () => {
+                      const { bookingsService } = await import("@/services/bookings.service");
+                      await bookingsService.markAsFullyPaid(booking.id);
+                      toast.success("Marked as Fully Paid");
+                      onPaymentAdded?.();
+                    }}
+                  >
+                    Mark as Fully Paid
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Progress bar */}
@@ -193,8 +259,47 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onPay
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Mail className="h-3 w-3" /> {booking.email}
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Phone className="h-3 w-3" /> {booking.phone}
+                <div className="flex items-center justify-between gap-1.5 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Phone className="h-3 w-3" /> {booking.phone}
+                  </div>
+                  <div className="flex gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 text-[9px] font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2 rounded-lg"
+                      onClick={() => {
+                        const msg = encodeURIComponent(`*YouthCamping Booking Received* 🏕️\n\nHello ${booking.userName},\n\nWe have received your booking request for *${booking.tripTitle}*. Our team is reviewing the availability and will confirm shortly.\n\n*Reference:* ${booking.bookingId || booking.id.slice(-6)}\n\nSee you soon!`);
+                        window.open(`https://wa.me/${booking.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
+                      }}
+                    >
+                      <MessageCircle className="h-3 w-3 mr-1" /> Recv
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 text-[9px] font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2 rounded-lg"
+                      onClick={() => {
+                        const msg = encodeURIComponent(`*YouthCamping Booking Confirmed* 🏕️\n\nHello ${booking.userName},\n\nYour adventure to *${booking.tripTitle}* is now *CONFIRMED*!\n\n*Booking ID:* ${booking.bookingId || booking.id.slice(-6)}\n*Travel Date:* ${formatDate(booking.travelDate)}\n\nGet ready for the wild! 🏔️`);
+                        window.open(`https://wa.me/${booking.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
+                      }}
+                    >
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> Conf
+                    </Button>
+                    {balance > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 text-[9px] font-bold text-red-600 hover:bg-red-50 px-2 rounded-lg"
+                        onClick={() => {
+                          const msg = encodeURIComponent(`*YouthCamping Payment Reminder* 🏕️\n\nHi ${booking.userName},\n\nJust a quick reminder regarding your booking for *${booking.tripTitle}*.\n\n*Remaining Balance:* ₹${balance.toLocaleString()}\n\nPlease clear the balance to confirm your final arrangements.\n\nTeam YouthCamping`);
+                          window.open(`https://wa.me/${booking.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
+                        }}
+                      >
+                        <AlertTriangle className="h-3 w-3 mr-1" /> Remind
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -211,6 +316,16 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onPay
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Users className="h-3 w-3" /> {booking.travelers || 1} Traveler(s)
                 </div>
+                {booking.pickupCity && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3" /> Pickup: {booking.pickupCity}
+                  </div>
+                )}
+                {booking.salesPersonName && (
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-bold">
+                    <User className="h-3 w-3" /> Sales: {booking.salesPersonName}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -397,6 +512,12 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onPay
                 <div className="bg-muted p-3 rounded-lg">
                   <p className="text-[10px] font-bold text-muted-foreground mb-1">CUSTOMER NOTES</p>
                   <p className="text-sm italic text-foreground/80">"{booking.notes}"</p>
+                </div>
+              )}
+              {booking.specialRequests && (
+                <div className="bg-amber-50 p-3 rounded-lg border border-amber-100">
+                  <p className="text-[10px] font-bold text-amber-600 mb-1">SPECIAL REQUESTS</p>
+                  <p className="text-sm text-foreground/80 font-medium">{booking.specialRequests}</p>
                 </div>
               )}
               {booking.adminNotes && (

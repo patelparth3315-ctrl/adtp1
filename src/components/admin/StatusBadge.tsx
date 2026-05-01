@@ -26,9 +26,12 @@ export function StatusBadge({ variant = "default", children, className }: Status
 
 export function getBookingBadgeVariant(status: string): BadgeVariant {
   switch (status) {
-    case "confirmed": return "success";
+    case "confirmed":
+    case "accepted": return "success";
     case "pending": return "warning";
-    case "cancelled": return "destructive";
+    case "cancelled":
+    case "rejected": return "destructive";
+    case "completed": return "default";
     default: return "default";
   }
 }

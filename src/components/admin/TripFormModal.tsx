@@ -236,28 +236,50 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="w-full flex flex-wrap h-auto gap-1.5 p-1.5 bg-muted rounded-[20px] border">
-            <TabBtn value="details" label="Details" />
-            <TabBtn value="gallery" label="Gallery" />
-            <TabBtn value="pricing" label="Pricing" />
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Main Info</span>
+              <TabsList className="w-full grid grid-cols-4 h-auto gap-1 p-1 bg-muted/50 rounded-2xl border border-border/50">
+                <TabBtn value="details" label="Details" />
+                <TabBtn value="gallery" label="Gallery" />
+                <TabBtn value="pricing" label="Pricing" />
+                <TabBtn value="dates" label="Schedule" />
+              </TabsList>
+            </div>
 
-            <TabBtn value="addons" label="Add-ons" />
-            <TabBtn value="dates" label="Dates" />
-            <TabBtn value="itinerary" label="Itinerary" />
-            <TabBtn value="highlights" label="Items" />
-            <TabBtn value="inclexcl" label="I/E" />
-            <TabBtn value="faqs" label="FAQs" />
-            <TabBtn value="attractions" label="Attractions" />
-            <TabBtn value="activities" label="Activities" />
-            <TabBtn value="stay" label="Stay" />
-            <TabBtn value="policies" label="Policies" />
-            <TabBtn value="videos" label="Videos" />
-            <TabBtn value="custom" label="Custom" />
-            <TabBtn value="seo" label="SEO" />
-            <TabBtn value="reels" label="Reels" />
-            <TabBtn value="reviews" label="Reviews" />
-            <TabBtn value="advanced" label="Adv" />
-          </TabsList>
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Expedition Details</span>
+              <TabsList className="w-full grid grid-cols-5 h-auto gap-1 p-1 bg-muted/50 rounded-2xl border border-border/50">
+                <TabBtn value="itinerary" label="Itinerary" />
+                <TabBtn value="highlights" label="Highlights" />
+                <TabBtn value="inclexcl" label="Inc/Excl" />
+                <TabBtn value="faqs" label="FAQs" />
+                <TabBtn value="stay" label="Stay" />
+              </TabsList>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Assets & Marketing</span>
+              <TabsList className="w-full grid grid-cols-5 h-auto gap-1 p-1 bg-muted/50 rounded-2xl border border-border/50">
+                <TabBtn value="attractions" label="Attract" />
+                <TabBtn value="activities" label="Active" />
+                <TabBtn value="reels" label="Reels" />
+                <TabBtn value="reviews" label="Reviews" />
+                <TabBtn value="seo" label="SEO" />
+              </TabsList>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Configuration</span>
+              <TabsList className="w-full grid grid-cols-5 h-auto gap-1 p-1 bg-muted/50 rounded-2xl border border-border/50">
+                <TabBtn value="addons" label="Addons" />
+                <TabBtn value="policies" label="Policies" />
+                <TabBtn value="videos" label="Videos" />
+                <TabBtn value="custom" label="Custom" />
+                <TabBtn value="advanced" label="Advanced" />
+              </TabsList>
+            </div>
+          </div>
 
           <TabsContent value="details">
             <div className="space-y-6 pt-4">

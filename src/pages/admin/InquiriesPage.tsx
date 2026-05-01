@@ -55,6 +55,18 @@ export default function InquiriesPage() {
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "N/A";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-IN', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (loading) {
     return (
       <div className="space-y-4 animate-fade-in">
@@ -93,7 +105,7 @@ export default function InquiriesPage() {
                 {inq.tripTitle && <p className="text-sm font-bold text-primary mb-3">Expedition: {inq.tripTitle}</p>}
                 <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">{inq.message || "No message provided."}</p>
                 <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                  <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {inq.createdAt}</span>
+                  <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {formatDate(inq.createdAt)}</span>
                   {inq.responseTimeMinutes && <span className="text-green-500">Replied in {inq.responseTimeMinutes}m</span>}
                 </div>
               </div>
@@ -106,16 +118,17 @@ export default function InquiriesPage() {
       )}
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent>
+        <DialogContent aria-describedby="inquiry-details">
           <DialogHeader>
             <DialogTitle>Inquiry from {selected?.name}</DialogTitle>
+            <p id="inquiry-details" className="text-xs text-muted-foreground">Detailed view of lead information and sales history.</p>
           </DialogHeader>
           {selected && (
             <div className="space-y-4">
               <div className="flex flex-col gap-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground"><Mail className="h-4 w-4" />{selected.email}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Mail className="h-4 w-4" />{selected.email || 'No Email Provided'}</div>
                 <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" />{selected.phone}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" />{selected.createdAt}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" />{formatDate(selected.createdAt)}</div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg bg-muted p-3">

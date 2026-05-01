@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import BookingFormModal from "@/components/admin/BookingFormModal";
 import BookingDetailsModal from "@/components/admin/BookingDetailsModal";
 import type { Booking, BookingFormData } from "@/types";
-import { CalendarCheck, Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { CalendarCheck, Plus, Pencil, Trash2, Eye, Download } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BookingsPage() {
@@ -63,10 +63,43 @@ export default function BookingsPage() {
     load();
   };
 
+  const handleExport = () => {
+    if (filtered.length === 0) return toast.error("No data to export");
+    
+    const headers = ["ID", "Guest", "Email", "Phone", "Trip", "Pax", "Amount", "Paid", "Status", "Date"];
+    const rows = filtered.map(b => [
+      b.bookingId || b.id,
+      b.userName,
+      b.email,
+      b.phone,
+      b.tripTitle,
+      b.travelers,
+      b.amount,
+      b.paidAmount,
+      b.status,
+      new Date(b.createdAt).toLocaleDateString()
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `bookings_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Export started");
+  };
+
   const columns = [
     { key: "userName", header: "Guest", render: (b: Booking) => (
       <div>
-        <p className="font-medium text-card-foreground">{b.userName}</p>
+        <p className="font-medium text-card-foreground flex items-center gap-2">
+          {b.userName} 
+          {b.bookingId && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono uppercase">{b.bookingId}</span>}
+        </p>
         <p className="text-xs text-muted-foreground">{b.email}</p>
       </div>
     )},
@@ -86,8 +119,10 @@ export default function BookingsPage() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="accepted">Accepted (Sync)</SelectItem>
           <SelectItem value="confirmed">Confirmed</SelectItem>
           <SelectItem value="completed">Completed</SelectItem>
+          <SelectItem value="rejected">Rejected</SelectItem>
           <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
@@ -105,14 +140,17 @@ export default function BookingsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">Bookings</h1>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add Booking</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport}><Download className="h-4 w-4 mr-2" />Export CSV</Button>
+          <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add Booking</Button>
+        </div>
       </div>
 
       <DataTable
         columns={columns} data={filtered} loading={loading}
         searchKey="userName" searchPlaceholder="Search bookings..."
         emptyMessage="No bookings yet" emptyIcon={<CalendarCheck className="h-10 w-10 text-muted-foreground" />}
-        filters={[{ key: "status", label: "Status", options: [{ label: "Pending", value: "pending" }, { label: "Confirmed", value: "confirmed" }, { label: "Completed", value: "completed" }, { label: "Cancelled", value: "cancelled" }] }]}
+        filters={[{ key: "status", label: "Status", options: [{ label: "Pending", value: "pending" }, { label: "Accepted", value: "accepted" }, { label: "Confirmed", value: "confirmed" }, { label: "Completed", value: "completed" }, { label: "Cancelled", value: "cancelled" }, { label: "Rejected", value: "rejected" }] }]}
         onFilterChange={(_, v) => setStatusFilter(v)}
       />
 

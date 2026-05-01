@@ -130,6 +130,7 @@ export interface TrainTicket {
 
 export interface Booking {
   id: string;
+  bookingId?: string;
   userName: string;
   email: string;
   phone: string;
@@ -139,7 +140,13 @@ export interface Booking {
   travelDate?: string;
   amount: number;
   paidAmount: number;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
+  paymentMode?: 'UPI' | 'Cash' | 'Bank Transfer' | 'Other' | 'None';
+  pickupCity?: string;
+  specialRequests?: string;
+  idProofUrl?: string;
+  salesPersonId?: string;
+  salesPersonName?: string;
+  status: "pending" | "confirmed" | "cancelled" | "completed" | "accepted" | "rejected";
   paymentStatus: "unpaid" | "partial" | "paid";
   notes?: string;
   adminNotes?: string;

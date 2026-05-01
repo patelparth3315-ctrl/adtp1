@@ -27,6 +27,16 @@ export const bookingsService = {
     return res.data.data;
   },
 
+  async retrySync(id: string): Promise<any> {
+    const res = await api.patch(`/bookings/${id}/retry-sync`);
+    return res.data.data;
+  },
+
+  async markAsFullyPaid(id: string): Promise<Booking> {
+    const res = await api.patch(`/bookings/${id}/status`, { paymentStatus: 'paid' });
+    return res.data.data;
+  },
+
   async remove(id: string): Promise<void> {
     await api.delete(`/bookings/${id}`);
   },
