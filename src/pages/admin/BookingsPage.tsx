@@ -63,6 +63,16 @@ export default function BookingsPage() {
     load();
   };
 
+  const handleRetrySync = async (id: string) => {
+    try {
+      await bookingsService.retrySync(id);
+      toast.success("Sync retry triggered");
+      load();
+    } catch (error) {
+      toast.error("Retry failed");
+    }
+  };
+
   const handleExport = () => {
     if (filtered.length === 0) return toast.error("No data to export");
     
@@ -126,6 +136,18 @@ export default function BookingsPage() {
           <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
+    )},
+    { key: "sync", header: "Sync", render: (b: Booking) => (
+      <div className="flex flex-col gap-1 items-start">
+        <StatusBadge variant={b.syncStatus === 'synced' ? 'success' : b.syncStatus === 'failed' ? 'destructive' : 'secondary'}>
+          {b.syncStatus || 'pending'}
+        </StatusBadge>
+        {b.syncStatus === 'failed' && (
+          <Button variant="link" size="sm" className="h-4 p-0 text-[10px] text-destructive underline" onClick={() => handleRetrySync(b.id)}>
+            Retry Sync
+          </Button>
+        )}
+      </div>
     )},
     { key: "actions", header: "", render: (b: Booking) => (
       <div className="flex gap-1">

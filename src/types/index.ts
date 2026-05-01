@@ -150,6 +150,8 @@ export interface Booking {
   paymentStatus: "unpaid" | "partial" | "paid";
   notes?: string;
   adminNotes?: string;
+  syncStatus?: 'pending' | 'synced' | 'failed';
+  lastSyncAt?: string;
   trainTickets?: TrainTicket[];
   createdAt: string;
   updatedAt: string;
