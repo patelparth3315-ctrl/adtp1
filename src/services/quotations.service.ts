@@ -6,7 +6,7 @@ export const quotationsService = {
     return res.data.data;
   },
   getById: async (id: string) => {
-    const res = await api.get(`/quotations/${id}`);
+    const res = await api.get(`/quotations/${id}?isAdmin=true`);
     return res.data.data;
   },
   save: async (data: any) => {
@@ -16,5 +16,9 @@ export const quotationsService = {
   remove: async (id: string) => {
     const res = await api.delete(`/quotations/${id}`);
     return res.data;
+  },
+  extend: async (id: string, hours: number) => {
+    const res = await api.patch(`/quotations/${id}/extend`, { hours });
+    return res.data.data;
   }
 };

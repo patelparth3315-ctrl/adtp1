@@ -162,6 +162,57 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="booking" className="mt-6">
+          <Card className="rounded-[32px] border-none shadow-sm">
+            <CardContent className="p-10 space-y-10">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Room Sharing Options</Label>
+                  <Button variant="outline" size="sm" onClick={() => setValue('bookingForm.roomSharingOptions', [...(watch('bookingForm.roomSharingOptions') || []), { label: '', priceAdjustment: 0 }])}>
+                    <Plus className="w-3 h-3 mr-2" /> Add Option
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(watch('bookingForm.roomSharingOptions') || []).map((_: any, index: number) => (
+                    <div key={index} className="flex gap-4 items-center bg-muted/20 p-4 rounded-2xl border-2 border-dashed">
+                      <Input {...register(`bookingForm.roomSharingOptions.${index}.label`)} placeholder="Label (e.g. Twin Sharing)" className="h-12 rounded-xl" />
+                      <Input {...register(`bookingForm.roomSharingOptions.${index}.priceAdjustment`)} type="number" placeholder="Price +/-" className="h-12 rounded-xl w-32" />
+                      <Button variant="ghost" size="icon" onClick={() => setValue('bookingForm.roomSharingOptions', watch('bookingForm.roomSharingOptions').filter((_: any, i: number) => i !== index))} className="text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Train Travel Options</Label>
+                  <Button variant="outline" size="sm" onClick={() => setValue('bookingForm.trainOptions', [...(watch('bookingForm.trainOptions') || []), { label: '', priceAdjustment: 0 }])}>
+                    <Plus className="w-3 h-3 mr-2" /> Add Option
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(watch('bookingForm.trainOptions') || []).map((_: any, index: number) => (
+                    <div key={index} className="flex gap-4 items-center bg-muted/20 p-4 rounded-2xl border-2 border-dashed">
+                      <Input {...register(`bookingForm.trainOptions.${index}.label`)} placeholder="Label (e.g. 3AC)" className="h-12 rounded-xl" />
+                      <Input {...register(`bookingForm.trainOptions.${index}.priceAdjustment`)} type="number" placeholder="Price +/-" className="h-12 rounded-xl w-32" />
+                      <Button variant="ghost" size="icon" onClick={() => setValue('bookingForm.trainOptions', watch('bookingForm.trainOptions').filter((_: any, i: number) => i !== index))} className="text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Submit Button Text</Label>
+                <Input {...register("bookingForm.submitButtonText")} className="h-14 rounded-2xl border-2" />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );

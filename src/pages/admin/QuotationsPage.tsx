@@ -40,13 +40,13 @@ export default function QuotationsPage() {
   };
 
   const columns = [
-    { key: "clientName", header: "Client", render: (q: any) => (
+    { key: "customerName", header: "Client", render: (q: any) => (
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-          <User className="h-5 w-5" />
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold uppercase">
+          {q.customerName?.charAt(0) || <User className="h-5 w-5" />}
         </div>
         <div>
-          <p className="font-medium text-card-foreground">{q.clientName}</p>
+          <p className="font-medium text-card-foreground">{q.customerName || "No Name"}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
              <Calendar className="h-3 w-3" /> {new Date(q.createdAt).toLocaleDateString()}
           </p>
@@ -59,12 +59,21 @@ export default function QuotationsPage() {
         {q.destination}
       </div>
     )},
-    { key: "price", header: "Price", render: (q: any) => (
+    { key: "price", header: "Total Price", render: (q: any) => (
       <div className="flex flex-col">
-        <span className="text-xs text-muted-foreground">Luxury</span>
-        <span className="font-bold">₹{q.highLevelPrice?.toLocaleString() || "0"}</span>
+        <span className="font-bold">₹{q.finalPrice?.toLocaleString() || "0"}</span>
+        {q.discount > 0 && <span className="text-[10px] text-emerald-600 font-bold">Saved ₹{q.discount.toLocaleString()}</span>}
       </div>
     )},
+    { key: "validity", header: "Validity", render: (q: any) => {
+      if (!q.expiresAt) return <StatusBadge variant="secondary">No Expiry</StatusBadge>;
+      const isExpired = new Date() > new Date(q.expiresAt);
+      const isUrgent = !isExpired && (new Date(q.expiresAt).getTime() - new Date().getTime()) < 24 * 60 * 60 * 1000;
+      
+      if (isExpired) return <StatusBadge variant="destructive">Expired</StatusBadge>;
+      if (isUrgent) return <StatusBadge className="bg-orange-100 text-orange-600 hover:bg-orange-100 border-none">Urgent</StatusBadge>;
+      return <StatusBadge className="bg-emerald-100 text-emerald-600 hover:bg-emerald-100 border-none">Active</StatusBadge>;
+    }},
     { key: "status", header: "Status", render: (q: any) => (
       <StatusBadge variant={q.status === 'Draft' ? 'secondary' : 'default'}>{q.status}</StatusBadge>
     )},

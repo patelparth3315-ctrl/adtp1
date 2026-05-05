@@ -2,7 +2,16 @@ export interface Admin {
   id: string;
   email: string;
   name: string;
-  role: string;
+  role: 'admin' | 'manager';
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  phone?: string;
+  role: 'admin' | 'manager' | 'user';
+  createdAt: string;
 }
 
 export interface AuthResponse {
@@ -328,6 +337,7 @@ export interface QuotationHotel {
   rating: number;
   description: string;
   roomType: string;
+  meals?: string;
   photos: string[];
 }
 
@@ -337,6 +347,8 @@ export interface QuotationDay {
   title: string;
   description: string;
   activities: string[];
+  meals?: string;
+  stay?: string;
   photos: string[];
 }
 
@@ -352,18 +364,40 @@ export interface Quotation {
   id: string;
   _id?: string;
   slug: string;
-  clientName: string;
+  status: "Draft" | "Published" | "Sent" | "Cancelled";
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  tripTitle: string;
   destination: string;
-  pax: number;
+  duration: string;
   travelDates: {
     from: string;
     to: string;
   };
-  duration: string;
-  lowLevelPrice: number;
-  highLevelPrice: number;
-  status: "Draft" | "Published" | "Sent" | "Cancelled";
-  data: any;
+  pax: number;
+  totalPrice: number;
+  discount: number;
+  finalPrice: number;
+  overview: string;
+  itinerary: ItineraryDay[];
+  inclusions: string[];
+  exclusions: string[];
+  coverImage: string;
+  experiencePhotos?: string[];
+  lowLevelHotels?: any[];
+  highLevelHotels?: any[];
+  lowLevelPrice?: number;
+  highLevelPrice?: number;
+  expiryHours?: number | null;
+  expiresAt?: string;
+  expert?: {
+    name: string;
+    whatsapp: string;
+    designation: string;
+    photo?: string;
+  };
+  viewCount?: number;
   createdAt: string;
   updatedAt: string;
 }

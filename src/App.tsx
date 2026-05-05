@@ -28,9 +28,12 @@ import BookingFormsPage from "./pages/admin/BookingFormsPage.tsx";
 import QuotationsPage from "./pages/admin/QuotationsPage.tsx";
 import QuotationFormPage from "./pages/admin/QuotationFormPage.tsx";
 import AIItineraryGeneratorPage from "./pages/admin/AIItineraryGeneratorPage.tsx";
+import QuestionsPage from "./pages/admin/QuestionsPage.tsx";
+import UserManagementPage from "./pages/admin/UserManagementPage.tsx";
+import DynamicFormAdmin from "./pages/admin/DynamicFormAdmin.tsx";
 import { 
   CollectionsPage, PromotionsPage, DistributionPage, 
-  ReportsPage, BillingPage, CustomersPage 
+  ReportsPage, BillingPage 
 } from "./pages/admin/PlaceholderPages.tsx";
 import { AdminLayout } from "./components/admin/AdminLayout.tsx";
 
@@ -72,11 +75,13 @@ const App = () => (
           <Route path="/admin/quotations" element={<AdminRoute><QuotationsPage /></AdminRoute>} />
           <Route path="/admin/quotations/:id" element={<AdminRoute><QuotationFormPage /></AdminRoute>} />
           <Route path="/admin/ai-itinerary" element={<AdminRoute><AIItineraryGeneratorPage /></AdminRoute>} />
+          <Route path="/admin/questions" element={<AdminRoute><QuestionsPage /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
           <Route path="/admin/distribution" element={<AdminRoute><DistributionPage /></AdminRoute>} />
           <Route path="/admin/reports" element={<AdminRoute><ReportsPage /></AdminRoute>} />
           <Route path="/admin/billing" element={<AdminRoute><BillingPage /></AdminRoute>} />
-          <Route path="/admin/customers" element={<AdminRoute><CustomersPage /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><UserManagementPage /></AdminRoute>} />
+          <Route path="/admin/dynamic-sync" element={<AdminRoute><DynamicFormAdmin /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/auth.store";
+import { toast } from "@/components/ui/sonner";
 import {
   Sidebar,
   SidebarContent,
@@ -42,7 +43,8 @@ import {
   Building2,
   Banknote,
   Link2,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,50 +63,52 @@ import { PlusCircle, UserPlus, FilePlus, CalendarPlus, ChevronDown } from "lucid
 const navGroups = [
   {
     items: [
-      { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-      { title: "Bookings", url: "/admin/bookings", icon: CalendarCheck },
-      { title: "Quotations", url: "/admin/quotations", icon: FileText, badge: "NEW" },
-      { title: "AI Itinerary", url: "/admin/ai-itinerary", icon: Sparkles, badge: "AI" },
-      { title: "Inquiries", url: "/admin/inquiries", icon: MessageSquare, badge: "NEW" },
+      { title: "Dashboard", url: "/admin", icon: LayoutDashboard, roles: ['admin', 'manager', 'user'] },
+      { title: "Bookings", url: "/admin/bookings", icon: CalendarCheck, roles: ['admin', 'manager'] },
+      { title: "Quotations", url: "/admin/quotations", icon: FileText, badge: "NEW", roles: ['admin', 'manager'] },
+      { title: "AI Itinerary", url: "/admin/ai-itinerary", icon: Sparkles, badge: "AI", roles: ['admin', 'manager'] },
+      { title: "Inquiries", url: "/admin/inquiries", icon: MessageSquare, badge: "NEW", roles: ['admin', 'manager'] },
     ]
   },
   {
     label: "Inventory",
     items: [
-      { title: "Trips & Tours", url: "/admin/trips", icon: Map },
-      { title: "Vendors", url: "/admin/vendors", icon: Building2 },
-      { title: "Collections", url: "/admin/collections", icon: LayoutDashboard },
-      { title: "Promotions", url: "/admin/promotions", icon: Star },
+      { title: "Trips & Tours", url: "/admin/trips", icon: Map, roles: ['admin', 'manager'] },
+      { title: "Vendors", url: "/admin/vendors", icon: Building2, roles: ['admin', 'manager'] },
+      { title: "Collections", url: "/admin/collections", icon: LayoutDashboard, roles: ['admin', 'manager'] },
+      { title: "Promotions", url: "/admin/promotions", icon: Star, roles: ['admin', 'manager'] },
     ]
   },
   {
     label: "Website Content",
     items: [
-      { title: "Page Builder", url: "/admin/page-builder", icon: FilePlus },
-      { title: "Website Theme", url: "/admin/theme", icon: Paintbrush },
-      { title: "Media Manager", url: "/admin/media", icon: Image },
-      { title: "Watch & Read", url: "/admin/blogs", icon: BookOpen },
-      { title: "Attractions", url: "/admin/attractions", icon: Map },
-      { title: "Review Center", url: "/admin/reviews", icon: Star },
-      { title: "Footer Management", url: "/admin/footer", icon: Layout },
+      { title: "Page Builder", url: "/admin/page-builder", icon: FilePlus, roles: ['admin'] },
+      { title: "Website Theme", url: "/admin/theme", icon: Paintbrush, roles: ['admin'] },
+      { title: "Media Manager", url: "/admin/media", icon: Image, roles: ['admin', 'manager'] },
+      { title: "Watch & Read", url: "/admin/blogs", icon: BookOpen, roles: ['admin', 'manager'] },
+      { title: "Attractions", url: "/admin/attractions", icon: Map, roles: ['admin', 'manager'] },
+      { title: "Review Center", url: "/admin/reviews", icon: Star, roles: ['admin', 'manager'] },
+      { title: "Question System", url: "/admin/questions", icon: HelpCircle, roles: ['admin', 'manager'] },
+      { title: "Footer Management", url: "/admin/footer", icon: Layout, roles: ['admin'] },
     ]
   },
   {
     label: "Marketing & Growth",
     items: [
-      { title: "SEO Center", url: "/admin/seo", icon: Globe },
-      { title: "Inquiry Form", url: "/admin/inquiry-form", icon: MessageSquare },
-      { title: "Booking Forms", url: "/admin/booking-forms", icon: Link2 },
-      { title: "Distribution", url: "/admin/distribution", icon: Share2 },
+      { title: "SEO Center", url: "/admin/seo", icon: Globe, roles: ['admin'] },
+      { title: "Inquiry Form", url: "/admin/inquiry-form", icon: MessageSquare, roles: ['admin', 'manager'] },
+      { title: "Booking Forms", url: "/admin/booking-forms", icon: Link2, roles: ['admin', 'manager'] },
+      { title: "Dynamic Sync", url: "/admin/dynamic-sync", icon: RefreshCw, badge: "NEW", roles: ['admin'] },
+      { title: "Distribution", url: "/admin/distribution", icon: Share2, roles: ['admin'] },
     ]
   },
   {
     label: "Administration",
     items: [
-      { title: "Reports & Analytics", url: "/admin/reports", icon: BarChart3 },
-      { title: "Billing & Plans", url: "/admin/billing", icon: CreditCard },
-      { title: "Customer CRM", url: "/admin/customers", icon: Users },
-      { title: "System Settings", url: "/admin/settings", icon: Settings },
+      { title: "Reports & Analytics", url: "/admin/reports", icon: BarChart3, roles: ['admin'] },
+      { title: "Billing & Plans", url: "/admin/billing", icon: CreditCard, roles: ['admin'] },
+      { title: "User Management", url: "/admin/users", icon: Users, roles: ['admin'] },
+      { title: "System Settings", url: "/admin/settings", icon: Settings, roles: ['admin'] },
     ]
   }
 ];
@@ -114,6 +118,7 @@ interface NavItem {
   url: string;
   icon: any;
   badge?: string;
+  roles?: string[];
 }
 
 function AdminSidebar() {
@@ -144,11 +149,8 @@ function AdminSidebar() {
 
         {navGroups.map((group, gIdx) => {
           const filteredItems = (group.items as NavItem[]).filter(item => {
-            if (admin?.role === 'agent') {
-              const restricted = ["/admin/page-builder", "/admin/settings", "/admin/seo", "/admin/pages", "/admin/theme"];
-              return !restricted.includes(item.url);
-            }
-            return true;
+            if (!item.roles) return true;
+            return item.roles.includes(admin?.role || '');
           });
 
           if (filteredItems.length === 0) return null;
@@ -200,7 +202,7 @@ function AdminSidebar() {
 }
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { admin, isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -209,13 +211,35 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   }, [checkAuth]);
 
   useEffect(() => {
-    // AUTH BYPASS: Removed redirect to login page
-    /*
-    if (!isLoading && !isAuthenticated && !location.pathname.includes('/login')) {
-      navigate("/admin/login");
+    if (!admin || isLoading) return;
+
+    // Check if the current route is restricted for the user's role
+    const currentPath = location.pathname;
+    
+    // Skip checks for login and the base admin path if it's the redirect target
+    if (currentPath === "/admin/login") return;
+
+    let allowed = true;
+    let targetItem = null;
+
+    for (const group of navGroups) {
+      const item = group.items.find(i => i.url === currentPath);
+      if (item) {
+        targetItem = item;
+        if (item.roles && !item.roles.includes(admin.role)) {
+          allowed = false;
+        }
+        break;
+      }
     }
-    */
-  }, [isAuthenticated, isLoading, navigate, location.pathname]);
+
+    if (!allowed && currentPath !== "/admin") {
+      console.warn("🚫 Unauthorized access attempt to:", currentPath);
+      navigate("/admin");
+      // Use a timeout to ensure navigation completes before toast
+      setTimeout(() => toast.error("Access Restricted: Unauthorized for your role"), 100);
+    }
+  }, [location.pathname, admin, isLoading, navigate]);
 
   if (isLoading) {
     return (
