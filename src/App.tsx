@@ -50,6 +50,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
           <Route path="/" element={<AdminRoute><DashboardPage /></AdminRoute>} />
           <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
