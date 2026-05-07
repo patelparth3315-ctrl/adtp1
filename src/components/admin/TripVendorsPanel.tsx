@@ -116,8 +116,14 @@ export default function TripVendorsPanel({ tripId, tripTitle, tripPrice, open, o
   };
 
   // Available vendors = all vendors minus already assigned
-  const assignedIds = assignments.map(a => typeof a.vendorId === 'object' ? (a.vendorId as Vendor).id : a.vendorId);
-  const availableVendors = allVendors.filter(v => !assignedIds.includes(v.id));
+  const assignedIds = (assignments || [])
+    .map(a => {
+      if (!a.vendorId) return null;
+      return typeof a.vendorId === 'object' ? (a.vendorId as Vendor).id : a.vendorId;
+    })
+    .filter(Boolean);
+    
+  const availableVendors = (allVendors || []).filter(v => v?.id && !assignedIds.includes(v.id));
 
   const totalCost = summary?.totalVendorCost ?? 0;
   const estimatedProfit = tripPrice - totalCost;

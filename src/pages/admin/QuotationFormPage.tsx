@@ -134,13 +134,13 @@ export default function QuotationFormPage() {
     };
 
     const copyLink = () => {
-        const url = `${import.meta.env.VITE_FRONTEND_URL}/quote/${formData.slug}`;
+        const url = `${import.meta.env.VITE_FRONTEND_URL}/quote/${formData.slug || formData.id}`;
         navigator.clipboard.writeText(url);
         toast.success("Link copied to clipboard!");
     };
 
     const sendWhatsApp = () => {
-        const quoteLink = `${import.meta.env.VITE_FRONTEND_URL}/quote/${formData.slug}`;
+        const quoteLink = `${import.meta.env.VITE_FRONTEND_URL}/quote/${formData.slug || formData.id}`;
         const message = `Hi ${formData.customerName},
 
 Greetings from YOUTHCAMPING Experiences.
@@ -215,15 +215,15 @@ ${formData.expert?.designation}`;
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Customer Name</Label>
-                                <Input value={formData.customerName} onChange={e => setFormData({...formData, customerName: e.target.value})} placeholder="Full Name" className="rounded-xl h-12 font-medium" />
+                                <Input value={formData.customerName || ""} onChange={e => setFormData({...formData, customerName: e.target.value})} placeholder="Full Name" className="rounded-xl h-12 font-medium" />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Mobile Number</Label>
-                                <Input value={formData.customerPhone} onChange={e => setFormData({...formData, customerPhone: e.target.value})} placeholder="e.g. 919876543210" className="rounded-xl h-12 font-medium" />
+                                <Input value={formData.customerPhone || ""} onChange={e => setFormData({...formData, customerPhone: e.target.value})} placeholder="e.g. 919876543210" className="rounded-xl h-12 font-medium" />
                             </div>
                             <div className="space-y-2 md:col-span-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Email Address (Optional)</Label>
-                                <Input value={formData.customerEmail} onChange={e => setFormData({...formData, customerEmail: e.target.value})} placeholder="customer@example.com" className="rounded-xl h-12 font-medium" />
+                                <Input value={formData.customerEmail || ""} onChange={e => setFormData({...formData, customerEmail: e.target.value})} placeholder="customer@example.com" className="rounded-xl h-12 font-medium" />
                             </div>
                         </div>
                     </GlassCard>
@@ -239,23 +239,23 @@ ${formData.expert?.designation}`;
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2 md:col-span-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Trip Title</Label>
-                                <Input value={formData.tripTitle} onChange={e => setFormData({...formData, tripTitle: e.target.value})} placeholder="e.g. Luxury Manali Retreat" className="rounded-xl h-12 font-bold" />
+                                <Input value={formData.tripTitle || ""} onChange={e => setFormData({...formData, tripTitle: e.target.value})} placeholder="e.g. Luxury Manali Retreat" className="rounded-xl h-12 font-bold" />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Destination</Label>
-                                <Input value={formData.destination} onChange={e => setFormData({...formData, destination: e.target.value})} placeholder="e.g. Manali, Himachal" className="rounded-xl h-12 font-medium" />
+                                <Input value={formData.destination || ""} onChange={e => setFormData({...formData, destination: e.target.value})} placeholder="e.g. Manali, Himachal" className="rounded-xl h-12 font-medium" />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Duration</Label>
-                                <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="e.g. 5D/4N" className="rounded-xl h-12 font-medium" />
+                                <Input value={formData.duration || ""} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="e.g. 5D/4N" className="rounded-xl h-12 font-medium" />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Travel Date (From)</Label>
-                                <Input type="date" value={formData.travelDates?.from} onChange={e => setFormData({...formData, travelDates: {...formData.travelDates!, from: e.target.value}})} className="rounded-xl h-12" />
+                                <Input type="date" value={formData.travelDates?.from || ""} onChange={e => setFormData({...formData, travelDates: {...formData.travelDates!, from: e.target.value}})} className="rounded-xl h-12" />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Travel Date (To)</Label>
-                                <Input type="date" value={formData.travelDates?.to} onChange={e => setFormData({...formData, travelDates: {...formData.travelDates!, to: e.target.value}})} className="rounded-xl h-12" />
+                                <Input type="date" value={formData.travelDates?.to || ""} onChange={e => setFormData({...formData, travelDates: {...formData.travelDates!, to: e.target.value}})} className="rounded-xl h-12" />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-bold uppercase opacity-60">Number of People</Label>
@@ -280,7 +280,7 @@ ${formData.expert?.designation}`;
                                         <Label className="text-[10px] font-bold uppercase opacity-60">Base Price (Standard)</Label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
-                                            <Input type="number" value={formData.lowLevelPrice} onChange={e => setFormData({...formData, lowLevelPrice: parseInt(e.target.value)})} className="rounded-xl h-12 pl-8 font-bold" />
+                                            <Input type="number" value={formData.lowLevelPrice || 0} onChange={e => setFormData({...formData, lowLevelPrice: parseInt(e.target.value)})} className="rounded-xl h-12 pl-8 font-bold" />
                                         </div>
                                     </div>
                                 </div>
@@ -292,7 +292,7 @@ ${formData.expert?.designation}`;
                                         <Label className="text-[10px] font-bold uppercase opacity-60">Base Price (Luxury)</Label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
-                                            <Input type="number" value={formData.highLevelPrice} onChange={e => setFormData({...formData, highLevelPrice: parseInt(e.target.value)})} className="rounded-xl h-12 pl-8 font-bold" />
+                                            <Input type="number" value={formData.highLevelPrice || 0} onChange={e => setFormData({...formData, highLevelPrice: parseInt(e.target.value)})} className="rounded-xl h-12 pl-8 font-bold" />
                                         </div>
                                     </div>
                                 </div>

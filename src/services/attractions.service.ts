@@ -22,18 +22,18 @@ export interface Attraction {
 export const attractionsService = {
   getAll: async () => {
     const response = await api.get('/attractions');
-    return response.data;
+    return response.data.data || [];
   },
   create: async (data: any) => {
     const response = await api.post('/attractions', data);
-    return response.data;
+    return response.data.data;
   },
   update: async (id: string, data: any) => {
     const response = await api.put(`/attractions/${id}`, data);
-    return response.data;
+    return response.data.data;
   },
   remove: async (id: string) => {
     const response = await api.delete(`/attractions/${id}`);
-    return response.data;
+    return response.data.data;
   }
 };

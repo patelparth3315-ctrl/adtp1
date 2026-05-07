@@ -22,7 +22,15 @@ export default function LoginPage() {
       toast.success("Welcome back!");
       navigate("/admin");
     } catch (error: any) {
-      const message = error.response?.data?.message || "Something went wrong";
+      console.error("Login attempt failed:", error);
+      let message = "Something went wrong";
+      if (!error.response) {
+        message = "Cannot connect to server. Is the backend running?";
+      } else if (error.response.status === 401) {
+        message = "Invalid email or password";
+      } else {
+        message = error.response.data?.message || message;
+      }
       toast.error(message);
     } finally {
       setLoading(false);

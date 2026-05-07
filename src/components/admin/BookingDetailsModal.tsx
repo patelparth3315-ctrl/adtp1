@@ -1,68 +1,58 @@
-import { useState, useEffect, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { 
+  User, Phone, MapPin, CreditCard, 
+  FileText, Calendar, Trash2, X,
+  CheckCircle2, AlertCircle, Clock,
+  ArrowRight, Pencil, Plus, Users
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Booking, Payment, PaymentSummary } from "@/types";
-import { StatusBadge, getBookingBadgeVariant } from "./StatusBadge";
-import { paymentsService } from "@/services/payments.service";
-import {
-  Calendar, User, Phone, Mail, MapPin, Users, CreditCard, Tag, FileText,
-  Clock, Train, Download, Plus, Trash2, Banknote, ArrowDownRight, CheckCircle2,
-  AlertTriangle, IndianRupee, RefreshCcw, Send, MessageCircle
-} from "lucide-react";
+import type { Booking } from "@/types";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { bookingsService } from "@/services/bookings.service";
 
 interface BookingDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   booking: Booking | null;
-  onPaymentAdded?: () => void;
+  onEdit?: (booking: Booking) => void; // New prop
 }
 
-export default function BookingDetailsModal({ open, onOpenChange, booking, onPaymentAdded }: BookingDetailsModalProps) {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [summary, setSummary] = useState<PaymentSummary | null>(null);
-  const [loadingPayments, setLoadingPayments] = useState(false);
-  const [showAddPayment, setShowAddPayment] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [paymentForm, setPaymentForm] = useState({
-    amount: "",
-    paymentMode: "UPI",
-    paymentDate: new Date().toISOString().split('T')[0],
-    reference: "",
-    notes: ""
+export default function BookingDetailsModal({ open, onOpenChange, booking, onEdit }: BookingDetailsModalProps) {
+  const [showAddPassenger, setShowAddPassenger] = useState(false);
+  const [editingPassenger, setEditingPassenger] = useState<any>(null);
+  const [passengers, setPassengers] = useState<any[]>([]);
+  const [newPassenger, setNewPassenger] = useState({
+    firstName: "",
+    lastName: "",
+    gender: "Male",
+    age: "",
+    phone: "",
+    email: ""
   });
 
-  const loadPayments = useCallback(async () => {
-    if (!booking?.id) return;
-    setLoadingPayments(true);
-    try {
-      const result = await paymentsService.getByBooking(booking.id);
-      setPayments(result.payments);
-      setSummary(result.summary);
-    } catch {
-      // Silently fail — payments module may not have data yet
-    } finally {
-      setLoadingPayments(false);
-    }
-  }, [booking?.id]);
-
+  // Initialize passengers with booking owner or from DB
   useEffect(() => {
-    if (open && booking?.id) {
-      loadPayments();
-      setShowAddPayment(false);
-      setPaymentForm({
-        amount: "",
-        paymentMode: "UPI",
-        paymentDate: new Date().toISOString().split('T')[0],
-        reference: "",
-        notes: ""
-      });
+    if (booking && open) {
+      if (booking.passengers && Array.isArray(booking.passengers) && booking.passengers.length > 0) {
+        setPassengers(booking.passengers);
+      } else {
+        setPassengers([{
+          id: 'main',
+          name: booking.fullName,
+          phone: booking.mobile,
+          email: "Not specified",
+          gender: booking.gender,
+          age: booking.age,
+          type: `${booking.trainClass} Train`,
+          status: 'Form complete'
+        }]);
+      }
     }
-  }, [open, booking?.id, loadPayments]);
+  }, [booking, open]);
 
   if (!booking) return null;
 
@@ -75,511 +65,516 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onPay
     });
   };
 
-  const totalAmount = summary?.totalAmount ?? booking.amount ?? 0;
-  const totalPaid = summary?.totalPaid ?? booking.paidAmount ?? 0;
-  const balance = totalAmount - totalPaid;
-  const paymentPercent = totalAmount > 0 ? Math.min(100, Math.round((totalPaid / totalAmount) * 100)) : 0;
-
-  const handleAddPayment = async () => {
-    if (!paymentForm.amount || Number(paymentForm.amount) <= 0) {
-      toast.error("Enter a valid amount");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await paymentsService.add({
-        bookingId: booking.id,
-        amount: Number(paymentForm.amount),
-        paymentMode: paymentForm.paymentMode,
-        paymentDate: paymentForm.paymentDate,
-        reference: paymentForm.reference,
-        notes: paymentForm.notes
-      });
-      toast.success("Payment recorded successfully");
-      setShowAddPayment(false);
-      setPaymentForm({ amount: "", paymentMode: "UPI", paymentDate: new Date().toISOString().split('T')[0], reference: "", notes: "" });
-      await loadPayments();
-      onPaymentAdded?.();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to add payment");
-    } finally {
-      setSubmitting(false);
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'paid': return 'text-emerald-600 bg-emerald-50 border-emerald-100';
+      case 'partial': return 'text-amber-600 bg-amber-50 border-amber-100';
+      case 'pending': return 'text-red-600 bg-red-50 border-red-100';
+      default: return 'text-gray-600 bg-gray-50 border-gray-100';
     }
   };
 
-  const handleDeletePayment = async (paymentId: string) => {
-    if (!confirm("Delete this payment record? The booking will be resynchronized.")) return;
-    try {
-      await paymentsService.remove(paymentId);
-      toast.success("Payment deleted");
-      await loadPayments();
-      onPaymentAdded?.();
-    } catch {
-      toast.error("Failed to delete payment");
+  const handleEditPassenger = (p: any) => {
+    const names = p.name.split(' ');
+    setEditingPassenger(p);
+    setNewPassenger({
+      firstName: names[0] || "",
+      lastName: names.slice(1).join(' ') || "",
+      gender: p.gender || "Male",
+      age: p.age?.toString() || "",
+      phone: p.phone || "",
+      email: p.email !== "Not specified" ? p.email : ""
+    });
+    setShowAddPassenger(true);
+  };
+
+  const handleSavePassenger = async (keepOpen = false) => {
+    if (!newPassenger.firstName) {
+      toast.error("Please enter at least a first name");
+      return;
     }
+
+    let updatedPassengers = [];
+
+    if (editingPassenger) {
+      // Update existing
+      updatedPassengers = passengers.map(p => p.id === editingPassenger.id ? {
+        ...p,
+        name: `${newPassenger.firstName} ${newPassenger.lastName}`,
+        phone: newPassenger.phone || "N/A",
+        email: newPassenger.email || "N/A",
+        gender: newPassenger.gender,
+        age: newPassenger.age || "N/A",
+      } : p);
+      toast.success("Passenger updated");
+    } else {
+      // Add new
+      const passenger = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: `${newPassenger.firstName} ${newPassenger.lastName}`,
+        phone: newPassenger.phone || "N/A",
+        email: newPassenger.email || "N/A",
+        gender: newPassenger.gender,
+        age: newPassenger.age || "N/A",
+        type: `${booking?.trainClass} Train`,
+        status: 'Pending'
+      };
+      updatedPassengers = [...passengers, passenger];
+      toast.success(`${newPassenger.firstName} added to booking`);
+    }
+    
+    setPassengers(updatedPassengers);
+    
+    try {
+      if (booking) {
+        await bookingsService.update(booking.id, { passengers: updatedPassengers });
+      }
+    } catch (e) {
+      toast.error("Failed to save to server, but updated locally");
+    }
+
+    setNewPassenger({ firstName: "", lastName: "", gender: "Male", age: "", phone: "", email: "" });
+    setEditingPassenger(null);
+    
+    if (!keepOpen) {
+      setShowAddPassenger(false);
+    }
+  };
+
+  const handleDownloadInvoice = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const invoiceHtml = `
+      <html>
+        <head>
+          <title>Invoice - ${booking.bookingId}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
+            .logo { font-size: 24px; font-weight: 900; color: #1e293b; letter-spacing: -1px; }
+            .invoice-details { text-align: right; }
+            .invoice-details p { margin: 2px 0; font-size: 12px; color: #64748b; font-weight: 600; }
+            .section { margin-bottom: 30px; }
+            .section-title { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; margin-bottom: 15px; letter-spacing: 1px; }
+            .grid { display: grid; grid-template-cols: 1fr 1fr; gap: 40px; }
+            .info-item { margin-bottom: 10px; }
+            .info-label { font-size: 9px; font-weight: 900; text-transform: uppercase; color: #94a3b8; margin-bottom: 2px; }
+            .info-value { font-size: 14px; font-weight: 600; color: #1e293b; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { text-align: left; font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding: 12px; border-bottom: 2px solid #f1f5f9; }
+            td { padding: 12px; font-size: 13px; border-bottom: 1px solid #f8fafc; }
+            .total-section { margin-top: 40px; float: right; width: 300px; }
+            .total-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+            .total-row.grand-total { border-bottom: none; margin-top: 10px; padding-top: 15px; border-top: 2px solid #1e293b; }
+            .total-row.grand-total .label { font-size: 14px; font-weight: 900; }
+            .total-row.grand-total .value { font-size: 18px; font-weight: 900; color: #1e293b; }
+            .footer { margin-top: 100px; font-size: 10px; color: #94a3b8; text-align: center; line-height: 1.5; }
+            @media print { .no-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">YOUTHCAMPING.</div>
+            <div class="invoice-details">
+              <p>INVOICE NO: ${booking.bookingId}</p>
+              <p>DATE: ${new Date().toLocaleDateString('en-IN')}</p>
+              <p>STATUS: ${booking.paymentStatus.toUpperCase()}</p>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="section">
+              <div class="section-title">Guest Details</div>
+              <div class="info-item">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">${booking.fullName}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Mobile Number</div>
+                <div class="info-value">+91 ${booking.mobile}</div>
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-title">Travel Details</div>
+              <div class="info-item">
+                <div class="info-label">Train Class / Transport</div>
+                <div class="info-value">${booking.trainClass} (${booking.ticketStatus})</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Room Type</div>
+                <div class="info-value">${booking.roomType}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Booking Summary</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Quantity</th>
+                  <th style="text-align: right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Base Trip Package - ${booking.trainClass}</td>
+                  <td>1 Adult</td>
+                  <td style="text-align: right">₹${booking.totalAmount.toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="total-section">
+            <div class="total-row">
+              <span class="label">Total Amount</span>
+              <span class="value">₹${booking.totalAmount.toLocaleString()}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Advance Paid</span>
+              <span class="value" style="color: #059669">-₹${booking.advancePaid.toLocaleString()}</span>
+            </div>
+            <div class="total-row grand-total">
+              <span class="label">Balance Due</span>
+              <span class="value">₹${booking.remainingAmount.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div style="clear: both"></div>
+
+          <div class="footer">
+            <p>Thank you for booking with YouthCamping!</p>
+            <p>This is a computer-generated invoice and does not require a signature.</p>
+            <p>For support, please contact us at support@youthcamping.com</p>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(invoiceHtml);
+    printWindow.document.close();
+    toast.success("Generating invoice...");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[720px] max-h-[92vh] overflow-y-auto p-0">
-        {/* Status Header */}
-        <div className={cn(
-          "px-8 py-6 border-b",
-          booking.status === 'confirmed' ? "bg-emerald-50" :
-          booking.status === 'cancelled' ? "bg-red-50" : "bg-amber-50"
-        )}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-black uppercase tracking-tight">Booking #{booking.id.slice(-6)}</span>
-                  <div className={cn(
-                    "px-2 py-0.5 rounded text-[8px] font-black uppercase",
-                    booking.syncStatus === 'synced' ? "bg-emerald-100 text-emerald-700" :
-                    booking.syncStatus === 'failed' ? "bg-red-100 text-red-700 animate-pulse" : "bg-slate-100 text-slate-500"
-                  )}>
-                    {booking.syncStatus === 'synced' ? "Cloud Synced" : booking.syncStatus === 'failed' ? "Sync Failed" : "Sync Pending"}
-                  </div>
-                </div>
-                {booking.bookingId && <span className="text-[10px] font-mono text-muted-foreground">{booking.bookingId}</span>}
+      <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Booking Details - {booking.bookingId}</DialogTitle>
+          <DialogDescription>Detailed view of the booking including passenger and payment information.</DialogDescription>
+        </DialogHeader>
+        {/* Header */}
+        <div className="bg-[#1e293b] px-8 py-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-500/20 p-2 rounded-lg">
+                <Calendar className="w-5 h-5 text-blue-400" />
               </div>
-              <div className="flex gap-2 items-center">
-                {booking.syncStatus === 'failed' && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-7 text-[9px] font-bold border-red-200 text-red-600 hover:bg-red-50"
-                    onClick={async () => {
-                      const { bookingsService } = await import("@/services/bookings.service");
-                      await bookingsService.retrySync(booking.id);
-                      toast.success("Sync retried successfully");
-                      onPaymentAdded?.();
-                    }}
-                  >
-                    <RefreshCcw className="h-3 w-3 mr-1" /> Retry Sync
-                  </Button>
-                )}
-                <StatusBadge variant={getBookingBadgeVariant(booking.status)}>{booking.status}</StatusBadge>
+              <div>
+                <h2 className="text-xl font-black tracking-tight leading-none uppercase">Booking Details</h2>
+                <p className="text-[10px] font-bold text-white/40 mt-1 uppercase tracking-widest">{booking.bookingId}</p>
               </div>
-            </DialogTitle>
-          </DialogHeader>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => booking && onEdit?.(booking)}
+                className="text-white bg-white/10 border-white/20 hover:bg-white/20 hover:text-white"
+              >
+                <Pencil className="w-4 h-4 mr-2" /> Edit Booking
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="text-white/60 hover:text-white hover:bg-white/10">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-4">
+            <div className={cn("px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border", getStatusColor(booking.paymentStatus))}>
+              Payment: {booking.paymentStatus}
+            </div>
+            <div className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/10 text-white/80 border border-white/5">
+              {booking.trainClass} — {booking.ticketStatus}
+            </div>
+          </div>
         </div>
 
-        {booking.status === 'pending' && (
-          <div className="px-8 pt-6 pb-2">
-            <Button 
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs gap-2 rounded-2xl shadow-lg shadow-emerald-200"
-              onClick={async () => {
-                try {
-                  const { bookingsService } = await import("@/services/bookings.service");
-                  await bookingsService.updateStatus(booking.id, "accepted");
-                  toast.success("Booking Accepted & Synced to Google Sheets!");
-                  onPaymentAdded?.(); // Refresh
-                } catch (err) {
-                  toast.error("Failed to accept booking");
-                }
-              }}
-            >
-              <CheckCircle2 className="h-4 w-4" /> Accept & Sync to Google Sheets
-            </Button>
-          </div>
-        )}
-
-        <div className="px-8 pb-8 space-y-6">
-          {/* ─── Payment Progress Bar ─── */}
-          <div className="bg-white border-2 border-border rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-                <IndianRupee className="h-3.5 w-3.5" /> Payment Progress
-              </h4>
-              <div className="flex gap-2">
-                <span className={cn(
-                  "text-xs font-black uppercase px-3 py-1 rounded-full",
-                  paymentPercent >= 100 ? "bg-emerald-100 text-emerald-700" :
-                  paymentPercent > 0 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
-                )}>
-                  {paymentPercent >= 100 ? "Fully Paid" : paymentPercent > 0 ? "Partial" : "Unpaid"}
-                </span>
-                {paymentPercent < 100 && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 text-[9px] font-bold text-emerald-600 hover:bg-emerald-50"
-                    onClick={async () => {
-                      const { bookingsService } = await import("@/services/bookings.service");
-                      await bookingsService.markAsFullyPaid(booking.id);
-                      toast.success("Marked as Fully Paid");
-                      onPaymentAdded?.();
-                    }}
-                  >
-                    Mark as Fully Paid
-                  </Button>
-                )}
-              </div>
+        <div className="p-8 bg-gray-50/50 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto font-sans">
+          {/* Guest Information */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
+              <User className="w-4 h-4 text-blue-600" />
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Guest Information</h3>
             </div>
-
-            {/* Progress bar */}
-            <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  "absolute left-0 top-0 h-full rounded-full transition-all duration-700",
-                  paymentPercent >= 100 ? "bg-emerald-500" :
-                  paymentPercent > 0 ? "bg-amber-500" : "bg-red-400"
-                )}
-                style={{ width: `${paymentPercent}%` }}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 bg-muted/30 rounded-xl">
-                <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">Total</p>
-                <p className="text-lg font-black text-foreground">₹{totalAmount.toLocaleString()}</p>
+            
+            <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
+              <div>
+                <Label text="Full Name" />
+                <p className="text-sm font-black text-gray-900 uppercase">{booking.fullName}</p>
               </div>
-              <div className="text-center p-3 bg-emerald-50 rounded-xl">
-                <p className="text-[9px] uppercase tracking-wider text-emerald-600 font-bold">Paid</p>
-                <p className="text-lg font-black text-emerald-700">₹{totalPaid.toLocaleString()}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label text="Age" />
+                  <p className="text-sm font-bold text-gray-700">{booking.age} Years</p>
+                </div>
+                <div>
+                  <Label text="Gender" />
+                  <p className="text-sm font-bold text-gray-700">{booking.gender}</p>
+                </div>
               </div>
-              <div className="text-center p-3 bg-red-50 rounded-xl">
-                <p className="text-[9px] uppercase tracking-wider text-red-600 font-bold">Balance</p>
-                <p className={cn("text-lg font-black", balance > 0 ? "text-red-600" : "text-emerald-600")}>
-                  ₹{Math.max(0, balance).toLocaleString()}
+              <div>
+                <Label text="Mobile Number" />
+                <p className="text-sm font-black text-blue-600 flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5" /> +91 {booking.mobile}
                 </p>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* ─── Customer & Trip Info ─── */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-                <User className="h-3 w-3" /> Customer
-              </h4>
-              <div className="bg-muted/20 rounded-xl p-4 space-y-2">
-                <p className="text-sm font-bold">{booking.userName}</p>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Mail className="h-3 w-3" /> {booking.email}
+          {/* Travel Information */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
+              <MapPin className="w-4 h-4 text-emerald-600" />
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Travel & Stay</h3>
+            </div>
+            
+            <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label text="Train Class" />
+                  <p className="text-sm font-bold text-gray-700">{booking.trainClass}</p>
                 </div>
-                <div className="flex items-center justify-between gap-1.5 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <Phone className="h-3 w-3" /> {booking.phone}
-                  </div>
-                  <div className="flex gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 text-[9px] font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2 rounded-lg"
-                      onClick={() => {
-                        const msg = encodeURIComponent(`*YouthCamping Booking Received* 🏕️\n\nHello ${booking.userName},\n\nWe have received your booking request for *${booking.tripTitle}*. Our team is reviewing the availability and will confirm shortly.\n\n*Reference:* ${booking.bookingId || booking.id.slice(-6)}\n\nSee you soon!`);
-                        window.open(`https://wa.me/${booking.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
-                      }}
-                    >
-                      <MessageCircle className="h-3 w-3 mr-1" /> Recv
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 text-[9px] font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2 rounded-lg"
-                      onClick={() => {
-                        const msg = encodeURIComponent(`*YouthCamping Booking Confirmed* 🏕️\n\nHello ${booking.userName},\n\nYour adventure to *${booking.tripTitle}* is now *CONFIRMED*!\n\n*Booking ID:* ${booking.bookingId || booking.id.slice(-6)}\n*Travel Date:* ${formatDate(booking.travelDate)}\n\nGet ready for the wild! 🏔️`);
-                        window.open(`https://wa.me/${booking.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
-                      }}
-                    >
-                      <CheckCircle2 className="h-3 w-3 mr-1" /> Conf
-                    </Button>
-                    {balance > 0 && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 text-[9px] font-bold text-red-600 hover:bg-red-50 px-2 rounded-lg"
-                        onClick={() => {
-                          const msg = encodeURIComponent(`*YouthCamping Payment Reminder* 🏕️\n\nHi ${booking.userName},\n\nJust a quick reminder regarding your booking for *${booking.tripTitle}*.\n\n*Remaining Balance:* ₹${balance.toLocaleString()}\n\nPlease clear the balance to confirm your final arrangements.\n\nTeam YouthCamping`);
-                          window.open(`https://wa.me/${booking.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
-                        }}
-                      >
-                        <AlertTriangle className="h-3 w-3 mr-1" /> Remind
-                      </Button>
-                    )}
-                  </div>
+                <div>
+                  <Label text="Ticket Status" />
+                  <p className="text-sm font-bold text-emerald-600">{booking.ticketStatus}</p>
                 </div>
+              </div>
+              <div>
+                <Label text="Room Type" />
+                <p className="text-sm font-bold text-gray-700">{booking.roomType}</p>
+              </div>
+              <div>
+                <Label text="Departure" />
+                <p className="text-sm font-medium text-gray-500">{formatDate(booking.createdAt)}</p>
               </div>
             </div>
+          </section>
 
-            <div className="space-y-3">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-                <MapPin className="h-3 w-3" /> Trip Details
-              </h4>
-              <div className="bg-muted/20 rounded-xl p-4 space-y-2">
-                <p className="text-sm font-bold">{booking.tripTitle || "Unknown Trip"}</p>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3" /> {formatDate(booking.travelDate)}
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Users className="h-3 w-3" /> {booking.travelers || 1} Traveler(s)
-                </div>
-                {booking.pickupCity && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3" /> Pickup: {booking.pickupCity}
-                  </div>
-                )}
-                {booking.salesPersonName && (
-                  <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-bold">
-                    <User className="h-3 w-3" /> Sales: {booking.salesPersonName}
-                  </div>
-                )}
+          {/* Payment Information */}
+          <section className="space-y-4 md:col-span-2">
+            <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
+              <CreditCard className="w-4 h-4 text-amber-600" />
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Payment Breakdown</h3>
+            </div>
+            
+            <div className="bg-white p-8 rounded-2xl border shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="space-y-1">
+                <Label text="Base Price" />
+                <p className="text-xl font-bold text-gray-700">₹{(booking.basePrice || 0).toLocaleString()}</p>
+              </div>
+              <div className="space-y-1">
+                <Label text="GST (5%)" />
+                <p className="text-xl font-bold text-gray-400">₹{(booking.gstAmount || 0).toLocaleString()}</p>
+              </div>
+              <div className="space-y-1">
+                <Label text="Total Amount" />
+                <p className="text-2xl font-black text-gray-900">₹{booking.totalAmount.toLocaleString()}</p>
+              </div>
+              <div className="bg-emerald-50 p-4 rounded-xl space-y-1 border border-emerald-100">
+                <Label text="Advance Paid" />
+                <p className="text-2xl font-black text-emerald-600">₹{booking.advancePaid.toLocaleString()}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">via {booking.paymentMode}</p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-xl space-y-1 border border-red-100 md:col-span-2 lg:col-span-1">
+                <Label text="Remaining Balance" />
+                <p className="text-2xl font-black text-red-600">₹{booking.remainingAmount.toLocaleString()}</p>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* ─── Payment History ─── */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-                <CreditCard className="h-3.5 w-3.5" /> Payment History ({payments.length})
-              </h4>
-              {balance > 0 && (
-                <Button
-                  size="sm"
-                  onClick={() => setShowAddPayment(!showAddPayment)}
-                  className="h-8 text-[10px] font-black uppercase tracking-wider gap-1.5 rounded-xl"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {showAddPayment ? "Cancel" : "Add Payment"}
-                </Button>
-              )}
+          {/* Notes */}
+          {booking.notes && (
+            <section className="space-y-4 md:col-span-2">
+              <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
+                <FileText className="w-4 h-4 text-gray-400" />
+                <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Special Notes</h3>
+              </div>
+              <div className="bg-gray-100/50 p-6 rounded-2xl border border-dashed border-gray-300">
+                <p className="text-sm text-gray-600 italic leading-relaxed">"{booking.notes}"</p>
+              </div>
+            </section>
+          )}
+
+          {/* Passengers Section (From Reference Image) */}
+          <section className="space-y-4 md:col-span-2 mt-4">
+            <div className="flex items-center justify-between border-b border-gray-200 pb-2 mb-4">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Passengers</h3>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  setEditingPassenger(null);
+                  setNewPassenger({ firstName: "", lastName: "", gender: "Male", age: "", phone: "", email: "" });
+                  setShowAddPassenger(true);
+                }}
+                className="h-8 text-[10px] font-black uppercase tracking-tight bg-white border shadow-sm flex items-center gap-2"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add passengers
+              </Button>
             </div>
 
-            {/* Add Payment Form */}
-            {showAddPayment && (
-              <div className="bg-primary/5 border-2 border-primary/20 rounded-2xl p-5 space-y-4 animate-in slide-in-from-top-2 duration-300">
-                <h5 className="text-xs font-black uppercase tracking-wider text-primary flex items-center gap-2">
-                  <ArrowDownRight className="h-4 w-4" /> Record New Payment
-                </h5>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Amount (₹) *</label>
-                    <Input
-                      type="number"
-                      placeholder={`Max ₹${balance.toLocaleString()}`}
-                      value={paymentForm.amount}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                      className="h-10 rounded-xl text-sm font-bold"
-                      max={balance}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Mode *</label>
-                    <Select value={paymentForm.paymentMode} onValueChange={(v) => setPaymentForm({ ...paymentForm, paymentMode: v })}>
-                      <SelectTrigger className="h-10 rounded-xl text-sm font-bold">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="UPI">UPI</SelectItem>
-                        <SelectItem value="Cash">Cash</SelectItem>
-                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                        <SelectItem value="Card">Card</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Date</label>
-                    <Input
-                      type="date"
-                      value={paymentForm.paymentDate}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
-                      className="h-10 rounded-xl text-sm font-bold"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Reference / UTR</label>
-                    <Input
-                      placeholder="Transaction ID..."
-                      value={paymentForm.reference}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
-                      className="h-10 rounded-xl text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Notes</label>
-                  <Input
-                    placeholder="Optional notes..."
-                    value={paymentForm.notes}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                    className="h-10 rounded-xl text-sm"
-                  />
-                </div>
-                <Button
-                  onClick={handleAddPayment}
-                  disabled={submitting}
-                  className="w-full h-11 rounded-xl font-black uppercase text-xs tracking-widest"
-                >
-                  {submitting ? "Recording..." : `Record ₹${Number(paymentForm.amount || 0).toLocaleString()} Payment`}
-                </Button>
-              </div>
-            )}
-
-            {/* Payment List */}
-            {loadingPayments ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">Loading payments...</div>
-            ) : payments.length === 0 ? (
-              <div className="text-center py-8 bg-muted/20 rounded-2xl">
-                <Banknote className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground font-medium">No payments recorded yet</p>
-                {balance > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAddPayment(true)}
-                    className="mt-3 text-[10px] font-bold uppercase tracking-wider"
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> Record First Payment
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="border rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/30">
-                      <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-wider text-muted-foreground">Date</th>
-                      <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-wider text-muted-foreground">Amount</th>
-                      <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-wider text-muted-foreground">Mode</th>
-                      <th className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-wider text-muted-foreground">Ref</th>
-                      <th className="px-4 py-3 w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {payments.map((p) => (
-                      <tr key={p.id || p._id} className="hover:bg-muted/10">
-                        <td className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                          {formatDate(p.paymentDate)}
-                        </td>
-                        <td className="px-4 py-3 font-black text-emerald-700">
-                          ₹{p.amount.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="text-[10px] font-bold bg-muted px-2 py-1 rounded-lg uppercase">
-                            {p.paymentMode}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground font-mono truncate max-w-[120px]">
-                          {p.reference || "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDeletePayment(p.id || p._id!)}
+            <div className="bg-white rounded-xl border shadow-sm overflow-hidden overflow-x-auto">
+              <table className="w-full text-[11px] min-w-[1000px]">
+                <thead className="bg-gray-50 border-b text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <tr>
+                    <th className="px-6 py-4 text-left w-24">Action</th>
+                    <th className="px-6 py-4 text-left">Form Status</th>
+                    <th className="px-6 py-4 text-left whitespace-nowrap">Trip Info / Category</th>
+                    <th className="px-6 py-4 text-left">Title first name and last name</th>
+                    <th className="px-6 py-4 text-left">Gender</th>
+                    <th className="px-6 py-4 text-left">Age</th>
+                    <th className="px-6 py-4 text-left whitespace-nowrap">Country code and phone number</th>
+                    <th className="px-6 py-4 text-left">E-mail</th>
+                    <th className="px-6 py-4 text-left">Newsletter signup</th>
+                    <th className="px-6 py-4 text-left">Status/Ac</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {passengers.map(p => (
+                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center border rounded overflow-hidden w-fit shadow-sm bg-white">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7 px-2 text-[10px] font-black border-r rounded-none hover:bg-gray-50 flex items-center gap-1"
+                            onClick={() => handleEditPassenger(p)}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Pencil className="h-3 w-3" /> Edit
                           </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7 w-7 rounded-none hover:bg-red-50 hover:text-red-500"
+                            onClick={async () => { 
+                              const updated = passengers.filter(x => x.id !== p.id);
+                              setPassengers(updated);
+                              if (booking) {
+                                try { await bookingsService.update(booking.id, { passengers: updated }); } 
+                                catch (e) { toast.error("Failed to save deletion"); }
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                          </Button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={cn("text-white px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tight", p.status === 'Form complete' ? "bg-[#22c55e]" : "bg-amber-500")}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="bg-gray-400 text-white px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tight">{p.type}</span>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-gray-700 uppercase whitespace-nowrap">{p.name}</td>
+                      <td className="px-6 py-4 text-gray-500">{p.gender}</td>
+                      <td className="px-6 py-4 text-gray-500">{p.age}</td>
+                      <td className="px-6 py-4 font-bold text-gray-600 whitespace-nowrap">+91-{p.phone}</td>
+                      <td className="px-6 py-4 text-gray-400 italic">{p.email}</td>
+                      <td className="px-6 py-4 text-center text-gray-400">-</td>
+                      <td className="px-6 py-4 text-center text-gray-400">-</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div className="p-8 border-t bg-white flex justify-between items-center">
+          <div className="flex items-center gap-2 text-gray-400">
+            <Clock className="w-4 h-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Booked on {formatDate(booking.createdAt)}</span>
           </div>
-
-          {/* ─── Booking Meta ─── */}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-            <div className="flex items-center justify-between text-sm p-3 bg-muted/20 rounded-xl">
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Tag className="h-3 w-3" /> Booked On
-              </span>
-              <span className="text-xs font-medium">{formatDate(booking.createdAt)}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm p-3 bg-muted/20 rounded-xl">
-              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Clock className="h-3 w-3" /> Last Updated
-              </span>
-              <span className="text-xs font-medium">
-                {new Date(booking.updatedAt || booking.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </span>
-            </div>
-          </div>
-
-          {/* ─── Notes ─── */}
-          {(booking.notes || booking.adminNotes) && (
-            <div className="space-y-3 pt-2 border-t">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-                <FileText className="h-3 w-3" /> Notes
-              </h4>
-              {booking.notes && (
-                <div className="bg-muted p-3 rounded-lg">
-                  <p className="text-[10px] font-bold text-muted-foreground mb-1">CUSTOMER NOTES</p>
-                  <p className="text-sm italic text-foreground/80">"{booking.notes}"</p>
-                </div>
-              )}
-              {booking.specialRequests && (
-                <div className="bg-amber-50 p-3 rounded-lg border border-amber-100">
-                  <p className="text-[10px] font-bold text-amber-600 mb-1">SPECIAL REQUESTS</p>
-                  <p className="text-sm text-foreground/80 font-medium">{booking.specialRequests}</p>
-                </div>
-              )}
-              {booking.adminNotes && (
-                <div className="bg-primary/5 p-3 rounded-lg border border-primary/10">
-                  <p className="text-[10px] font-bold text-primary/60 mb-1">ADMIN INTERNAL NOTES</p>
-                  <p className="text-sm text-foreground/80">{booking.adminNotes}</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ─── Train Tickets (preserved from original) ─── */}
-          {booking.trainTickets && booking.trainTickets.length > 0 && (
-            <div className="space-y-4 pt-4 border-t border-border">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
-                <Train className="h-3 w-3" /> Train Tickets
-              </h4>
-              <div className="grid grid-cols-1 gap-3">
-                {booking.trainTickets.map((ticket, idx) => (
-                  <div key={idx} className="bg-muted/30 p-4 rounded-xl border border-border space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">PNR: {ticket.pnr || "N/A"}</p>
-                        <p className="text-sm font-black">{ticket.trainNo} {ticket.trainName}</p>
-                      </div>
-                      <StatusBadge variant={ticket.status === 'Confirmed' ? 'success' : ticket.status === 'Cancelled' ? 'destructive' : 'warning'}>
-                        {ticket.status}
-                      </StatusBadge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground">Journey</p>
-                        <p className="font-semibold">{ticket.from} ➜ {ticket.to}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground">Departure</p>
-                        <p className="font-semibold">{ticket.departureDate ? new Date(ticket.departureDate).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : "N/A"}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground">Coach / Seat</p>
-                        <p className="font-semibold">{ticket.coach} / {ticket.seat}</p>
-                      </div>
-                    </div>
-                    {ticket.ticketUrl && (
-                      <div className="pt-2 border-t border-border/50">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full h-8 text-[10px] gap-1"
-                          onClick={() => window.open(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8888"}${ticket.ticketUrl}`, "_blank")}
-                        >
-                          <Download className="h-3 w-3" /> Download Ticket PDF
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <Button 
+            onClick={handleDownloadInvoice}
+            variant="outline" 
+            className="px-8 h-12 rounded-xl text-xs font-black uppercase tracking-widest border-2 hover:bg-gray-50"
+          >
+            Download Invoice
+          </Button>
         </div>
       </DialogContent>
+
+      {/* Add/Edit Passenger Modal */}
+      <Dialog open={showAddPassenger} onOpenChange={(o) => { setShowAddPassenger(o); if(!o) setEditingPassenger(null); }}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+          <div className="p-8 space-y-6 bg-white">
+            <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">
+              {editingPassenger ? "Edit Passenger" : "Add New Passenger"}
+            </h3>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label text="First Name" />
+                <Input value={newPassenger.firstName} onChange={e => setNewPassenger({...newPassenger, firstName: e.target.value})} placeholder="First Name" />
+              </div>
+              <div className="space-y-1.5">
+                <Label text="Last Name" />
+                <Input value={newPassenger.lastName} onChange={e => setNewPassenger({...newPassenger, lastName: e.target.value})} placeholder="Last Name" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label text="Gender" />
+                  <Select value={newPassenger.gender} onValueChange={v => setNewPassenger({...newPassenger, gender: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label text="Age" />
+                  <Input type="number" value={newPassenger.age} onChange={e => setNewPassenger({...newPassenger, age: e.target.value})} placeholder="Age" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label text="Mobile Number" />
+                <Input value={newPassenger.phone} onChange={e => setNewPassenger({...newPassenger, phone: e.target.value})} placeholder="10 Digit Number" />
+              </div>
+              <div className="space-y-1.5">
+                <Label text="Email" />
+                <Input value={newPassenger.email} onChange={e => setNewPassenger({...newPassenger, email: e.target.value})} placeholder="Email Address" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-8 py-5 flex justify-end gap-3 border-t">
+            <Button variant="ghost" onClick={() => { setShowAddPassenger(false); setEditingPassenger(null); }} className="text-xs font-bold uppercase tracking-widest">Cancel</Button>
+            {!editingPassenger && (
+              <Button onClick={() => handleSavePassenger(true)} className="bg-blue-600 text-white text-xs font-black uppercase tracking-widest px-6 h-10 rounded-lg">Save & Add Another</Button>
+            )}
+            <Button onClick={() => handleSavePassenger(false)} className="bg-emerald-600 text-white text-xs font-black uppercase tracking-widest px-6 h-10 rounded-lg">
+              {editingPassenger ? "Update Details" : "Save"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
+}
+
+function Label({ text }: { text: string }) {
+  return <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{text}</p>;
 }

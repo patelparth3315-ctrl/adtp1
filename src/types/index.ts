@@ -137,36 +137,50 @@ export interface TrainTicket {
   ticketUrl?: string;
 }
 
-export interface Booking {
+// ─── BOOKING SYSTEM TYPES ───
+
+export interface BookingTrip {
   id: string;
-  bookingId?: string;
-  userName: string;
-  email: string;
-  phone: string;
-  tripId: string;
-  tripTitle?: string;
-  travelers: number;
-  travelDate?: string;
-  amount: number;
-  paidAmount: number;
-  paymentMode?: 'UPI' | 'Cash' | 'Bank Transfer' | 'Other' | 'None';
-  pickupCity?: string;
-  specialRequests?: string;
-  idProofUrl?: string;
-  salesPersonId?: string;
-  salesPersonName?: string;
-  status: "pending" | "confirmed" | "cancelled" | "completed" | "accepted" | "rejected";
-  paymentStatus: "unpaid" | "partial" | "paid";
-  notes?: string;
-  adminNotes?: string;
-  syncStatus?: 'pending' | 'synced' | 'failed';
-  lastSyncAt?: string;
-  trainTickets?: TrainTicket[];
+  tripCode: string;
+  tripName: string;
+  isActive: boolean;
+  formLink?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export type BookingFormData = Omit<Booking, "id" | "createdAt" | "updatedAt" | "tripTitle">;
+export interface BookingPassenger {
+  name: string;
+  age: number;
+  gender: string;
+  phone: string;
+}
+
+export interface Booking {
+  id: string;
+  bookingId: string;
+  tripId: string;
+  tripName: string;
+  status: 'pending' | 'confirmed';
+  fullName: string;
+  age: number;
+  gender: 'Male' | 'Female' | 'Other';
+  mobile: string;
+  trainClass: 'Sleeper' | '3AC' | '2AC' | 'Flight';
+  ticketStatus: 'Confirmed' | 'Waiting' | 'Not Booked';
+  roomType: string;
+  totalAmount: number;
+  advancePaid: number;
+  remainingAmount: number;
+  paymentMode: 'UPI' | 'Cash' | 'Bank Transfer' | '';
+  paymentStatus: 'Pending' | 'Partial' | 'Paid';
+  notes?: string;
+  passengers?: BookingPassenger[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type BookingFormData = Omit<Booking, "id" | "bookingId" | "remainingAmount" | "createdAt" | "updatedAt">;
 
 export interface Inquiry {
   id: string;

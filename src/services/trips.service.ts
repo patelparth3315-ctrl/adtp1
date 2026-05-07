@@ -3,7 +3,7 @@ import type { Trip, TripFormData } from "@/types";
 
 export const tripsService = {
   async getAll(): Promise<Trip[]> {
-    const res = await api.get("/trips");
+    const res = await api.get("/trips?status=all");
     return res.data.data;
   },
 

@@ -32,10 +32,14 @@ export default function TripsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = statusFilter === "all" ? trips : trips.filter((t) => t.status === statusFilter);
+  const filtered = (trips || []).filter((t) => {
+    if (!t) return false;
+    return statusFilter === "all" || t.status === statusFilter;
+  });
 
   const openCreate = () => { setEditing(null); setModalOpen(true); };
   const openEdit = async (t: Trip) => { 
+    if (!t?.id) return;
     try {
       const fullTrip = await tripsService.getById(t.id);
       setEditing(fullTrip || t);
@@ -48,7 +52,6 @@ export default function TripsPage() {
   };
 
   const handleSave = async (data: TripFormData, editingId?: string) => {
-    // ── DATA SANITIZATION: Ensure all required fields exist ──
     const payload = {
       ...data,
       title: data.title || "Untitled Trip",
@@ -76,13 +79,14 @@ export default function TripsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this trip?")) return;
+    if (!id || !confirm("Delete this trip?")) return;
     await tripsService.remove(id);
     toast.success("Trip deleted");
     load();
   };
 
   const toggleStatus = async (t: Trip) => {
+    if (!t?.id) return;
     const newStatus = t.status === "published" ? "draft" : "published";
     await tripsService.update(t.id, { status: newStatus });
     toast.success(`Trip ${newStatus}`);
@@ -90,40 +94,55 @@ export default function TripsPage() {
   };
 
   const columns = [
-    { key: "title", header: "Trip", render: (t: Trip) => (
-      <div className="flex items-center gap-3">
-        {(t.heroImage || t.images[0]) && <img src={t.heroImage || t.images[0]} alt="" className="h-10 w-14 rounded-lg object-cover" />}
-        <div>
-          <p className="font-medium text-card-foreground">{t.title}</p>
-          <p className="text-xs text-muted-foreground">{t.location}</p>
+    { key: "title", header: "Trip", render: (t: Trip) => {
+      if (!t) return null;
+      return (
+        <div className="flex items-center gap-3">
+          {(t.heroImage || t.images?.[0]) && (
+            <img 
+              src={t.heroImage || t.images?.[0]} 
+              alt="" 
+              className="h-10 w-14 rounded-lg object-cover" 
+            />
+          )}
+          <div>
+            <p className="font-medium text-card-foreground">{t.title || "Untitled"}</p>
+            <p className="text-xs text-muted-foreground">{t.location || "No location"}</p>
+          </div>
         </div>
-      </div>
-    )},
+      );
+    }},
     { key: "category", header: "Category", render: (t: Trip) => (
-      <span className="capitalize">{t.category?.replace(/-/g, ' ')}</span>
+      <span className="capitalize">{t?.category?.replace(/-/g, ' ') || "N/A"}</span>
     )},
-    { key: "price", header: "Price", render: (t: Trip) => `₹${t.price.toLocaleString()}` },
-    { key: "duration", header: "Duration", render: (t: Trip) => t.duration || "N/A" },
+    { key: "price", header: "Price", render: (t: Trip) => `₹${t?.price?.toLocaleString() || '0'}` },
+    { key: "duration", header: "Duration", render: (t: Trip) => t?.duration || "N/A" },
     { key: "itinerary", header: "Days", render: (t: Trip) => (
       <span className="flex items-center gap-1 text-muted-foreground font-bold">
         <CalendarDays className="h-3.5 w-3.5" />
-        {t.itinerary?.length || "0"}
+        {t?.itinerary?.length || "0"}
       </span>
     )},
-    { key: "status", header: "Status", render: (t: Trip) => (
-      <button onClick={() => toggleStatus(t)}>
-        <StatusBadge variant={getTripBadgeVariant(t.status)}>{t.status}</StatusBadge>
-      </button>
-    )},
-    { key: "actions", header: "", render: (t: Trip) => (
-      <div className="flex gap-1">
-        <Button variant="ghost" size="icon" onClick={() => setVendorTrip(t)} title="Manage Vendors">
-          <Building2 className="h-4 w-4 text-blue-600" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
-        <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-      </div>
-    )},
+    { key: "status", header: "Status", render: (t: Trip) => {
+      if (!t) return null;
+      return (
+        <button onClick={() => toggleStatus(t)}>
+          <StatusBadge variant={getTripBadgeVariant(t.status)}>{t.status}</StatusBadge>
+        </button>
+      );
+    }},
+    { key: "actions", header: "", render: (t: Trip) => {
+      if (!t) return null;
+      return (
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" onClick={() => setVendorTrip(t)} title="Manage Vendors">
+            <Building2 className="h-4 w-4 text-blue-600" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+        </div>
+      );
+    }},
   ];
 
   return (

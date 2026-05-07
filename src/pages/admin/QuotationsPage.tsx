@@ -79,7 +79,7 @@ export default function QuotationsPage() {
     )},
     { key: "actions", header: "", render: (q: any) => (
       <div className="flex gap-1">
-        <Button variant="ghost" size="icon" onClick={() => window.open(`${import.meta.env.VITE_FRONTEND_URL}/quote/${q.slug}`, '_blank')} title="Preview Quote">
+        <Button variant="ghost" size="icon" onClick={() => window.open(`${import.meta.env.VITE_FRONTEND_URL}/quote/${q.slug || q.id}`, '_blank')} title="Preview Quote">
           <Share2 className="h-4 w-4 text-blue-600" />
         </Button>
         <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/quotations/${q.id}`)} title="Edit Quote">

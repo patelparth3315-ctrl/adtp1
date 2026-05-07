@@ -13,6 +13,7 @@ import {
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card } from '../../components/ui/card';
+import api from '../../services/api';
 
 const DynamicFormAdmin = () => {
   const [forms, setForms] = useState<any[]>([]);
@@ -24,10 +25,8 @@ const DynamicFormAdmin = () => {
 
   const fetchForms = async () => {
     try {
-      const res = await fetch('http://localhost:5005/api/dynamic-forms', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      const data = await res.json();
+      const res = await api.get('/dynamic-forms');
+      const data = res.data;
       if (data.success) {
         setForms(data.data);
         if (data.data.length > 0 && !selectedForm) {
@@ -49,8 +48,8 @@ const DynamicFormAdmin = () => {
     if (!selectedForm) return;
     setSyncing(true);
     try {
-      const res = await fetch(`http://localhost:5005/api/dynamic-forms/${selectedForm._id}/structure?sync=true`);
-      const data = await res.json();
+      const res = await api.get(`/dynamic-forms/${selectedForm._id}/structure?sync=true`);
+      const data = res.data;
       if (data.success) {
         // Refresh to get updated fields
         await fetchForms();
@@ -68,15 +67,8 @@ const DynamicFormAdmin = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('http://localhost:5005/api/dynamic-forms/config', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(selectedForm)
-      });
-      const data = await res.json();
+      const res = await api.post('/dynamic-forms/config', selectedForm);
+      const data = res.data;
       if (data.success) {
         setMessage({ type: 'success', text: 'Settings saved successfully' });
       }

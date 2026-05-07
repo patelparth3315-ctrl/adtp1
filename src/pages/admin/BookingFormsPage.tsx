@@ -106,7 +106,8 @@ export default function BookingFormsPage() {
     
     const params = new URLSearchParams({
       trip: form.tripName,
-      date: form.date
+      date: form.date,
+      tid: form.tripId || ''
     });
     return `${baseUrl}/book?${params.toString()}`;
   };
@@ -386,6 +387,7 @@ export default function BookingFormsPage() {
             <DialogTitle className="font-black uppercase tracking-tight text-lg">
               Generate Booking Form
             </DialogTitle>
+            <DialogDescription className="sr-only">Select a trip and date to generate a booking form.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 py-4">
@@ -475,6 +477,7 @@ export default function BookingFormsPage() {
             <DialogTitle className="font-black uppercase tracking-tight flex items-center gap-2">
               <Share2 className="h-5 w-5 text-primary" /> Share Booking Link
             </DialogTitle>
+            <DialogDescription className="sr-only">Copy and share the booking form link.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 py-4">
@@ -538,6 +541,7 @@ export default function BookingFormsPage() {
             <DialogTitle className="font-black uppercase tracking-tight text-lg">
               Edit Booking Form Link
             </DialogTitle>
+            <DialogDescription className="sr-only">Edit the google sheet link associated with this booking form.</DialogDescription>
           </DialogHeader>
 
           {formToEdit && (
