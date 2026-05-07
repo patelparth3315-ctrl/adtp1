@@ -3,7 +3,7 @@ import { quotationsService } from "@/services/quotations.service";
 import { DataTable } from "@/components/admin/DataTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, FileText, Calendar, User, MapPin, Share2 } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, Calendar, User, MapPin, Share2, Clock, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -37,6 +37,22 @@ export default function QuotationsPage() {
     } catch (err) {
       toast.error("Failed to delete quotation");
     }
+  };
+
+  const handleExtend = async (id: string) => {
+    try {
+      await quotationsService.extend(id, 48);
+      toast.success("Validity extended by 48 hours");
+      load();
+    } catch (err) {
+      toast.error("Failed to extend validity");
+    }
+  };
+
+  const handleCopy = (q: any) => {
+    const url = `${import.meta.env.VITE_FRONTEND_URL}/quote/${q.slug || q.id}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Link copied to clipboard!");
   };
 
   const columns = [
@@ -79,8 +95,14 @@ export default function QuotationsPage() {
     )},
     { key: "actions", header: "", render: (q: any) => (
       <div className="flex gap-1">
+        <Button variant="ghost" size="icon" onClick={() => handleCopy(q)} title="Copy Public Link">
+          <Copy className="h-4 w-4 text-emerald-600" />
+        </Button>
         <Button variant="ghost" size="icon" onClick={() => window.open(`${import.meta.env.VITE_FRONTEND_URL}/quote/${q.slug || q.id}`, '_blank')} title="Preview Quote">
           <Share2 className="h-4 w-4 text-blue-600" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => handleExtend(q.id)} title="Extend Validity (48h)">
+          <Clock className="h-4 w-4 text-orange-500" />
         </Button>
         <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/quotations/${q.id}`)} title="Edit Quote">
           <Pencil className="h-4 w-4" />
