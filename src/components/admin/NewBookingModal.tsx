@@ -37,6 +37,7 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
     paymentStatus: "Pending",
     paymentMode: "UPI",
     notes: "",
+    email: "",
   });
 
   useEffect(() => {
@@ -76,8 +77,8 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
 
     console.log("📡 Sending booking:", payload);
 
-    if (!payload.name || !payload.phone || !payload.tripId) {
-      toast.error("Required fields: Name, Phone, and Trip Selection");
+    if (!payload.name || !payload.phone || !payload.tripId || !payload.email) {
+      toast.error("Required fields: Name, Phone, Trip, and Email Address");
       return;
     }
 
@@ -104,6 +105,7 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
         paymentStatus: "Pending",
         paymentMode: "UPI",
         notes: "",
+        email: "",
       });
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.message || "Failed to create booking";
@@ -164,11 +166,12 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
 
                <div className="grid grid-cols-2 gap-6">
                  <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Age</Label>
+                   <Label className="text-[11px] font-bold text-gray-700">Email Address <span className="text-red-500">*</span></Label>
                    <Input 
-                     type="number"
-                     value={form.age} 
-                     onChange={e => setForm({ ...form, age: parseInt(e.target.value) || 0 })}
+                     type="email"
+                     value={form.email} 
+                     onChange={e => setForm({ ...form, email: e.target.value })}
+                     placeholder="customer@example.com" 
                      className="h-9 border-gray-300 text-sm shadow-sm"
                    />
                  </div>
@@ -184,6 +187,18 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
                        <SelectItem value="Other">Other</SelectItem>
                      </SelectContent>
                    </Select>
+                 </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-6">
+                 <div className="space-y-1.5">
+                   <Label className="text-[11px] font-bold text-gray-700">Age</Label>
+                   <Input 
+                     type="number"
+                     value={form.age} 
+                     onChange={e => setForm({ ...form, age: parseInt(e.target.value) || 0 })}
+                     className="h-9 border-gray-300 text-sm shadow-sm"
+                   />
                  </div>
                </div>
             </section>

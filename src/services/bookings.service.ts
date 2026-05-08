@@ -68,5 +68,21 @@ export const bookingsService = {
 
   async deleteTrip(id: string): Promise<void> {
     await api.delete(`/bookings/trips/${id}`);
+  },
+
+  // ── EMAILS ──
+
+  async sendEmail(bookingId: string, type: 'confirmation' | 'payment' | 'reminder' | 'cancellation' | 'invoice', amount?: number): Promise<void> {
+    console.log("📡 [bookingsService] Sending email request:", { bookingId, type, amount });
+    await api.post("/emails/send", { 
+      bookingId, 
+      type, 
+      amount: amount || 0 
+    });
+  },
+
+  async getEmailLogs(bookingId: string): Promise<any[]> {
+    const res = await api.get(`/emails/logs/${bookingId}`);
+    return res.data;
   }
 };

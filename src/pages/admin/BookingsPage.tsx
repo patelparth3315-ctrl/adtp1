@@ -81,7 +81,14 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: Booking | null; o
   const [total, setTotal] = useState("");
   const [advance, setAdvance] = useState("");
   const [mode, setMode] = useState("UPI");
+  const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (booking) {
+      setEmail(booking.email || "");
+    }
+  }, [booking]);
 
   if (!booking) return null;
 
@@ -93,9 +100,18 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: Booking | null; o
         totalAmount: parseFloat(total),
         advancePaid: parseFloat(advance) || 0,
         paymentMode: mode,
-        paymentStatus: parseFloat(advance) >= parseFloat(total) ? 'Paid' : parseFloat(advance) > 0 ? 'Partial' : 'Pending'
+        paymentStatus: parseFloat(advance) >= parseFloat(total) ? 'Paid' : parseFloat(advance) > 0 ? 'Partial' : 'Pending',
+        email
       });
       toast.success("Booking confirmed!");
+      // Automatically send confirmation email
+      try {
+        await bookingsService.sendEmail(booking.id, 'confirmation');
+        toast.success("Confirmation email sent!");
+      } catch (e) {
+        console.error("Failed to send automatic confirmation email", e);
+        toast.error("Booking confirmed but email failed to send");
+      }
       onDone();
     } catch { toast.error("Failed to confirm"); }
     setSaving(false);
@@ -112,8 +128,8 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: Booking | null; o
         </DialogHeader>
         <div className="p-6 space-y-4">
           <div className="bg-gray-50 p-4 rounded-xl">
-            <p className="font-black text-gray-900">{booking.fullName}</p>
-            <p className="text-xs text-gray-400">{booking.bookingId} · {booking.tripId} · {booking.mobile}</p>
+            <p className="font-black text-gray-900">{booking?.fullName || "No Name"}</p>
+            <p className="text-xs text-gray-400">{booking?.bookingId} · {booking?.tripId} · {booking?.mobile} · {booking?.email || "No Email"}</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -139,6 +155,10 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: Booking | null; o
                 <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold uppercase text-gray-400">Customer Email (For confirmation)</label>
+            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="customer@example.com" />
           </div>
           <Button onClick={handleConfirm} disabled={saving} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest h-12 rounded-xl">
             {saving ? "Processing..." : "Confirm Booking"}
@@ -184,7 +204,7 @@ export default function BookingsPage() {
 
   const openEdit = (b: Booking) => {
     setEditTarget(b);
-    setEditForm({ fullName: b.fullName, mobile: b.mobile, age: b.age, gender: b.gender, trainClass: b.trainClass, ticketStatus: b.ticketStatus, roomType: b.roomType, totalAmount: b.totalAmount, advancePaid: b.advancePaid, paymentMode: b.paymentMode, paymentStatus: b.paymentStatus, notes: b.notes || '' });
+    setEditForm({ fullName: b.fullName, mobile: b.mobile, email: b.email || '', age: b.age, gender: b.gender, trainClass: b.trainClass, ticketStatus: b.ticketStatus, roomType: b.roomType, totalAmount: b.totalAmount, advancePaid: b.advancePaid, paymentMode: b.paymentMode, paymentStatus: b.paymentStatus, notes: b.notes || '' });
   };
 
   const saveEdit = async () => {
@@ -330,6 +350,7 @@ export default function BookingsPage() {
                 <div><label className="text-[10px] font-bold uppercase text-gray-400">Gender</label>
                   <Select value={editForm.gender} onValueChange={v => setEditForm({...editForm, gender: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select>
                 </div>
+                <div className="col-span-2"><label className="text-[10px] font-bold uppercase text-gray-400">Email Address</label><Input value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} placeholder="customer@example.com" /></div>
                 <div><label className="text-[10px] font-bold uppercase text-gray-400">Room Type</label><Input value={editForm.roomType} onChange={e => setEditForm({...editForm, roomType: e.target.value})} /></div>
                 <div><label className="text-[10px] font-bold uppercase text-gray-400">Train Class</label>
                   <Select value={editForm.trainClass} onValueChange={v => setEditForm({...editForm, trainClass: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Sleeper">Sleeper</SelectItem><SelectItem value="3AC">3AC</SelectItem><SelectItem value="2AC">2AC</SelectItem><SelectItem value="Flight">Flight</SelectItem></SelectContent></Select>

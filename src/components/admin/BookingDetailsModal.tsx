@@ -33,10 +33,50 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
     phone: "",
     email: ""
   });
+  const [emailLogs, setEmailLogs] = useState<any[]>([]);
+
+  const fetchEmailLogs = async () => {
+    if (!booking) return;
+    try {
+      const logs = await bookingsService.getEmailLogs(booking.id);
+      setEmailLogs(logs);
+    } catch (e) {
+      console.error("Failed to fetch email logs", e);
+    }
+  };
+
+  const handleSendEmail = async (type: any) => {
+    if (!booking) return;
+    
+    // Safety check for real email
+    const targetEmail = booking.email;
+    if (!targetEmail || targetEmail.includes("no-email") || targetEmail.includes("example.com")) {
+      toast.error("Real customer email is missing! Please edit the booking to add a valid email.");
+      return;
+    }
+
+    console.log("Booking:", booking);
+    console.log("Booking ID:", booking?.id);
+    console.log("Email:", booking?.email);
+    console.log("Sending email to:", booking?.email || "No Email");
+    console.log("📡 [handleSendEmail] Triggering:", { bookingId: booking.id, type });
+    
+    const toastId = toast.loading(`Sending ${type} email...`);
+    try {
+      await bookingsService.sendEmail(booking.id, type, booking.totalAmount);
+      console.log("✅ [handleSendEmail] Success");
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} email sent!`, { id: toastId });
+      fetchEmailLogs();
+    } catch (e: any) {
+      console.error("❌ [handleSendEmail] Error:", e.response?.data || e.message);
+      toast.error(`Failed to send ${type} email: ${e.response?.data?.message || 'Unknown error'}`, { id: toastId });
+    }
+  };
 
   // Initialize passengers with booking owner or from DB
   useEffect(() => {
     if (booking && open) {
+      fetchEmailLogs();
       if (booking.passengers && Array.isArray(booking.passengers) && booking.passengers.length > 0) {
         setPassengers(booking.passengers);
       } else {
@@ -266,6 +306,8 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
     toast.success("Generating invoice...");
   };
 
+  if (!booking) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
@@ -399,6 +441,73 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
               <div className="bg-red-50 p-4 rounded-xl space-y-1 border border-red-100 md:col-span-2 lg:col-span-1">
                 <Label text="Remaining Balance" />
                 <p className="text-2xl font-black text-red-600">₹{booking.remainingAmount.toLocaleString()}</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4 md:col-span-2">
+            <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
+              <FileText className="w-4 h-4 text-blue-600" />
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Automation & Communication</h3>
+            </div>
+            
+            <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-6">
+              <div className="flex flex-wrap gap-3">
+                <Button 
+                  onClick={() => handleSendEmail('confirmation')}
+                  variant="outline" 
+                  className="bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100 text-[10px] font-black uppercase tracking-widest px-4 h-10"
+                >
+                  Resend Confirmation
+                </Button>
+                <Button 
+                  onClick={() => handleSendEmail('reminder')}
+                  variant="outline" 
+                  className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 text-[10px] font-black uppercase tracking-widest px-4 h-10"
+                >
+                  Send Reminder
+                </Button>
+                <Button 
+                  onClick={() => handleSendEmail('invoice')}
+                  variant="outline" 
+                  className="bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100 text-[10px] font-black uppercase tracking-widest px-4 h-10"
+                >
+                  Send Invoice (Email)
+                </Button>
+                <Button 
+                  onClick={() => handleSendEmail('cancellation')}
+                  variant="outline" 
+                  className="bg-red-50 text-red-700 border-red-100 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest px-4 h-10"
+                >
+                  Send Cancellation
+                </Button>
+              </div>
+
+              {/* Email Logs */}
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email History</h4>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                  {emailLogs.length === 0 ? (
+                    <p className="text-[10px] text-gray-400 font-bold italic">No emails sent yet.</p>
+                  ) : (
+                    emailLogs.map((log: any) => (
+                      <div key={log.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <div className={cn("p-1.5 rounded-lg", log.status === 'success' ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600")}>
+                            {log.status === 'success' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black text-gray-700 uppercase">{log.type} Email</p>
+                            <p className="text-[9px] text-gray-400 font-bold">{new Date(log.sentAt).toLocaleString()}</p>
+                          </div>
+                        </div>
+                        <div className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-full border", log.status === 'success' ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-red-600 bg-red-50 border-red-100")}>
+                          {log.status}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </section>

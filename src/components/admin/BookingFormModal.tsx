@@ -31,7 +31,8 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
     advancePaid: "",
     paymentMode: "UPI",
     paymentStatus: "Pending",
-    notes: ""
+    notes: "",
+    email: ""
   });
 
   useEffect(() => {
@@ -49,7 +50,8 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
           advancePaid: booking.advancePaid.toString(),
           paymentMode: booking.paymentMode,
           paymentStatus: booking.paymentStatus,
-          notes: booking.notes || ""
+          notes: booking.notes || "",
+          email: booking.email || ""
         });
       } else {
         setForm({
@@ -64,7 +66,8 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
           advancePaid: "",
           paymentMode: "UPI",
           paymentStatus: "Pending",
-          notes: ""
+          notes: "",
+          email: ""
         });
       }
     }
@@ -147,6 +150,10 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-bold uppercase text-gray-400">Mobile Number *</Label>
                 <Input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value})} placeholder="10 Digit Number" maxLength={10} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold uppercase text-gray-400">Email Address *</Label>
+                <Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="customer@example.com" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-bold uppercase text-gray-400">Age *</Label>
