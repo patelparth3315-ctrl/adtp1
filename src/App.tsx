@@ -37,7 +37,7 @@ import {
 } from "./pages/admin/PlaceholderPages.tsx";
 import { AdminLayout } from "./components/admin/AdminLayout.tsx";
 
-import ErrorBoundary from "./components/ErrorBoundary";
+import ErrorBoundary from "./components/ErrorBoundary.tsx";
 
 const queryClient = new QueryClient();
 
