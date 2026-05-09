@@ -295,7 +295,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                <SidebarTrigger className="text-gray-500 hover:text-black hover:bg-gray-100 h-10 w-10 rounded-xl" />
                <div className="flex items-center gap-3">
                   <h2 className="font-black text-gray-900 uppercase tracking-tighter text-lg leading-none">
-                    {location.pathname === "/admin" || location.pathname === "/" ? "Dashboard" : location.pathname.split("/").pop()?.replace(/-/g, " ")}
+                    {location.pathname === "/admin" || location.pathname === "/" 
+                      ? "Dashboard" 
+                      : (location.pathname.split("/").filter(Boolean).pop() || "Page").replace(/-/g, " ")}
                   </h2>
                </div>
             </div>

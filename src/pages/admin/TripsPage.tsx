@@ -112,19 +112,30 @@ export default function TripsPage() {
         </div>
       );
     }},
+    { key: "tripCode", header: "Trip Code", render: (t: Trip) => {
+      if (!t) return null;
+      return (
+        <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+          {t.id || "N/A"}
+        </span>
+      );
+    }},
     { key: "category", header: "Category", render: (t: Trip) => (
       <span className="capitalize">{t?.category?.replace(/-/g, ' ') || "N/A"}</span>
     )},
-    { key: "price", header: "Price", render: (t: Trip) => `₹${t?.price?.toLocaleString() || '0'}` },
+    { key: "price", header: "Price", render: (t: Trip) => {
+      const price = Number(t?.price);
+      return `₹${isNaN(price) ? '0' : price.toLocaleString()}`;
+    }},
     { key: "duration", header: "Duration", render: (t: Trip) => t?.duration || "N/A" },
     { key: "itinerary", header: "Days", render: (t: Trip) => (
       <span className="flex items-center gap-1 text-muted-foreground font-bold">
         <CalendarDays className="h-3.5 w-3.5" />
-        {t?.itinerary?.length || "0"}
+        {Array.isArray(t?.itinerary) ? t.itinerary.length : "0"}
       </span>
     )},
     { key: "status", header: "Status", render: (t: Trip) => {
-      if (!t) return null;
+      if (!t?.status) return null;
       return (
         <button onClick={() => toggleStatus(t)}>
           <StatusBadge variant={getTripBadgeVariant(t.status)}>{t.status}</StatusBadge>

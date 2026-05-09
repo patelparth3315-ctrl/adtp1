@@ -26,15 +26,18 @@ interface DataTableProps<T> {
 }
 
 export function DataTable<T extends Record<string, any>>({
-  columns, data, loading, searchPlaceholder = "Search...", searchKey,
+  columns, data = [], loading, searchPlaceholder = "Search...", searchKey,
   filters, onFilterChange, pageSize = 10, emptyMessage = "No data found", emptyIcon,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
 
-  const filtered = searchKey
-    ? data.filter((item) => String(item[searchKey]).toLowerCase().includes(search.toLowerCase()))
-    : data;
+  const filtered = (data || [])
+    .filter((item) => {
+      if (!searchKey || !search) return true;
+      const value = item[searchKey];
+      return String(value || "").toLowerCase().includes(search.toLowerCase());
+    });
 
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);

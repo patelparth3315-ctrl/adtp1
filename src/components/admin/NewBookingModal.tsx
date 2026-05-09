@@ -38,6 +38,7 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
     paymentMode: "UPI",
     notes: "",
     email: "",
+    departureDate: "",
   });
 
   useEffect(() => {
@@ -77,8 +78,8 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
 
     console.log("📡 Sending booking:", payload);
 
-    if (!payload.name || !payload.phone || !payload.tripId || !payload.email) {
-      toast.error("Required fields: Name, Phone, Trip, and Email Address");
+    if (!payload.name || !payload.phone || !payload.tripId || !payload.email || !payload.departureDate) {
+      toast.error("Required fields: Name, Phone, Trip, Email, and Departure Date");
       return;
     }
 
@@ -106,6 +107,7 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
         paymentMode: "UPI",
         notes: "",
         email: "",
+        departureDate: "",
       });
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.message || "Failed to create booking";
@@ -205,23 +207,54 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
 
               {/* Trip Section */}
               <section className="space-y-5">
-                 <h3 className="text-sm font-bold text-gray-800 pb-2 border-b">Trip Info</h3>
-
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Select Trip <span className="text-red-500">*</span></Label>
-                   <Select value={form.tripId} onValueChange={handleTripChange}>
-                     <SelectTrigger className="h-9 border-gray-300 text-sm shadow-sm">
-                       <SelectValue placeholder={loadingTrips ? "Loading trips..." : "Select the expedition"} />
-                     </SelectTrigger>
-                     <SelectContent>
-                       {trips.map(trip => (
-                         <SelectItem key={trip.id} value={trip.id} className="text-sm font-medium">
-                           {trip.title} (₹{trip.price})
-                         </SelectItem>
-                       ))}
-                     </SelectContent>
-                   </Select>
-                 </div>
+                <h3 className="text-sm font-bold text-gray-800 pb-2 border-b">Trip Info</h3>
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[11px] font-bold text-gray-700">Select Trip <span className="text-red-500">*</span></Label>
+                        <button 
+                          type="button"
+                          onClick={() => setForm({ ...form, isManualTrip: !form.isManualTrip, tripId: "" })}
+                          className="text-[9px] font-bold text-primary hover:underline"
+                        >
+                          {form.isManualTrip ? "Select from list" : "Enter Code Manually"}
+                        </button>
+                      </div>
+                      {form.isManualTrip ? (
+                        <Input 
+                          value={form.tripId} 
+                          onChange={e => setForm({ ...form, tripId: e.target.value })}
+                          placeholder="e.g. MKA1" 
+                          className="h-9 border-gray-300 text-sm shadow-sm font-bold uppercase"
+                        />
+                      ) : (
+                        <Select value={form.tripId} onValueChange={handleTripChange}>
+                          <SelectTrigger className="h-9 border-gray-300 text-sm shadow-sm">
+                            <SelectValue placeholder={loadingTrips ? "Loading trips..." : "Select the expedition"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {trips.map(trip => (
+                              <SelectItem key={trip.id} value={trip.id} className="text-sm font-medium">
+                                {trip.title} (₹{trip.price})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-bold text-gray-700">Departure Date <span className="text-red-500">*</span></Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                        <Input 
+                          type="date"
+                          value={form.departureDate} 
+                          onChange={e => setForm({ ...form, departureDate: e.target.value })}
+                          className="h-9 border-gray-300 pl-9 text-sm shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
                <div className="grid grid-cols-2 gap-6">
                  <div className="space-y-1.5">
@@ -322,9 +355,9 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
               />
             </section>
           </div>
-          </div>
+        </div>
 
-          <div className="px-6 py-4 border-t bg-gray-50/80 shrink-0 flex items-center justify-between">
+        <div className="px-6 py-4 border-t bg-gray-50/80 shrink-0 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-[10px] text-gray-500">Balance</span>
               <span className="text-sm font-bold text-gray-900">₹{(form.totalAmount - (form.advancePaid || 0)).toLocaleString()}</span>

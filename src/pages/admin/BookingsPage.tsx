@@ -186,8 +186,19 @@ export default function BookingsPage() {
 
   const fetchAll = async () => {
     setLoading(true);
-    const [b, t] = await Promise.all([bookingsService.getAll(), bookingsService.getTrips()]);
-    setBookings(b); setTrips(t); setLoading(false);
+    try {
+      const [b, t] = await Promise.all([
+        bookingsService.getAll().catch(err => { console.error("Bookings failed", err); return []; }),
+        bookingsService.getTrips().catch(err => { console.error("Trips failed", err); return []; })
+      ]);
+      setBookings(Array.isArray(b) ? b : []); 
+      setTrips(Array.isArray(t) ? t : []);
+    } catch (err) {
+      console.error("🔥 Critical fetch error:", err);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { fetchAll(); }, []);
 
@@ -300,18 +311,20 @@ export default function BookingsPage() {
                   <td className="px-4 py-3 text-xs text-gray-500">{b.mobile}</td>
                   <td className="px-4 py-3"><span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-black">{b.tripId}</span></td>
                   {tab === 'confirmed' && <>
-                    <td className="px-4 py-3 font-bold text-sm">₹{(b.totalAmount||0).toLocaleString()}</td>
-                    <td className="px-4 py-3 font-bold text-sm text-emerald-600">₹{(b.advancePaid||0).toLocaleString()}</td>
-                    <td className="px-4 py-3 font-black text-sm text-red-600">₹{(b.remainingAmount||0).toLocaleString()}</td>
+                    <td className="px-4 py-3 font-bold text-sm">₹{Number(b.totalAmount || 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 font-bold text-sm text-emerald-600">₹{Number(b.advancePaid || 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 font-black text-sm text-red-600">₹{Number(b.remainingAmount || 0).toLocaleString()}</td>
                     <td className="px-4 py-3">
                       <span className={cn("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border",
                         b.paymentStatus === 'Paid' ? "text-emerald-600 bg-emerald-50 border-emerald-200" :
                         b.paymentStatus === 'Partial' ? "text-amber-600 bg-amber-50 border-amber-200" :
                         "text-red-600 bg-red-50 border-red-200"
-                      )}>{b.paymentStatus}</span>
+                      )}>{b.paymentStatus || 'Pending'}</span>
                     </td>
                   </>}
-                  <td className="px-4 py-3 text-[10px] text-gray-400">{new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
+                  <td className="px-4 py-3 text-[10px] text-gray-400">
+                    {b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : 'N/A'}
+                  </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1">
                       {tab === 'pending' && (
