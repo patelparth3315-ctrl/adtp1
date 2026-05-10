@@ -4,13 +4,11 @@ import { Plus, Search, MoreHorizontal, Edit, Trash, HelpCircle, LayoutGrid, Spar
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import axios from "axios";
+import api from "@/services/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5005/api";
 
 interface Question {
   _id: string;
@@ -38,7 +36,7 @@ export default function QuestionsPage() {
   const { data: questions, isLoading } = useQuery({
     queryKey: ["questions"],
     queryFn: async () => {
-      const res = await axios.get(`${API_URL}/questions`);
+      const res = await api.get("/questions");
       return res.data.data as Question[];
     }
   });
@@ -47,9 +45,9 @@ export default function QuestionsPage() {
   const mutation = useMutation({
     mutationFn: async (data: any) => {
       if (editingQuestion) {
-        return axios.put(`${API_URL}/questions/${editingQuestion._id}`, data);
+        return api.put(`/questions/${editingQuestion._id}`, data);
       }
-      return axios.post(`${API_URL}/questions`, data);
+      return api.post("/questions", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["questions"] });
@@ -64,7 +62,7 @@ export default function QuestionsPage() {
   // Delete Mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return axios.delete(`${API_URL}/questions/${id}`);
+      return api.delete(`/questions/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["questions"] });

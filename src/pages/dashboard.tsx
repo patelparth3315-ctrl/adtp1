@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { dashboardService } from '@/services/dashboard.service';
 import {
   BarChart,
   Bar,
@@ -35,23 +36,11 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8888/api";
-
-
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem('admin_token');
-        const response = await fetch(`${apiUrl}/admin/stats`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data.data);
-        }
+        const data = await dashboardService.getStats();
+        setStats(data);
       } catch (error) {
         console.error('Failed to fetch stats:', error);
       } finally {
@@ -60,7 +49,7 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-  }, [apiUrl]);
+  }, []);
 
   if (loading) {
     return (
