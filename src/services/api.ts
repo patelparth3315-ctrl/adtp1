@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001').replace(/\/api$/, '')
+  baseURL: (import.meta.env.VITE_API_URL || 'https://bktp1.onrender.com').replace(/\/api$/, '')
 });
 
 api.interceptors.request.use((config) => {
