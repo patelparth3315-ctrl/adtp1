@@ -288,9 +288,25 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                 value={form.heroImage}
                 onUpload={(url) => setForm({ ...form, heroImage: url })}
               />
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest opacity-50">Trip Title</Label>
-                <Input id="title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: slugify(e.target.value) })} className="rounded-xl font-bold" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest opacity-50">Trip Title</Label>
+                  <Input id="title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: slugify(e.target.value) })} className="rounded-xl font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tripCode" className="text-[10px] font-black uppercase tracking-widest opacity-50">Trip Code (Manual)</Label>
+                  <Input 
+                    id="tripCode" 
+                    value={form.shortName || form.id || ""} 
+                    onChange={(e) => {
+                      const val = e.target.value.toUpperCase();
+                      setForm({ ...form, id: val, shortName: val, tripCode: val });
+                    }} 
+                    placeholder="e.g. MKA1" 
+                    className="rounded-xl font-bold uppercase" 
+                  />
+                  <p className="text-[8px] text-muted-foreground ml-1">Editable anytime. Use short codes like MKA1 for easy tracking.</p>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

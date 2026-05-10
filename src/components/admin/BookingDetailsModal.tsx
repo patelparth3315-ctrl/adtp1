@@ -347,6 +347,9 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
               Payment: {booking.paymentStatus}
             </div>
             <div className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/10 text-white/80 border border-white/5">
+              {booking.tripId} — {booking.tripName || booking.trip?.title || "No Trip Assigned"}
+            </div>
+            <div className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/10 text-white/80 border border-white/5">
               {booking.trainClass} — {booking.ticketStatus}
             </div>
           </div>
@@ -393,6 +396,13 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
             
             <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label text="Trip Destination" />
+                  <p className="text-sm font-black text-gray-900 uppercase">
+                    {booking.tripName || booking.trip?.title || "Not Assigned"}
+                    <span className="ml-2 text-blue-600">({booking.tripId})</span>
+                  </p>
+                </div>
                 <div>
                   <Label text="Train Class" />
                   <p className="text-sm font-bold text-gray-700">{booking.trainClass}</p>

@@ -17,6 +17,7 @@ interface BookingFormModalProps {
 }
 
 export default function BookingFormModal({ open, onOpenChange, onSuccess, booking }: BookingFormModalProps) {
+  const [trips, setTrips] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   
   const [form, setForm] = useState({
@@ -24,6 +25,7 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
     age: "",
     gender: "Male",
     mobile: "",
+    tripId: "",
     trainClass: "Sleeper",
     ticketStatus: "Confirmed",
     roomType: "",
@@ -32,17 +34,27 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
     paymentMode: "UPI",
     paymentStatus: "Pending",
     notes: "",
-    email: ""
+    email: "",
+    departureDate: ""
   });
 
   useEffect(() => {
     if (open) {
+      const loadTrips = async () => {
+        try {
+          const t = await bookingsService.getTrips();
+          setTrips(t);
+        } catch (e) { console.error(e); }
+      };
+      loadTrips();
+
       if (booking) {
         setForm({
           fullName: booking.fullName,
-          age: booking.age.toString(),
+          age: (booking.age || 0).toString(),
           gender: booking.gender,
           mobile: booking.mobile,
+          tripId: booking.tripId,
           trainClass: booking.trainClass,
           ticketStatus: booking.ticketStatus,
           roomType: booking.roomType,
@@ -51,7 +63,8 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
           paymentMode: booking.paymentMode,
           paymentStatus: booking.paymentStatus,
           notes: booking.notes || "",
-          email: booking.email || ""
+          email: booking.email || "",
+          departureDate: booking.departureDate ? new Date(booking.departureDate).toISOString().split('T')[0] : ""
         });
       } else {
         setForm({
@@ -59,6 +72,7 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
           age: "",
           gender: "Male",
           mobile: "",
+          tripId: "",
           trainClass: "Sleeper",
           ticketStatus: "Confirmed",
           roomType: "",
@@ -67,7 +81,8 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
           paymentMode: "UPI",
           paymentStatus: "Pending",
           notes: "",
-          email: ""
+          email: "",
+          departureDate: ""
         });
       }
     }
@@ -80,8 +95,8 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
   const remaining = total - advance;
 
   const handleSubmit = async () => {
-    if (!form.fullName || !form.age || !form.mobile || !form.roomType || !form.basePrice) {
-      toast.error("Please fill all required fields");
+    if (!form.fullName || !form.age || !form.mobile || !form.roomType || !form.basePrice || !form.departureDate) {
+      toast.error("Please fill all required fields (Name, Age, Mobile, Room, Price, Date)");
       return;
     }
 
@@ -100,6 +115,7 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
         totalAmount: total,
         advancePaid: advance,
         remainingAmount: remaining,
+        departureDate: new Date(form.departureDate),
         gender: form.gender as any,
         trainClass: form.trainClass as any,
         ticketStatus: form.ticketStatus as any,
@@ -175,6 +191,24 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
 
           <section className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b pb-2 mb-4">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Expedition Selection</h3>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase text-gray-400">Select Trip *</Label>
+              <Select value={form.tripId} onValueChange={v => setForm({...form, tripId: v})}>
+                <SelectTrigger><SelectValue placeholder="Select Trip" /></SelectTrigger>
+                <SelectContent>
+                  {trips.map(t => (
+                    <SelectItem key={t.id} value={t.tripCode}>{t.tripCode} — {t.tripName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </section>
+
+          <section className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b pb-2 mb-4">
               <MapPin className="w-4 h-4 text-emerald-600" />
               <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Travel Details</h3>
             </div>
@@ -190,6 +224,10 @@ export default function BookingFormModal({ open, onOpenChange, onSuccess, bookin
                     <SelectItem value="Flight">Flight</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold uppercase text-gray-400">Departure Date *</Label>
+                <Input type="date" value={form.departureDate} onChange={e => setForm({...form, departureDate: e.target.value})} className="font-bold text-blue-600" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] font-bold uppercase text-gray-400">Ticket Status *</Label>

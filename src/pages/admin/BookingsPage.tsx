@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Copy, Trash2, CheckCircle, Clock, Filter, X, Link2, Users, ChevronDown } from "lucide-react";
+import { Plus, Search, Copy, Trash2, CheckCircle, Clock, Filter, X, Link2, Users, ChevronDown, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -15,21 +15,39 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
   const [trips, setTrips] = useState<BookingTrip[]>([]);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const load = async () => { setTrips(await bookingsService.getTrips()); };
   useEffect(() => { if (open) load(); }, [open]);
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     if (!code || !name) return toast.error("Both fields required");
     setLoading(true);
     try {
-      await bookingsService.createTrip({ tripCode: code.toUpperCase(), tripName: name });
-      toast.success("Trip created!");
-      setCode(""); setName("");
+      if (editId) {
+        await bookingsService.updateTrip(editId, { tripCode: code.toUpperCase(), tripName: name });
+        toast.success("Trip updated!");
+      } else {
+        await bookingsService.createTrip({ tripCode: code.toUpperCase(), tripName: name });
+        toast.success("Trip created!");
+      }
+      setCode(""); setName(""); setEditId(null);
       load(); onRefresh();
     } catch (e: any) { toast.error(e?.response?.data?.message || "Failed"); }
     setLoading(false);
+  };
+
+  const startEdit = (t: BookingTrip) => {
+    setEditId(t.id);
+    setCode(t.tripCode);
+    setName(t.tripName);
+  };
+
+  const cancelEdit = () => {
+    setEditId(null);
+    setCode("");
+    setName("");
   };
 
   const copyLink = (link?: string) => {
@@ -47,9 +65,16 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
         </DialogHeader>
         <div className="p-6 space-y-6">
           <div className="flex gap-2">
-            <Input placeholder="Trip Code (e.g. MKA1)" value={code} onChange={e => setCode(e.target.value)} className="w-32 uppercase font-bold" />
-            <Input placeholder="Trip Name (e.g. Manali Kasol)" value={name} onChange={e => setName(e.target.value)} className="flex-1" />
-            <Button onClick={handleCreate} disabled={loading} className="bg-blue-600 text-white font-bold px-4">Add</Button>
+            <Input placeholder="Code" value={code} onChange={e => setCode(e.target.value)} className="w-28 uppercase font-bold" />
+            <Input placeholder="Trip Name" value={name} onChange={e => setName(e.target.value)} className="flex-1" />
+            {editId ? (
+              <div className="flex gap-1">
+                <Button onClick={handleSave} disabled={loading} size="sm" className="bg-emerald-600 text-white font-bold">Update</Button>
+                <Button onClick={cancelEdit} variant="ghost" size="sm" className="text-gray-400"><X className="w-4 h-4" /></Button>
+              </div>
+            ) : (
+              <Button onClick={handleSave} disabled={loading} size="sm" className="bg-blue-600 text-white font-bold">Add</Button>
+            )}
           </div>
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
             {trips.map(t => (
@@ -59,10 +84,17 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
                   <span className="font-bold text-gray-700 text-sm">{t.tripName}</span>
                 </div>
                 <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" className="text-blue-500" onClick={() => startEdit(t)} title="Edit trip">
+                    <Edit className="w-3.5 h-3.5" />
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => copyLink(t.formLink)} title="Copy form link">
                     <Copy className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="text-red-500" onClick={async () => { await bookingsService.deleteTrip(t.id); load(); onRefresh(); }}>
+                  <Button size="sm" variant="ghost" className="text-red-500" onClick={async () => { 
+                    if(confirm("Delete trip?")) {
+                      await bookingsService.deleteTrip(t.id); load(); onRefresh(); 
+                    }
+                  }}>
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
@@ -215,7 +247,22 @@ export default function BookingsPage() {
 
   const openEdit = (b: Booking) => {
     setEditTarget(b);
-    setEditForm({ fullName: b.fullName, mobile: b.mobile, email: b.email || '', age: b.age, gender: b.gender, trainClass: b.trainClass, ticketStatus: b.ticketStatus, roomType: b.roomType, totalAmount: b.totalAmount, advancePaid: b.advancePaid, paymentMode: b.paymentMode, paymentStatus: b.paymentStatus, notes: b.notes || '' });
+    setEditForm({ 
+      fullName: b.fullName, 
+      mobile: b.mobile, 
+      email: b.email || '', 
+      age: b.age, 
+      gender: b.gender, 
+      tripId: b.tripId,
+      trainClass: b.trainClass, 
+      ticketStatus: b.ticketStatus, 
+      roomType: b.roomType, 
+      totalAmount: b.totalAmount, 
+      advancePaid: b.advancePaid, 
+      paymentMode: b.paymentMode, 
+      paymentStatus: b.paymentStatus, 
+      notes: b.notes || '' 
+    });
   };
 
   const saveEdit = async () => {
@@ -364,6 +411,17 @@ export default function BookingsPage() {
                   <Select value={editForm.gender} onValueChange={v => setEditForm({...editForm, gender: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select>
                 </div>
                 <div className="col-span-2"><label className="text-[10px] font-bold uppercase text-gray-400">Email Address</label><Input value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} placeholder="customer@example.com" /></div>
+                <div className="col-span-2">
+                  <label className="text-[10px] font-bold uppercase text-gray-400">Assigned Trip</label>
+                  <Select value={editForm.tripId} onValueChange={v => setEditForm({...editForm, tripId: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {trips.map(t => (
+                        <SelectItem key={t.id} value={t.tripCode}>{t.tripCode} — {t.tripName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><label className="text-[10px] font-bold uppercase text-gray-400">Room Type</label><Input value={editForm.roomType} onChange={e => setEditForm({...editForm, roomType: e.target.value})} /></div>
                 <div><label className="text-[10px] font-bold uppercase text-gray-400">Train Class</label>
                   <Select value={editForm.trainClass} onValueChange={v => setEditForm({...editForm, trainClass: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Sleeper">Sleeper</SelectItem><SelectItem value="3AC">3AC</SelectItem><SelectItem value="2AC">2AC</SelectItem><SelectItem value="Flight">Flight</SelectItem></SelectContent></Select>
