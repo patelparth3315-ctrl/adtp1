@@ -100,15 +100,16 @@ export default function BookingFormsPage() {
   };
 
   const getInternalBookingUrl = (form: BookingFormRecord) => {
-    // Try to get frontend URL from env, fallback to port replacement for local dev
-    const envFrontendUrl = import.meta.env.VITE_FRONTEND_URL;
-    const baseUrl = envFrontendUrl || window.location.origin.replace('8080', '3000');
+    // Strictly use VITE_FRONTEND_URL from environment for production
+    const baseUrl = import.meta.env.VITE_FRONTEND_URL || "https://youthcamping.vercel.app";
     
     const params = new URLSearchParams({
-      trip: form.tripName,
-      date: form.date,
-      tid: form.tripId || ''
+      trip: (form.tripName || '').trim(),
+      date: (form.date || '').trim(),
+      tid: (form.tripId || '').trim()
     });
+    
+    console.log("🔗 [Admin] Generated Booking Link:", `${baseUrl}/book?${params.toString()}`);
     return `${baseUrl}/book?${params.toString()}`;
   };
 
