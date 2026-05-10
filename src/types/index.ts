@@ -67,6 +67,7 @@ export interface RoomOption {
 export interface Trip {
   id: string;
   title: string;
+  shortName?: string;
   slug: string;
   description: string;
   heroImage: string;
@@ -175,6 +176,8 @@ export interface Booking {
   paymentMode: 'UPI' | 'Cash' | 'Bank Transfer' | '';
   paymentStatus: 'Pending' | 'Partial' | 'Paid';
   notes?: string;
+  departureDate?: string;
+  reminderSent?: boolean;
   passengers?: BookingPassenger[];
   createdAt: string;
   updatedAt: string;
