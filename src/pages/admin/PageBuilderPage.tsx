@@ -342,7 +342,15 @@ export default function PageBuilderPage() {
       case 'reality':
         return { backgroundColor: '#ffffff', padding: '80px', title: 'The Reality Of A Trip', subtitle: 'Watch the reality behind our trips', videos: [] };
       case 'video_section':
-        return { backgroundColor: '#ffffff', padding: '80px', videoUrl: 'https://www.youtube.com/embed/j6hb-iOZalE', maxWidth: '5xl' };
+        return { 
+          title: 'Videos', 
+          subtitle: 'Exclusive footage from our expeditions', 
+          videos: [
+            { title: 'Spiti Valley', id: 'j6hb-iOZalE' }
+          ],
+          backgroundColor: '#ffffff', 
+          padding: '80px' 
+        };
       case 'photo_slider':
         return {
           slides: [
@@ -986,14 +994,60 @@ export default function PageBuilderPage() {
 
                       {/* ── VIDEO SECTION ── */}
                       {selectedSection.type === 'video_section' && (
-                        <div className="space-y-6">
-                           <Label className="text-xs font-black uppercase tracking-widest">YouTube Embed URL</Label>
-                           <Input 
-                             value={selectedSection.draft.videoUrl || ''} 
-                             onChange={e => updateSelectedSection({ videoUrl: e.target.value })} 
-                             placeholder="https://www.youtube.com/embed/..."
-                             className="rounded-xl border-2 font-bold"
-                           />
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <Label className="text-xs font-black uppercase tracking-widest">Section Title</Label>
+                              <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="rounded-xl border-2 font-bold" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs font-black uppercase tracking-widest">Subtitle</Label>
+                              <Input value={selectedSection.draft.subtitle || ''} onChange={e => updateSelectedSection({ subtitle: e.target.value })} className="rounded-xl border-2 font-bold" />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <Label className="text-xs font-black uppercase tracking-widest">YouTube Videos</Label>
+                            <div className="space-y-4">
+                              {(selectedSection.draft.videos || []).map((vid:any, i:number) => (
+                                <div key={i} className="bg-muted/20 p-6 rounded-3xl border-2 space-y-4">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Video #{i+1}</Label>
+                                    <Button variant="ghost" size="icon" onClick={() => {
+                                      const next = selectedSection.draft.videos.filter((_:any, idx:number) => idx !== i);
+                                      updateSelectedSection({ videos: next });
+                                    }}>
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                      <Label className="text-[10px] font-black uppercase tracking-widest">Video Title</Label>
+                                      <Input value={vid.title} onChange={e => {
+                                        const next = [...selectedSection.draft.videos];
+                                        next[i].title = e.target.value;
+                                        updateSelectedSection({ videos: next });
+                                      }} className="rounded-xl border-2 text-xs font-bold" />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label className="text-[10px] font-black uppercase tracking-widest">YouTube Video ID</Label>
+                                      <Input value={vid.id} onChange={e => {
+                                        const next = [...selectedSection.draft.videos];
+                                        next[i].id = e.target.value;
+                                        updateSelectedSection({ videos: next });
+                                      }} placeholder="e.g. j6hb-iOZalE" className="rounded-xl border-2 text-xs font-bold" />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              <Button variant="outline" className="w-full rounded-2xl border-2 border-dashed h-16 font-black text-[10px] tracking-widest gap-2" onClick={() => {
+                                const next = [...(selectedSection.draft.videos || []), { title: '', id: '' }];
+                                updateSelectedSection({ videos: next });
+                              }}>
+                                <Plus className="w-4 h-4" /> ADD VIDEO ID
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -1545,103 +1599,6 @@ export default function PageBuilderPage() {
                     </div>
                   )}
 
-                  {selectedSection.type === 'reality' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                      <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Section Title</Label>
-                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Title Size</Label>
-                          <Select value={selectedSection.draft.titleSize || 'text-3xl md:text-5xl'} onValueChange={v => updateSelectedSection({ titleSize: v })}>
-                            <SelectTrigger className="rounded-xl border-2 font-bold"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text-2xl md:text-3xl">Small (2xl-3xl)</SelectItem>
-                              <SelectItem value="text-3xl md:text-5xl">Medium (3xl-5xl)</SelectItem>
-                              <SelectItem value="text-5xl md:text-7xl">Large (5xl-7xl)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Alignment</Label>
-                          <Select value={selectedSection.draft.titleAlign || 'left'} onValueChange={v => updateSelectedSection({ titleAlign: v })}>
-                            <SelectTrigger className="rounded-xl border-2 uppercase font-bold text-[10px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left" className="font-bold">LEFT</SelectItem>
-                              <SelectItem value="center" className="font-bold">CENTER</SelectItem>
-                              <SelectItem value="right" className="font-bold">RIGHT</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Section Subtitle</Label>
-                        <Input value={selectedSection.draft.subtitle || ''} onChange={e => updateSelectedSection({ subtitle: e.target.value })} className="rounded-xl border-2" />
-                      </div>
-                      <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Video Gallery</Label>
-                        <div className="space-y-6">
-                          {(selectedSection.draft.videos || []).map((video: any, i: number) => (
-                            <div key={i} className="bg-muted/20 p-6 rounded-3xl border-2 space-y-4 relative group">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => {
-                                  const next = (selectedSection.draft.videos || []).filter((_:any, idx:number) => idx !== i);
-                                  updateSelectedSection({ videos: next });
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Video Title</Label>
-                                  <Input value={video.title} onChange={e => {
-                                    const next = [...selectedSection.draft.videos];
-                                    next[i].title = e.target.value;
-                                    updateSelectedSection({ videos: next });
-                                  }} className="rounded-xl border-2 text-xs font-bold" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Tagline</Label>
-                                  <Input value={video.sub} onChange={e => {
-                                    const next = [...selectedSection.draft.videos];
-                                    next[i].sub = e.target.value;
-                                    updateSelectedSection({ videos: next });
-                                  }} className="rounded-xl border-2 text-xs font-bold" />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">YouTube Embed URL</Label>
-                                <Input value={video.url} onChange={e => {
-                                  const next = [...selectedSection.draft.videos];
-                                  next[i].url = e.target.value;
-                                  updateSelectedSection({ videos: next });
-                                }} className="rounded-xl border-2 text-xs font-mono" placeholder="https://www.youtube.com/embed/..." />
-                              </div>
-                              <ImageUpload 
-                                label="Thumbnail Image" 
-                                value={video.img} 
-                                onUpload={url => {
-                                  const next = [...selectedSection.draft.videos];
-                                  next[i].img = url;
-                                  updateSelectedSection({ videos: next });
-                                }} 
-                              />
-                            </div>
-                          ))}
-                          <Button variant="outline" className="w-full rounded-2xl border-2 border-dashed h-16 font-black text-[10px] tracking-widest gap-2" onClick={() => {
-                            const next = [...(selectedSection.draft.videos || []), { title: '', sub: '', url: '', img: '' }];
-                            updateSelectedSection({ videos: next });
-                          }}>
-                            <Plus className="w-4 h-4" /> ADD VIDEO
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* ── SOCIAL PROOF SECTION ── */}
                   {selectedSection.type === 'social_proof' && (
