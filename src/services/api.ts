@@ -1,10 +1,15 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001').replace(/\/api$/, '') + '/api'
+  baseURL: (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001').replace(/\/api$/, '')
 });
 
 api.interceptors.request.use((config) => {
+  // Ensure URL starts with /api if it's a relative path
+  if (config.url && !config.url.startsWith('/api') && !config.url.startsWith('http')) {
+    config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
+  }
+
   // As per requirement, use 'token' key instead of 'admin_token'
   const token = localStorage.getItem('token');
   if (token) {
