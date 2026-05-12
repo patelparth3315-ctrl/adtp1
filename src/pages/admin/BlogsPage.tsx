@@ -77,7 +77,7 @@ export default function BlogsPage() {
   const toggleStatus = async (b: Blog) => {
     const newStatus = b.status === "published" ? "draft" : "published";
     try {
-      await blogsService.update(b.id, { status: newStatus });
+      await blogsService.update(b.id || (b as any)._id, { status: newStatus });
       toast.success(`Blog ${newStatus}`);
       load();
     } catch (error) {
@@ -111,7 +111,7 @@ export default function BlogsPage() {
     { key: "actions", header: "", render: (b: Blog) => (
       <div className="flex gap-1">
         <Button variant="ghost" size="icon" onClick={() => openEdit(b)}><Pencil className="h-4 w-4" /></Button>
-        <Button variant="ghost" size="icon" onClick={() => handleDelete(b.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => handleDelete(b.id || (b as any)._id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
       </div>
     )},
   ];
