@@ -273,6 +273,10 @@ export default function PageBuilderPage() {
   }, [sections, saveStatus]);
 
   const saveDraft = async () => {
+    if (loading || sections.length === 0) {
+      console.log("🛑 [PageBuilder] Skip saving: loading or empty sections");
+      return;
+    }
     setSaveStatus('saving');
     try {
       await pageBuilderService.updateSections(currentPage, sections);
@@ -1216,7 +1220,21 @@ export default function PageBuilderPage() {
                         <Input value={selectedSection.draft.subtitle || ''} onChange={e => updateSelectedSection({ subtitle: e.target.value })} className="rounded-xl border-2" placeholder="Brief description below title" />
                       </div>
                       <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Select Trips</Label>
+                        <Label className="text-xs font-black uppercase tracking-widest text-primary">Batch / Departure Months</Label>
+                        <Input 
+                          value={(selectedSection.draft.months || []).join(', ')} 
+                          onChange={e => {
+                            // Split by comma, semicolon or multiple spaces
+                            const val = e.target.value.split(/[,;]|\s{2,}/).map(m => m.trim().toUpperCase()).filter(m => m !== '');
+                            updateSelectedSection({ months: val });
+                          }} 
+                          className="h-14 rounded-2xl border-2 font-bold" 
+                          placeholder="e.g. MAY 26, JUN 26" 
+                        />
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">Leave empty to auto-generate from active trips</p>
+                      </div>
+                      <div className="space-y-4">
+                        <Label className="text-xs font-black uppercase tracking-widest">Select Trips (Manual Selection)</Label>
                         <div className="grid grid-cols-2 gap-4">
                           {trips.map(trip => (
                             <div 
