@@ -180,8 +180,6 @@ export interface Booking {
   notes?: string;
   departureDate?: string;
   reminderSent?: boolean;
-  pickupCity?: string;
-  skipDays?: number;
   passengers?: BookingPassenger[];
   createdAt: string;
   updatedAt: string;

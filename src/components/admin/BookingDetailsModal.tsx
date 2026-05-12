@@ -418,13 +418,9 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
                   <p className="text-sm font-bold text-gray-700">{booking.roomType}</p>
                 </div>
                 <div>
-                  <Label text="Direct Join" />
-                  <p className="text-sm font-black text-primary-orange uppercase">{booking.skipDays > 0 ? `Yes (${booking.pickupCity})` : "No"}</p>
+                  <Label text="Departure" />
+                  <p className="text-sm font-medium text-gray-500">{formatDate(booking.createdAt)}</p>
                 </div>
-              </div>
-              <div>
-                <Label text="Departure" />
-                <p className="text-sm font-medium text-gray-500">{formatDate(booking.createdAt)}</p>
               </div>
             </div>
           </section>
