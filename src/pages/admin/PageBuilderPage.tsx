@@ -1221,17 +1221,40 @@ export default function PageBuilderPage() {
                       </div>
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest text-primary">Batch / Departure Months</Label>
-                        <Input 
-                          value={(selectedSection.draft.months || []).join(', ')} 
-                          onChange={e => {
-                            // Split by comma, semicolon, colon, period or multiple spaces
-                            const val = e.target.value.split(/[,;:\.]|\s{2,}/).map(m => m.trim().toUpperCase()).filter(m => m !== '');
-                            updateSelectedSection({ months: val });
-                          }} 
-                          className="h-14 rounded-2xl border-2 font-bold" 
-                          placeholder="e.g. MAY 26, JUN 26" 
-                        />
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">Leave empty to auto-generate from active trips</p>
+                        <div className="flex flex-wrap gap-2 p-4 bg-muted/20 rounded-[24px] border-2 border-dashed min-h-[80px]">
+                          {(selectedSection.draft.months || []).map((m: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2 bg-primary text-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase shadow-lg group">
+                              {m}
+                              <button 
+                                onClick={() => {
+                                  const next = (selectedSection.draft.months || []).filter((_: any, i: number) => i !== idx);
+                                  updateSelectedSection({ months: next });
+                                }}
+                                className="hover:text-black transition-colors"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                          <div className="flex items-center gap-2 flex-1 min-w-[120px]">
+                            <Input 
+                              placeholder="Type and press Comma or Enter"
+                              className="h-8 border-none bg-transparent text-[10px] font-bold uppercase focus-visible:ring-0 p-0"
+                              onKeyDown={(e) => {
+                                if (e.key === ',' || e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const val = (e.currentTarget.value || '').trim().toUpperCase();
+                                  if (val) {
+                                    const next = Array.from(new Set([...(selectedSection.draft.months || []), val]));
+                                    updateSelectedSection({ months: next });
+                                    e.currentTarget.value = '';
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">Type a month (e.g. MAY 26) and press Enter to add as a box</p>
                       </div>
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Select Trips (Manual Selection)</Label>
