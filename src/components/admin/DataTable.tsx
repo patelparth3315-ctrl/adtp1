@@ -10,6 +10,7 @@ interface Column<T> {
   header: string;
   render?: (item: T) => React.ReactNode;
   className?: string;
+  sortable?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -23,11 +24,13 @@ interface DataTableProps<T> {
   pageSize?: number;
   emptyMessage?: string;
   emptyIcon?: React.ReactNode;
+  rowKey?: keyof T;
 }
 
 export function DataTable<T extends Record<string, any>>({
   columns, data = [], loading, searchPlaceholder = "Search...", searchKey,
   filters, onFilterChange, pageSize = 10, emptyMessage = "No data found", emptyIcon,
+  rowKey = "id" as keyof T,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -42,6 +45,14 @@ export function DataTable<T extends Record<string, any>>({
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
+  const renderCellValue = (item: T, col: Column<T>) => {
+    if (col.render) return col.render(item);
+    const value = item[col.key];
+    if (value === null || value === undefined) return "";
+    if (typeof value === "object") return JSON.stringify(value);
+    return String(value);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
@@ -52,7 +63,7 @@ export function DataTable<T extends Record<string, any>>({
           </div>
         )}
         {filters?.map((f) => (
-          <Select key={f.key} onValueChange={(v) => onFilterChange?.(f.key, v)}>
+          <Select key={f.key} defaultValue="all" onValueChange={(v) => onFilterChange?.(f.key, v)}>
             <SelectTrigger className="w-[160px]"><SelectValue placeholder={f.label} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
@@ -92,10 +103,10 @@ export function DataTable<T extends Record<string, any>>({
                 </tr>
               ) : (
                 paged.map((item, i) => (
-                  <tr key={item.id || i} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr key={String(item[rowKey] || i)} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                     {columns.map((col) => (
                       <td key={col.key} className={cn("px-4 py-3 text-card-foreground", col.className)}>
-                        {col.render ? col.render(item) : item[col.key]}
+                        {renderCellValue(item, col)}
                       </td>
                     ))}
                   </tr>
