@@ -1259,25 +1259,55 @@ export default function PageBuilderPage() {
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Select Trips (Manual Selection)</Label>
                         <div className="grid grid-cols-2 gap-4">
-                          {trips.map(trip => (
-                            <div 
-                              key={trip.id} 
-                              onClick={() => {
-                                const current = selectedSection.draft.tripIds || [];
-                                const updated = current.includes(trip.id) ? current.filter((id:any) => id !== trip.id) : [...current, trip.id];
-                                updateSelectedSection({ tripIds: updated });
-                              }}
-                              className={`p-3 rounded-2xl border-2 flex items-center gap-4 cursor-pointer transition-all ${
-                                (selectedSection.draft.tripIds || []).includes(trip.id) ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-border hover:border-primary/30'
-                              }`}
-                            >
-                              <img src={trip.images?.[0]} className="w-12 h-12 rounded-lg object-cover" alt="" />
-                              <div className="flex-1 overflow-hidden">
-                                <h5 className="text-[11px] font-black uppercase tracking-tight truncate">{trip.title}</h5>
-                                <p className="text-[9px] font-bold text-muted-foreground uppercase">{trip.duration}</p>
+                          {(() => {
+                            const selectedMonths = (selectedSection.draft.months || []).map((m: string) => {
+                              let normalized = m.trim().toUpperCase();
+                              if (/^[A-Z]{3}\d{2}$/.test(normalized)) return normalized.replace(/^([A-Z]{3})(\d{2})$/, "$1 '$2");
+                              if (/^[A-Z]{3}\s\d{2}$/.test(normalized)) return normalized.replace(/^([A-Z]{3})\s(\d{2})$/, "$1 '$2");
+                              return normalized;
+                            });
+
+                            const filteredTrips = trips.filter(trip => {
+                              if (selectedMonths.length === 0) return true;
+                              try {
+                                const dates = typeof trip.availableDates === 'string' ? JSON.parse(trip.availableDates) : trip.availableDates;
+                                return (dates || []).some((d: any) => {
+                                  const date = new Date(d.date || d);
+                                  const mStr = date.toLocaleString('en-US', { month: 'short', year: '2-digit' }).toUpperCase();
+                                  return selectedMonths.includes(mStr);
+                                });
+                              } catch (e) { return false; }
+                            });
+
+                            if (filteredTrips.length === 0) {
+                              return (
+                                <div className="col-span-2 p-8 text-center bg-muted/10 rounded-2xl border-2 border-dashed">
+                                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No trips found for selected months</p>
+                                  <Button variant="link" onClick={() => updateSelectedSection({ months: [] })} className="text-[10px] font-bold underline">Show All Trips</Button>
+                                </div>
+                              );
+                            }
+
+                            return filteredTrips.map(trip => (
+                              <div 
+                                key={trip.id} 
+                                onClick={() => {
+                                  const current = selectedSection.draft.tripIds || [];
+                                  const updated = current.includes(trip.id) ? current.filter((id:any) => id !== trip.id) : [...current, trip.id];
+                                  updateSelectedSection({ tripIds: updated });
+                                }}
+                                className={`p-3 rounded-2xl border-2 flex items-center gap-4 cursor-pointer transition-all ${
+                                  (selectedSection.draft.tripIds || []).includes(trip.id) ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-border hover:border-primary/30'
+                                }`}
+                              >
+                                <img src={trip.images?.[0]} className="w-12 h-12 rounded-lg object-cover" alt="" />
+                                <div className="flex-1 overflow-hidden">
+                                  <h5 className="text-[11px] font-black uppercase tracking-tight truncate">{trip.title}</h5>
+                                  <p className="text-[9px] font-bold text-muted-foreground uppercase">{trip.duration}</p>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ));
+                          })()}
                         </div>
                       </div>
                     </div>
