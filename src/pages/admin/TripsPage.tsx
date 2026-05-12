@@ -5,7 +5,7 @@ import { StatusBadge, getTripBadgeVariant } from "@/components/admin/StatusBadge
 import { Button } from "@/components/ui/button";
 import TripFormModal from "@/components/admin/TripFormModal";
 import type { Trip, TripFormData } from "@/types";
-import { Plus, Pencil, Trash2, Map, CalendarDays, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Map, CalendarDays, Building2, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import TripVendorsPanel from "@/components/admin/TripVendorsPanel";
 
@@ -93,6 +93,16 @@ export default function TripsPage() {
     load();
   };
 
+  const handleShuffle = async () => {
+    try {
+      await tripsService.shuffle();
+      toast.success("Trips shuffled successfully!");
+      load();
+    } catch (error) {
+      toast.error("Failed to shuffle trips");
+    }
+  };
+
   const columns = [
     { key: "title", header: "Trip", render: (t: Trip) => {
       if (!t) return null;
@@ -160,7 +170,10 @@ export default function TripsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">Trips</h1>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add Trip</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleShuffle}><Shuffle className="h-4 w-4 mr-2" />Shuffle</Button>
+          <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add Trip</Button>
+        </div>
       </div>
 
       <DataTable

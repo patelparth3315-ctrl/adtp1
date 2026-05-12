@@ -25,4 +25,7 @@ export const tripsService = {
   async remove(id: string): Promise<void> {
     await api.delete(`/trips/${id}`);
   },
+  async shuffle(): Promise<void> {
+    await api.post("/trips/shuffle");
+  },
 };
