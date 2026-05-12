@@ -1271,10 +1271,22 @@ export default function PageBuilderPage() {
                               if (selectedMonths.length === 0) return true;
                               try {
                                 const dates = typeof trip.availableDates === 'string' ? JSON.parse(trip.availableDates) : trip.availableDates;
-                                return (dates || []).some((d: any) => {
+                                if (!dates || !Array.isArray(dates)) return false;
+
+                                return dates.some((d: any) => {
                                   const date = new Date(d.date || d);
-                                  const mStr = date.toLocaleString('en-US', { month: 'short', year: '2-digit' }).toUpperCase();
-                                  return selectedMonths.includes(mStr);
+                                  if (isNaN(date.getTime())) return false;
+
+                                  const mName = date.toLocaleString('en-US', { month: 'short' }).toUpperCase(); // "MAY"
+                                  const mYear = date.toLocaleString('en-US', { year: '2-digit' }); // "26"
+                                  const mFull = `${mName} ${mYear}`; // "MAY 26"
+                                  const mFullApos = `${mName} '${mYear}`; // "MAY '26"
+
+                                  return selectedMonths.some(sm => {
+                                    const smClean = sm.replace(/[^A-Z0-9]/g, '');
+                                    const targetClean = (mName + mYear).replace(/[^A-Z0-9]/g, '');
+                                    return sm === mName || sm === mFull || sm === mFullApos || smClean === targetClean || smClean === mName;
+                                  });
                                 });
                               } catch (e) { return false; }
                             });
