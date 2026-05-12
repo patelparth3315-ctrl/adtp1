@@ -42,6 +42,7 @@ export interface TripVariant {
   originalPrice: number;
   discountedPrice: number;
   image: string;
+  skipDays?: number;
 }
 
 export interface TravelOption {
@@ -179,6 +180,8 @@ export interface Booking {
   notes?: string;
   departureDate?: string;
   reminderSent?: boolean;
+  pickupCity?: string;
+  skipDays?: number;
   passengers?: BookingPassenger[];
   createdAt: string;
   updatedAt: string;

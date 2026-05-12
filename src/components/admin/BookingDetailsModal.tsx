@@ -412,9 +412,15 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
                   <p className="text-sm font-bold text-emerald-600">{booking.ticketStatus}</p>
                 </div>
               </div>
-              <div>
-                <Label text="Room Type" />
-                <p className="text-sm font-bold text-gray-700">{booking.roomType}</p>
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                <div>
+                  <Label text="Room Type" />
+                  <p className="text-sm font-bold text-gray-700">{booking.roomType}</p>
+                </div>
+                <div>
+                  <Label text="Direct Join" />
+                  <p className="text-sm font-black text-primary-orange uppercase">{booking.skipDays > 0 ? `Yes (${booking.pickupCity})` : "No"}</p>
+                </div>
               </div>
               <div>
                 <Label text="Departure" />

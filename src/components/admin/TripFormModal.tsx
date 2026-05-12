@@ -466,9 +466,10 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                            <Input value={v.location} placeholder="Location (e.g. Delhi)" onChange={(e) => { const updated = [...form.variants]; updated[i].location = e.target.value; setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
                            <Input value={v.duration} placeholder="Duration (e.g. 5D/4N)" onChange={(e) => { const updated = [...form.variants]; updated[i].duration = e.target.value; setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
                          </div>
-                         <div className="grid grid-cols-2 gap-3">
-                           <Input type="number" value={v.originalPrice} placeholder="Original Price" onChange={(e) => { const updated = [...form.variants]; updated[i].originalPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
-                           <Input type="number" value={v.discountedPrice} placeholder="Discounted Price" onChange={(e) => { const updated = [...form.variants]; updated[i].discountedPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                         <div className="grid grid-cols-3 gap-3">
+                           <Input type="number" value={v.originalPrice} placeholder="Orig. Price" onChange={(e) => { const updated = [...form.variants]; updated[i].originalPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                           <Input type="number" value={v.discountedPrice} placeholder="Disc. Price" onChange={(e) => { const updated = [...form.variants]; updated[i].discountedPrice = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
+                           <Input type="number" value={v.skipDays || 0} placeholder="Skip Days" title="Days to remove from start" onChange={(e) => { const updated = [...form.variants]; updated[i].skipDays = Number(e.target.value); setForm({ ...form, variants: updated }); }} className="h-9 text-xs" />
                          </div>
                        </div>
                      </div>
