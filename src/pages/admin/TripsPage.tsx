@@ -4,8 +4,9 @@ import { DataTable } from "@/components/admin/DataTable";
 import { StatusBadge, getTripBadgeVariant } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/button";
 import TripFormModal from "@/components/admin/TripFormModal";
+import TripSortModal from "@/components/admin/TripSortModal";
 import type { Trip, TripFormData } from "@/types";
-import { Plus, Pencil, Trash2, Map, CalendarDays, Building2, Shuffle } from "lucide-react";
+import { Plus, Pencil, Trash2, Map, CalendarDays, Building2, Shuffle, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import TripVendorsPanel from "@/components/admin/TripVendorsPanel";
 
@@ -16,6 +17,7 @@ export default function TripsPage() {
   const [editing, setEditing] = useState<Trip | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [vendorTrip, setVendorTrip] = useState<Trip | null>(null);
+  const [sortModalOpen, setSortModalOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -174,8 +176,18 @@ export default function TripsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">Trips</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleShuffle}><Shuffle className="h-4 w-4 mr-2" />Shuffle</Button>
-          <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Add Trip</Button>
+          <Button variant="outline" onClick={() => setSortModalOpen(true)} className="rounded-xl font-bold border-primary/20 hover:border-primary/40 text-primary">
+            <GripVertical className="h-4 w-4 mr-2" />
+            Reorder
+          </Button>
+          <Button variant="outline" onClick={handleShuffle} className="rounded-xl font-bold border-primary/20 hover:border-primary/40 text-primary">
+            <Shuffle className="h-4 w-4 mr-2" />
+            Shuffle
+          </Button>
+          <Button onClick={openCreate} className="rounded-xl font-bold shadow-lg shadow-primary/20">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Trip
+          </Button>
         </div>
       </div>
 
@@ -198,6 +210,12 @@ export default function TripsPage() {
           onOpenChange={(open) => { if (!open) setVendorTrip(null); }}
         />
       )}
+      <TripSortModal 
+        open={sortModalOpen} 
+        onOpenChange={setSortModalOpen} 
+        trips={trips} 
+        onSaved={load} 
+      />
     </div>
   );
 }

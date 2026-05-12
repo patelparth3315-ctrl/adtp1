@@ -28,4 +28,7 @@ export const tripsService = {
   async shuffle(): Promise<void> {
     await api.post("/trips/shuffle");
   },
+  async bulkUpdateOrder(orderMap: Record<string, number>): Promise<void> {
+    await api.post("/trips/bulk-order", { orderMap });
+  },
 };
