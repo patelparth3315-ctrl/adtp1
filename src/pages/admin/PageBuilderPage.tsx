@@ -291,6 +291,11 @@ export default function PageBuilderPage() {
   const publish = async () => {
     setPublishing(true);
     try {
+      // FORCE A SAVE FIRST before publishing so we don't publish stale data
+      await pageBuilderService.updateSections(currentPage, sections);
+      setSaveStatus('saved');
+      setLastSaved(new Date());
+
       await pageBuilderService.publish(currentPage);
       toast.success("Published! Site updated.");
       // Trigger revalidation
