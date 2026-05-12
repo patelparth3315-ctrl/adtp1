@@ -1853,8 +1853,8 @@ export default function PageBuilderPage() {
                   {selectedSection.type === 'testimonials' && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                       <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Section Title</Label>
-                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" placeholder="Traveler Stories" />
+                        <Label className="text-xs font-black uppercase tracking-widest">Section Title (Reviews & Testimonials)</Label>
+                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" placeholder="What Our Travelers Say" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -1942,7 +1942,7 @@ export default function PageBuilderPage() {
                                 }} className="rounded-xl border-2 text-xs font-bold min-h-[80px]" placeholder="An amazing experience..." />
                               </div>
                               <ImageUpload 
-                                label="Traveler Photo"
+                                label="Traveler Photo (Profile)"
                                 value={item.image} 
                                 onUpload={url => {
                                   const next = [...(selectedSection.draft.items || [])];
@@ -1950,6 +1950,37 @@ export default function PageBuilderPage() {
                                   updateSelectedSection({ items: next });
                                 }} 
                               />
+
+                              <div className="space-y-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Location / Trip Photos (Gallery)</Label>
+                                <div className="grid grid-cols-2 gap-4">
+                                  {(item.locationImages || []).map((img: string, imgIdx: number) => (
+                                    <div key={imgIdx} className="relative group/img">
+                                      <img src={img} className="w-full h-32 object-cover rounded-xl border-2" />
+                                      <button 
+                                        onClick={() => {
+                                          const nextItems = [...(selectedSection.draft.items || [])];
+                                          nextItems[i].locationImages = nextItems[i].locationImages.filter((_:any, idx:number) => idx !== imgIdx);
+                                          updateSelectedSection({ items: nextItems });
+                                        }}
+                                        className="absolute top-2 right-2 p-1 bg-destructive text-white rounded-lg opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                  <ImageUpload 
+                                    label="Add Location Image"
+                                    value=""
+                                    onUpload={url => {
+                                      const nextItems = [...(selectedSection.draft.items || [])];
+                                      if (!nextItems[i].locationImages) nextItems[i].locationImages = [];
+                                      nextItems[i].locationImages.push(url);
+                                      updateSelectedSection({ items: nextItems });
+                                    }}
+                                  />
+                                </div>
+                              </div>
                             </div>
                           ))}
                           <Button variant="outline" className="w-full rounded-2xl border-2 border-dashed h-16 font-black text-[10px] tracking-widest gap-2" onClick={() => {
