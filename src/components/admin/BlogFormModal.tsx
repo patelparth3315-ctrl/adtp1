@@ -56,7 +56,7 @@ export default function BlogFormModal({ open, onOpenChange, editing, onSave }: B
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(form, editing?.id);
+      await onSave(form, editing?.id || (editing as any)?._id);
       onOpenChange(false);
     } finally {
       setSaving(false);
