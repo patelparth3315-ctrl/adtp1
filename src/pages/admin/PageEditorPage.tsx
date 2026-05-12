@@ -347,6 +347,23 @@ export default function PageEditorPage() {
                     </>
                   )}
 
+                  {(activeSection.type === 'trips' || activeSection.type === 'upcoming_trips' || activeSection.type === 'featured_trips' || activeSection.type === 'trending_trips') && (
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Batch Months (Comma Separated)</Label>
+                       <Input 
+                         value={(activeSection.data.months || []).join(', ')} 
+                         onChange={(e) => {
+                           const monthsArr = e.target.value.split(',').map(m => m.trim()).filter(m => m !== '');
+                           const newSections = sections.map(s => s.id === activeSection.id ? { ...s, data: { ...s.data, months: monthsArr } } : s);
+                           setSections(newSections);
+                         }}
+                         placeholder="e.g. MAY '26, JUN '26"
+                         className="rounded-xl font-bold"
+                       />
+                       <p className="text-[10px] text-muted-foreground italic">Leave empty to generate automatically from trip dates.</p>
+                    </div>
+                  )}
+
                   {activeSection.type === 'blogs' && (
                     <div className="space-y-4">
                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Display Mode</Label>
@@ -406,7 +423,10 @@ export default function PageEditorPage() {
 function getDefaultData(type: string) {
   switch(type) {
     case 'hero': return { title: 'Adventure Module', subtitle: 'Discover the world with us', image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb' };
-    case 'trips': return { title: 'Trending Trips' };
+    case 'trips': return { 
+      title: 'Trending Trips', 
+      months: ["APR '26", "MAY '26", "JUN '26", "JUL '26", "AUG '26", "SEP '26", "OCT '26"] 
+    };
     case 'grid': return { title: 'Explore All Trips', subtitle: 'Global Expeditions', count: 6 };
     case 'videohero': return { title: 'The World Awaits', subtitle: 'Experience Travel Like Never Before', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b' };
     case 'banner': return { title: 'It\'s time for Winter Trips', subtitle: 'Kashmir • Spiti Valley • Kasol Manali', image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b' };
