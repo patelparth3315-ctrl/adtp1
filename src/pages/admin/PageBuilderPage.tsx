@@ -1257,41 +1257,70 @@ export default function PageBuilderPage() {
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">Type a month (e.g. MAY 26) and press Enter to add as a box</p>
                       </div>
                       <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Select Trips (Manual Selection)</Label>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-black uppercase tracking-widest">Select Trips (Manual Selection)</Label>
+                          <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                            {(() => {
+                              const selectedMonthsClean = (selectedSection.draft.months || []).map((m: string) => m.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''));
+                              const filtered = trips.filter(trip => {
+                                if (selectedMonthsClean.length === 0) return true;
+                                try {
+                                  const datesArr = typeof trip.availableDates === 'string' ? JSON.parse(trip.availableDates) : trip.availableDates;
+                                  if (!datesArr || !Array.isArray(datesArr)) return false;
+                                  return datesArr.some((d: any) => {
+                                    const ds = d.date || d;
+                                    let date;
+                                    if (typeof ds === 'string' && /^\d{4}-\d{2}-\d{2}/.test(ds)) {
+                                      const [y, m, day] = ds.split('-').map(Number);
+                                      date = new Date(y, m - 1, day);
+                                    } else { date = new Date(ds); }
+                                    if (isNaN(date.getTime())) return false;
+                                    const mName = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                                    const mYear = date.toLocaleString('en-US', { year: '2-digit' });
+                                    const mFull = mName + mYear;
+                                    return selectedMonthsClean.includes(mName) || selectedMonthsClean.includes(mFull);
+                                  });
+                                } catch (e) { return false; }
+                              });
+                              return `Showing ${filtered.length} of ${trips.length} trips`;
+                            })()}
+                          </span>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                           {(() => {
-                            const selectedMonths = (selectedSection.draft.months || []).map((m: string) => {
-                              let normalized = m.trim().toUpperCase();
-                              if (/^[A-Z]{3}\d{2}$/.test(normalized)) return normalized.replace(/^([A-Z]{3})(\d{2})$/, "$1 '$2");
-                              if (/^[A-Z]{3}\s\d{2}$/.test(normalized)) return normalized.replace(/^([A-Z]{3})\s(\d{2})$/, "$1 '$2");
-                              return normalized;
-                            });
+                            const selectedMonthsClean = (selectedSection.draft.months || []).map((m: string) => m.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''));
+                            const currentTripIds = selectedSection.draft.tripIds || [];
 
+                            // 1. Calculate filtered trips
                             const filteredTrips = trips.filter(trip => {
-                              if (selectedMonths.length === 0) return true;
+                              if (selectedMonthsClean.length === 0) return true;
                               try {
-                                const dates = typeof trip.availableDates === 'string' ? JSON.parse(trip.availableDates) : trip.availableDates;
-                                if (!dates || !Array.isArray(dates)) return false;
-
-                                return dates.some((d: any) => {
-                                  const date = new Date(d.date || d);
+                                const datesArr = typeof trip.availableDates === 'string' ? JSON.parse(trip.availableDates) : trip.availableDates;
+                                if (!datesArr || !Array.isArray(datesArr)) return false;
+                                return datesArr.some((d: any) => {
+                                  const ds = d.date || d;
+                                  let date;
+                                  if (typeof ds === 'string' && /^\d{4}-\d{2}-\d{2}/.test(ds)) {
+                                    const [y, m, day] = ds.split('-').map(Number);
+                                    date = new Date(y, m - 1, day);
+                                  } else { date = new Date(ds); }
                                   if (isNaN(date.getTime())) return false;
-
-                                  const mName = date.toLocaleString('en-US', { month: 'short' }).toUpperCase(); // "MAY"
-                                  const mYear = date.toLocaleString('en-US', { year: '2-digit' }); // "26"
-                                  const mFull = `${mName} ${mYear}`; // "MAY 26"
-                                  const mFullApos = `${mName} '${mYear}`; // "MAY '26"
-
-                                  return selectedMonths.some(sm => {
-                                    const smClean = sm.replace(/[^A-Z0-9]/g, '');
-                                    const targetClean = (mName + mYear).replace(/[^A-Z0-9]/g, '');
-                                    return sm === mName || sm === mFull || sm === mFullApos || smClean === targetClean || smClean === mName;
-                                  });
+                                  const mName = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                                  const mYear = date.toLocaleString('en-US', { year: '2-digit' });
+                                  const mFull = mName + mYear;
+                                  return selectedMonthsClean.includes(mName) || selectedMonthsClean.includes(mFull);
                                 });
                               } catch (e) { return false; }
                             });
 
-                            if (filteredTrips.length === 0) {
+                            // 2. Combine: Always show currently selected trips + filtered results
+                            const alreadySelected = trips.filter(t => currentTripIds.includes(t.id));
+                            const notSelectedButFiltered = filteredTrips.filter(t => !currentTripIds.includes(t.id));
+                            
+                            const displayTrips = Array.from(new Set([...alreadySelected, ...notSelectedButFiltered]));
+
+                            if (displayTrips.length === 0) {
                               return (
                                 <div className="col-span-2 p-8 text-center bg-muted/10 rounded-2xl border-2 border-dashed">
                                   <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No trips found for selected months</p>
@@ -1300,16 +1329,15 @@ export default function PageBuilderPage() {
                               );
                             }
 
-                            return filteredTrips.map(trip => (
+                            return displayTrips.map(trip => (
                               <div 
                                 key={trip.id} 
                                 onClick={() => {
-                                  const current = selectedSection.draft.tripIds || [];
-                                  const updated = current.includes(trip.id) ? current.filter((id:any) => id !== trip.id) : [...current, trip.id];
+                                  const updated = currentTripIds.includes(trip.id) ? currentTripIds.filter((id:any) => id !== trip.id) : [...currentTripIds, trip.id];
                                   updateSelectedSection({ tripIds: updated });
                                 }}
                                 className={`p-3 rounded-2xl border-2 flex items-center gap-4 cursor-pointer transition-all ${
-                                  (selectedSection.draft.tripIds || []).includes(trip.id) ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-border hover:border-primary/30'
+                                  currentTripIds.includes(trip.id) ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-border hover:border-primary/30'
                                 }`}
                               >
                                 <img src={trip.images?.[0]} className="w-12 h-12 rounded-lg object-cover" alt="" />
@@ -1317,6 +1345,7 @@ export default function PageBuilderPage() {
                                   <h5 className="text-[11px] font-black uppercase tracking-tight truncate">{trip.title}</h5>
                                   <p className="text-[9px] font-bold text-muted-foreground uppercase">{trip.duration}</p>
                                 </div>
+                                {currentTripIds.includes(trip.id) && <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />}
                               </div>
                             ));
                           })()}
