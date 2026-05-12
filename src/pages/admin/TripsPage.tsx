@@ -82,17 +82,28 @@ export default function TripsPage() {
 
   const handleDelete = async (id: string) => {
     if (!id || !confirm("Delete this trip?")) return;
-    await tripsService.remove(id);
-    toast.success("Trip deleted");
-    load();
+    try {
+      await tripsService.remove(id);
+      toast.success("Trip deleted");
+      load();
+    } catch (error: any) {
+      console.error("❌ DELETE ERROR:", error);
+      const msg = error.response?.data?.message || "Failed to delete trip";
+      toast.error(msg);
+    }
   };
 
   const toggleStatus = async (t: Trip) => {
     if (!t?.id) return;
-    const newStatus = t.status === "published" ? "draft" : "published";
-    await tripsService.update(t.id, { status: newStatus });
-    toast.success(`Trip ${newStatus}`);
-    load();
+    try {
+      const newStatus = t.status === "published" ? "draft" : "published";
+      await tripsService.update(t.id, { status: newStatus });
+      toast.success(`Trip ${newStatus}`);
+      load();
+    } catch (error: any) {
+      console.error("❌ STATUS ERROR:", error);
+      toast.error("Failed to update status");
+    }
   };
 
   const handleShuffle = async () => {
