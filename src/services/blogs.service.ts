@@ -4,12 +4,13 @@ import type { Blog, BlogFormData } from "@/types";
 export const blogsService = {
   getAll: async () => {
     const res = await api.get("/blogs");
-    return res.data.data.map((b: any) => ({ ...b, id: b._id }));
+    return res.data.data.map((b: any) => ({ ...b, id: b.id || b._id }));
   },
 
   getOne: async (id: string) => {
     const res = await api.get(`/blogs/${id}`);
-    return { ...res.data.data, id: res.data.data._id };
+    const b = res.data.data;
+    return { ...b, id: b.id || b._id };
   },
 
   create: async (data: BlogFormData) => {
