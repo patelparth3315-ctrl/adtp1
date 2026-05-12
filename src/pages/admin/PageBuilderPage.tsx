@@ -1224,8 +1224,8 @@ export default function PageBuilderPage() {
                         <Input 
                           value={(selectedSection.draft.months || []).join(', ')} 
                           onChange={e => {
-                            // Split by comma, semicolon or multiple spaces
-                            const val = e.target.value.split(/[,;]|\s{2,}/).map(m => m.trim().toUpperCase()).filter(m => m !== '');
+                            // Split by comma, semicolon, colon, period or multiple spaces
+                            const val = e.target.value.split(/[,;:\.]|\s{2,}/).map(m => m.trim().toUpperCase()).filter(m => m !== '');
                             updateSelectedSection({ months: val });
                           }} 
                           className="h-14 rounded-2xl border-2 font-bold" 
