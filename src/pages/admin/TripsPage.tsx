@@ -137,6 +137,9 @@ export default function TripsPage() {
       const price = Number(t?.price);
       return `₹${isNaN(price) ? '0' : price.toLocaleString()}`;
     }},
+    { key: "order", header: "Order", render: (t: Trip) => (
+      <span className="font-bold text-primary">{t.order || 0}</span>
+    )},
     { key: "duration", header: "Duration", render: (t: Trip) => t?.duration || "N/A" },
     { key: "itinerary", header: "Days", render: (t: Trip) => (
       <span className="flex items-center gap-1 text-muted-foreground font-bold">

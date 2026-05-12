@@ -310,6 +310,16 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="order" className="text-[10px] font-black uppercase tracking-widest opacity-50">Display Order</Label>
+                  <Input 
+                    id="order" 
+                    type="number"
+                    value={form.order || 0} 
+                    onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} 
+                    className="rounded-xl font-bold" 
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Base Price (₹)</Label>
                   <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="rounded-xl" />
                 </div>

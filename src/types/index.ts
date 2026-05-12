@@ -120,6 +120,7 @@ export interface Trip {
   departureCity?: string;
   ageLimit?: string;
   bookingUrl?: string;
+  order?: number;
   createdAt: string;
   updatedAt: string;
 }
