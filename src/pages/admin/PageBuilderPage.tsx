@@ -267,14 +267,14 @@ export default function PageBuilderPage() {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(async () => {
         await saveDraft();
-      }, 2000);
+      }, 1000);
     }
     return () => clearTimeout(timerRef.current);
   }, [sections, saveStatus]);
 
   const saveDraft = async () => {
-    if (loading || sections.length === 0) {
-      console.log("🛑 [PageBuilder] Skip saving: loading or empty sections");
+    if (loading) {
+      console.log("🛑 [PageBuilder] Skip saving: loading in progress");
       return;
     }
     setSaveStatus('saving');
