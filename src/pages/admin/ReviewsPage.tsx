@@ -140,7 +140,7 @@ export default function ReviewsPage() {
 
   const toggleFeatured = async (r: any) => {
     try {
-      await reviewsService.update(r._id, { isFeatured: !r.isFeatured });
+      await reviewsService.update(r.id || r._id, { isFeatured: !r.isFeatured });
       toast.success(r.isFeatured ? "Removed from featured" : "Set as featured");
       load();
     } catch (error) {
@@ -189,7 +189,7 @@ export default function ReviewsPage() {
     { key: "actions", header: "", render: (r: any) => (
       <div className="flex gap-1">
         <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-        <Button variant="ghost" size="icon" onClick={() => handleDelete(r._id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id || r._id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
       </div>
     )},
   ];
