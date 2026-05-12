@@ -348,19 +348,40 @@ export default function PageEditorPage() {
                   )}
 
                   {(activeSection.type === 'trips' || activeSection.type === 'upcoming_trips' || activeSection.type === 'featured_trips' || activeSection.type === 'trending_trips') && (
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Batch Months (Comma Separated)</Label>
-                       <Input 
-                         value={(activeSection.data.months || []).join(', ')} 
-                         onChange={(e) => {
-                           const monthsArr = e.target.value.split(',').map(m => m.trim()).filter(m => m !== '');
-                           const newSections = sections.map(s => s.id === activeSection.id ? { ...s, data: { ...s.data, months: monthsArr } } : s);
-                           setSections(newSections);
-                         }}
-                         placeholder="e.g. MAY '26, JUN '26"
-                         className="rounded-xl font-bold"
-                       />
-                       <p className="text-[10px] text-muted-foreground italic">Leave empty to generate automatically from trip dates.</p>
+                    <div className="space-y-4">
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Batch / Departure Months</Label>
+                       <div className="flex flex-wrap gap-2 p-3 bg-muted/10 rounded-xl border-2 border-dashed min-h-[60px]">
+                          {(activeSection.data.months || []).map((m: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2 bg-primary text-black px-2 py-1 rounded-md text-[9px] font-black uppercase">
+                              {m}
+                              <button 
+                                onClick={() => {
+                                  const monthsArr = (activeSection.data.months || []).filter((_: any, i: number) => i !== idx);
+                                  const newSections = sections.map(s => s.id === activeSection.id ? { ...s, data: { ...s.data, months: monthsArr } } : s);
+                                  setSections(newSections);
+                                }}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                          <Input 
+                            placeholder="Add month..."
+                            className="h-6 border-none bg-transparent text-[9px] font-bold uppercase focus-visible:ring-0 p-0 flex-1 min-w-[80px]"
+                            onKeyDown={(e) => {
+                              if (e.key === ',' || e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = (e.currentTarget.value || '').trim().toUpperCase();
+                                if (val) {
+                                  const monthsArr = Array.from(new Set([...(activeSection.data.months || []), val]));
+                                  const newSections = sections.map(s => s.id === activeSection.id ? { ...s, data: { ...s.data, months: monthsArr } } : s);
+                                  setSections(newSections);
+                                  e.currentTarget.value = '';
+                                }
+                              }
+                            }}
+                          />
+                       </div>
                     </div>
                   )}
 
