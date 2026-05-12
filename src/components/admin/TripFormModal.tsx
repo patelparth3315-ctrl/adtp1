@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Trip, TripFormData, ItineraryDay, FAQ } from "@/types";
@@ -232,7 +232,9 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editing ? "Edit Trip" : "Create Trip"}</DialogTitle>
-          <p className="text-xs text-muted-foreground">Fill in the details below to {editing ? "update the" : "create a new"} expedition.</p>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Fill in the details below to {editing ? "update the" : "create a new"} expedition.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
