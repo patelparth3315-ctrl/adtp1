@@ -196,7 +196,7 @@ export default function PageBuilderPage() {
   const [saveStatus, setSaveStatus] = useState<'saved' | 'dirty' | 'saving'>('saved');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [typeModalOpen, setTypeModalOpen] = useState(false);
-  const [trips, setTrips] = useState<any[]>([]);
+  const [dbTrips, setDbTrips] = useState<any[]>([]);
 
   // History for Undo/Redo
   const history = useRef<any[]>([]);
@@ -223,7 +223,7 @@ export default function PageBuilderPage() {
       }
 
       setSections(layoutData.sections || []);
-      setTrips(tripsData || []);
+      setDbTrips(tripsData || []);
       if (layoutData.sections?.length > 0) {
         setSelectedSectionId(layoutData.sections[0].id);
       }
@@ -762,13 +762,17 @@ export default function PageBuilderPage() {
                           </div>
                         </div>
                       <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Subheadline / Tagline</Label>
+                        <Label className="text-xs font-black uppercase tracking-widest">Subheadline / Tagline (Animated)</Label>
                         <Textarea 
                           value={selectedSection.draft.subheadline || ''} 
                           onChange={e => updateSelectedSection({ subheadline: e.target.value })}
                           className="min-h-[100px] rounded-2xl border-2 font-medium"
                           maxLength={200}
+                          placeholder="e.g. Spreading Happiness, Connecting Travelers, Curating Vibes"
                         />
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic text-primary-orange">
+                          Use commas to create an animated typing effect (e.g. "Phrase 1, Phrase 2")
+                        </p>
                       </div>
                       <div className="grid grid-cols-2 gap-8">
                         <div className="space-y-4">
@@ -864,7 +868,7 @@ export default function PageBuilderPage() {
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Select Trips to Showcase</Label>
                         <div className="grid grid-cols-2 gap-4">
-                          {trips.map(trip => (
+                          {dbTrips.map(trip => (
                             <div 
                               key={trip.id} 
                               onClick={() => {
@@ -1262,27 +1266,27 @@ export default function PageBuilderPage() {
                           <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
                             {(() => {
                               const selectedMonthsClean = (selectedSection.draft.months || []).map((m: string) => m.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''));
-                              const filtered = trips.filter(trip => {
-                                if (selectedMonthsClean.length === 0) return true;
-                                try {
-                                  const datesArr = typeof trip.availableDates === 'string' ? JSON.parse(trip.availableDates) : trip.availableDates;
-                                  if (!datesArr || !Array.isArray(datesArr)) return false;
-                                  return datesArr.some((d: any) => {
-                                    const ds = d.date || d;
-                                    let date;
-                                    if (typeof ds === 'string' && /^\d{4}-\d{2}-\d{2}/.test(ds)) {
-                                      const [y, m, day] = ds.split('-').map(Number);
-                                      date = new Date(y, m - 1, day);
-                                    } else { date = new Date(ds); }
-                                    if (isNaN(date.getTime())) return false;
-                                    const mName = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-                                    const mYear = date.toLocaleString('en-US', { year: '2-digit' });
-                                    const mFull = mName + mYear;
-                                    return selectedMonthsClean.includes(mName) || selectedMonthsClean.includes(mFull);
-                                  });
-                                } catch (e) { return false; }
-                              });
-                              return `Showing ${filtered.length} of ${trips.length} trips`;
+                              const filtered = dbTrips.filter(trip => {
+                                 if (selectedMonthsClean.length === 0) return true;
+                                 try {
+                                   const datesArr = typeof trip.availableDates === 'string' ? JSON.parse(trip.availableDates) : trip.availableDates;
+                                   if (!datesArr || !Array.isArray(datesArr)) return false;
+                                   return datesArr.some((d: any) => {
+                                     const ds = d.date || d;
+                                     let date;
+                                     if (typeof ds === 'string' && /^\d{4}-\d{2}-\d{2}/.test(ds)) {
+                                       const [y, m, day] = ds.split('-').map(Number);
+                                       date = new Date(y, m - 1, day);
+                                     } else { date = new Date(ds); }
+                                     if (isNaN(date.getTime())) return false;
+                                     const mName = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                                     const mYear = date.toLocaleString('en-US', { year: '2-digit' });
+                                     const mFull = `${mName} '${mYear}`;
+                                     return selectedMonthsClean.includes(mName) || selectedMonthsClean.includes(mFull) || selectedMonthsClean.includes(mName+mYear);
+                                   });
+                                 } catch (e) { return false; }
+                               });
+                               return `Showing ${filtered.length} of ${dbTrips.length} trips`;
                             })()}
                           </span>
                         </div>
@@ -1293,7 +1297,7 @@ export default function PageBuilderPage() {
                             const currentTripIds = selectedSection.draft.tripIds || [];
 
                             // 1. Calculate filtered trips
-                            const filteredTrips = trips.filter(trip => {
+                            const filteredTrips = dbTrips.filter(trip => {
                               if (selectedMonthsClean.length === 0) return true;
                               try {
                                 const datesArr = typeof trip.availableDates === 'string' ? JSON.parse(trip.availableDates) : trip.availableDates;
@@ -1308,14 +1312,14 @@ export default function PageBuilderPage() {
                                   if (isNaN(date.getTime())) return false;
                                   const mName = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
                                   const mYear = date.toLocaleString('en-US', { year: '2-digit' });
-                                  const mFull = mName + mYear;
-                                  return selectedMonthsClean.includes(mName) || selectedMonthsClean.includes(mFull);
+                                  const mFull = `${mName} '${mYear}`;
+                                  return selectedMonthsClean.includes(mName) || selectedMonthsClean.includes(mFull) || selectedMonthsClean.includes(mName+mYear);
                                 });
                               } catch (e) { return false; }
                             });
 
                             // 2. Combine: Always show currently selected trips + filtered results
-                            const alreadySelected = trips.filter(t => currentTripIds.includes(t.id));
+                            const alreadySelected = dbTrips.filter(t => currentTripIds.includes(t.id));
                             const notSelectedButFiltered = filteredTrips.filter(t => !currentTripIds.includes(t.id));
                             
                             const displayTrips = Array.from(new Set([...alreadySelected, ...notSelectedButFiltered]));
