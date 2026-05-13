@@ -13,6 +13,32 @@ const ThemeContext = createContext<{
 
 export const useTheme = () => useContext(ThemeContext);
 
+const defaultTheme: ThemeConfig = {
+  fontFamily: 'Montserrat',
+  headingFont: 'Montserrat',
+  bodyFont: 'Montserrat',
+  fontSizeBase: '16',
+  fontSizeHeading: '32',
+  fontWeightNormal: '400',
+  fontWeightBold: '700',
+  primaryColor: '#FF5B00',
+  secondaryColor: '#1B2A4A',
+  backgroundColor: '#FFFFFF',
+  textColor: '#1F2937',
+  buttonColor: '#FF5B00',
+  buttonHoverColor: '#E65200',
+  buttonTextColor: '#FFFFFF',
+  buttonRadius: '12',
+  cardBgColor: '#FFFFFF',
+  cardRadius: '24',
+  cardShadow: '0 10px 40px rgba(0,0,0,0.03)',
+  borderColor: '#F1F5F9',
+  borderWidth: '1',
+  spacingUnit: '4',
+  containerWidth: '1280',
+  darkMode: false
+};
+
 export const DynamicThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<ThemeConfig | null>(null);
 
@@ -67,7 +93,9 @@ export const DynamicThemeProvider = ({ children }: { children: React.ReactNode }
       setTheme(config);
       applyTheme(config);
     } catch (error) {
-      console.error('Failed to load theme:', error);
+      console.error('Failed to load theme, using default:', error);
+      setTheme(defaultTheme);
+      applyTheme(defaultTheme);
     }
   };
 
