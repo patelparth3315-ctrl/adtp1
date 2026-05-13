@@ -3,7 +3,7 @@ import {
   Layout, Megaphone, Users, MessageSquare, ImageIcon, Type, 
   Plus, Trash2, GripVertical, Eye, Send, 
   MoreVertical, Copy, Lock, Unlock, Save, Undo2, Redo2, History,
-  Loader2, CheckCircle2, AlertCircle, ChevronRight, X
+  Loader2, CheckCircle2, AlertCircle, ChevronRight, X, Menu, PanelLeftClose
 } from "lucide-react";
 import { pageBuilderService } from "@/services/page-builder.service";
 import { tripsService } from "@/services/trips.service";
@@ -195,6 +195,7 @@ export default function PageBuilderPage() {
   const [saveStatus, setSaveStatus] = useState<'saved' | 'dirty' | 'saving'>('saved');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [typeModalOpen, setTypeModalOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dbTrips, setDbTrips] = useState<any[]>([]);
 
   // History for Undo/Redo
@@ -500,14 +501,18 @@ export default function PageBuilderPage() {
   );
 
   return (
-    <div className="fixed inset-0 top-16 left-64 bg-background z-10 flex flex-col overflow-hidden border-l border-border">
+    <div className="fixed inset-0 top-14 md:top-16 left-0 md:left-[3rem] lg:left-64 bg-background z-10 flex flex-col overflow-hidden border-l border-border">
       <Toaster position="top-right" />
       
       {/* ── TOOLBAR ── */}
-      <header className="h-16 border-b border-border bg-card/50 backdrop-blur-md px-6 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-6">
+      <header className="h-12 md:h-16 border-b border-border bg-card/50 backdrop-blur-md px-2 sm:px-4 md:px-6 flex items-center justify-between shrink-0 gap-2">
+        <div className="flex items-center gap-2 md:gap-6 min-w-0">
+          {/* Mobile sidebar toggle */}
+          <Button variant="ghost" size="icon" className="rounded-xl md:hidden shrink-0" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Menu className="w-5 h-5" />
+          </Button>
           <Select value={currentPage} onValueChange={setCurrentPage}>
-            <SelectTrigger className="w-[180px] rounded-xl border-2 font-bold h-10">
+            <SelectTrigger className="w-[100px] sm:w-[140px] md:w-[180px] rounded-xl border-2 font-bold h-9 md:h-10 text-[10px] md:text-xs">
               <SelectValue placeholder="Select Page" />
             </SelectTrigger>
             <SelectContent className="rounded-xl shadow-2xl">
@@ -515,45 +520,54 @@ export default function PageBuilderPage() {
             </SelectContent>
           </Select>
           
-          <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3">
             <div className={`w-2 h-2 rounded-full ${saveStatus === 'saved' ? 'bg-green-500' : saveStatus === 'saving' ? 'bg-blue-500 animate-pulse' : 'bg-amber-500'}`} />
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
-              {saveStatus === 'saved' ? (lastSaved ? `Saved ${Math.floor((new Date().getTime() - lastSaved.getTime())/1000)}s ago` : 'All changes saved') : 
-               saveStatus === 'saving' ? 'Saving changes...' : 'Unsaved Changes'}
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-60 hidden lg:inline">
+              {saveStatus === 'saved' ? (lastSaved ? `Saved ${Math.floor((new Date().getTime() - lastSaved.getTime())/1000)}s ago` : 'Saved') : 
+               saveStatus === 'saving' ? 'Saving...' : 'Unsaved'}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={undo} disabled={history.current.length === 0} className="rounded-xl">
+        <div className="flex items-center gap-1 md:gap-2 shrink-0">
+          <Button variant="ghost" size="icon" onClick={undo} disabled={history.current.length === 0} className="rounded-xl h-8 w-8 md:h-9 md:w-9">
             <Undo2 className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={redo} disabled={redoStack.current.length === 0} className="rounded-xl">
+          <Button variant="ghost" size="icon" onClick={redo} disabled={redoStack.current.length === 0} className="rounded-xl h-8 w-8 md:h-9 md:w-9">
             <Redo2 className="w-4 h-4" />
           </Button>
-          <div className="w-px h-6 bg-border mx-2" />
-          <Button variant="outline" className="rounded-xl border-2 font-black text-[10px] tracking-widest h-10 px-6" onClick={() => {
+          <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
+          <Button variant="outline" size="icon" className="rounded-xl border-2 h-8 w-8 md:h-10 md:w-auto md:px-4 lg:px-6" onClick={() => {
             const token = localStorage.getItem('token');
             window.open(`/admin/preview?page=${currentPage}&token=${token}`, '_blank');
           }}>
-            <Eye className="w-4 h-4 mr-2" /> PREVIEW
+            <Eye className="w-4 h-4" /><span className="hidden lg:inline ml-2 font-black text-[10px] tracking-widest">PREVIEW</span>
           </Button>
-          <Button variant="outline" className="rounded-xl border-2 font-black text-[10px] tracking-widest h-10 px-6" onClick={saveDraft}>
-            <Save className="w-4 h-4 mr-2" /> SAVE DRAFT
+          <Button variant="outline" size="icon" className="rounded-xl border-2 h-8 w-8 md:h-10 md:w-auto md:px-4 lg:px-6" onClick={saveDraft}>
+            <Save className="w-4 h-4" /><span className="hidden lg:inline ml-2 font-black text-[10px] tracking-widest">SAVE</span>
           </Button>
-          <Button className="rounded-xl font-black text-[10px] tracking-widest h-10 px-6 shadow-xl shadow-primary/20" onClick={publish} disabled={publishing}>
-            {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 mr-2" />} PUBLISH
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-xl ml-2">
-            <History className="w-4 h-4" />
+          <Button size="icon" className="rounded-xl h-8 w-8 md:h-10 md:w-auto md:px-4 lg:px-6 shadow-xl shadow-primary/20" onClick={publish} disabled={publishing}>
+            {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            <span className="hidden lg:inline ml-2 font-black text-[10px] tracking-widest">PUBLISH</span>
           </Button>
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* ── SECTION LIST (LEFT) ── */}
-        <aside className="w-[320px] border-r border-border bg-muted/20 flex flex-col overflow-hidden shrink-0">
-          <div className="p-4 flex-1 overflow-y-auto">
+        {/* Mobile overlay backdrop */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+        <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-40 md:z-auto w-[280px] sm:w-[320px] border-r border-border bg-muted/20 flex flex-col overflow-hidden shrink-0 h-full transition-transform duration-300 ease-in-out`}>
+          {/* Mobile close button */}
+          <div className="flex items-center justify-between p-3 border-b border-border md:hidden">
+            <span className="text-[10px] font-black uppercase tracking-widest">Sections</span>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setSidebarOpen(false)}>
+              <PanelLeftClose className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="p-3 md:p-4 flex-1 overflow-y-auto">
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="sections">
                 {(provided) => (
@@ -648,10 +662,10 @@ export default function PageBuilderPage() {
         <main className="flex-1 bg-background overflow-hidden flex flex-col relative">
           {selectedSection ? (
             <ScrollArea className="flex-1">
-              <div className="max-w-4xl mx-auto p-12 space-y-12">
+              <div className="max-w-4xl mx-auto p-3 sm:p-6 md:p-8 lg:p-12 space-y-6 md:space-y-12">
                 {/* ── Meta Settings ── */}
                 <section className="space-y-6">
-                  <div className="flex items-center gap-4 border-b border-border pb-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 border-b border-border pb-4 sm:pb-6">
                     <div className="bg-primary/10 p-3 rounded-2xl">
                       {(() => {
                         const Icon = SECTION_TYPES.find(t => t.type === selectedSection.type)?.icon || Layout;
@@ -736,8 +750,8 @@ export default function PageBuilderPage() {
                 <div className={selectedSection.locked ? 'opacity-50 pointer-events-none' : ''}>
                   {selectedSection.type === 'hero' && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="grid grid-cols-4 gap-4 items-end">
-                          <div className="col-span-3 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                          <div className="md:col-span-3 space-y-4">
                             <div className="flex justify-between">
                               <Label className="text-xs font-black uppercase tracking-widest">Main Headline</Label>
                               <span className="text-[10px] font-bold opacity-30">{(selectedSection.draft.headline || '').length}/80</span>
@@ -778,7 +792,7 @@ export default function PageBuilderPage() {
                           Use commas to create an animated typing effect (e.g. "Phrase 1, Phrase 2")
                         </p>
                       </div>
-                      <div className="grid grid-cols-2 gap-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                         <div className="space-y-4">
                           <Label className="text-xs font-black uppercase tracking-widest">Background Video URL (YouTube)</Label>
                           <Input 
