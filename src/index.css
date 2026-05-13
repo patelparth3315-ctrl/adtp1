@@ -139,3 +139,63 @@ body {
 input, button, .card, .modal {
   @apply transition-all duration-300;
 }
+
+/* ===== RESPONSIVE ADMIN PANEL OVERRIDES ===== */
+
+/* Tables: horizontal scroll on small screens */
+@media (max-width: 768px) {
+  .admin-table-wrap,
+  [role="table"],
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+}
+
+/* Modals: fit viewport, internal scroll */
+@media (max-width: 640px) {
+  [role="dialog"] {
+    max-height: 95dvh !important;
+    max-width: 95vw !important;
+    margin: auto;
+    border-radius: 1rem !important;
+  }
+  [role="dialog"] > div {
+    max-height: 85dvh;
+    overflow-y: auto;
+  }
+}
+
+/* Forms: single-column on mobile */
+@media (max-width: 640px) {
+  .grid-cols-2,
+  .grid-cols-3,
+  .md\:grid-cols-2,
+  .md\:grid-cols-3,
+  .lg\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Cards & grids: prevent overflow */
+@media (max-width: 640px) {
+  .klook-panel {
+    padding: 1rem !important;
+    border-radius: 1rem !important;
+  }
+}
+
+/* Touch target minimum sizes */
+@media (max-width: 768px) {
+  button, a, [role="button"] {
+    min-height: 36px;
+    min-width: 36px;
+  }
+}
+
+/* Prevent body overflow on mobile sidebar */
+body.sidebar-open {
+  overflow: hidden;
+}

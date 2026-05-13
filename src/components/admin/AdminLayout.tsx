@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/auth.store";
 import { toast } from "@/components/ui/sonner";
@@ -130,10 +130,18 @@ interface NavItem {
 }
 
 function AdminSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const { logout, admin } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto-close sidebar on mobile when navigating
+  React.useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [location.pathname, isMobile, setOpenMobile]);
 
   const handleLogout = () => {
     logout();
@@ -290,36 +298,34 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           {/* Top Navbar */}
-          <header className="h-16 flex items-center justify-between border-b bg-white px-8 shrink-0 z-20 shadow-sm">
-            <div className="flex items-center gap-4">
-               <SidebarTrigger className="text-gray-500 hover:text-black hover:bg-gray-100 h-10 w-10 rounded-xl" />
-               <div className="flex items-center gap-3">
-                  <h2 className="font-black text-gray-900 uppercase tracking-tighter text-lg leading-none">
-                    {location.pathname === "/admin" || location.pathname === "/" 
-                      ? "Dashboard" 
-                      : (location.pathname.split("/").filter(Boolean).pop() || "Page").replace(/-/g, " ")}
-                  </h2>
-               </div>
+          <header className="h-14 md:h-16 flex items-center justify-between border-b bg-white px-3 sm:px-4 md:px-8 shrink-0 z-20 shadow-sm">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0">
+               <SidebarTrigger className="text-gray-500 hover:text-black hover:bg-gray-100 h-9 w-9 md:h-10 md:w-10 rounded-xl shrink-0" />
+               <h2 className="font-black text-gray-900 uppercase tracking-tighter text-sm md:text-lg leading-none truncate">
+                 {location.pathname === "/admin" || location.pathname === "/" 
+                   ? "Dashboard" 
+                   : (location.pathname.split("/").filter(Boolean).pop() || "Page").replace(/-/g, " ")}
+               </h2>
             </div>
 
-            <div className="flex items-center gap-4">
-               {/* New Action Buttons (VacationLabs Style) */}
-               <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 shrink-0">
+               {/* Action Buttons - hidden on small mobile, icons only on tablet */}
+               <div className="hidden sm:flex items-center gap-2 md:gap-3">
                   <Button 
                     onClick={() => setInquiryModalOpen(true)}
-                    className="bg-primary hover:bg-primary/90 text-white rounded-xl h-10 px-5 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95"
+                    className="bg-primary hover:bg-primary/90 text-white rounded-xl h-9 md:h-10 px-3 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-primary/20 transition-all active:scale-95"
                   >
-                    <PlusCircle className="w-4 h-4" /> New inquiry
+                    <PlusCircle className="w-4 h-4" /><span className="hidden lg:inline">New inquiry</span>
                   </Button>
                   <Button 
                     onClick={() => setBookingModalOpen(true)}
-                    className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-10 px-5 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-slate-200 transition-all active:scale-95"
+                    className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-9 md:h-10 px-3 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-slate-200 transition-all active:scale-95"
                   >
-                    <PlusCircle className="w-4 h-4" /> New booking
+                    <PlusCircle className="w-4 h-4" /><span className="hidden lg:inline">New booking</span>
                   </Button>
                </div>
 
-               <div className="w-px h-6 bg-gray-200 mx-2" />
+               <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
 
                <div className="relative hidden xl:block">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -328,14 +334,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                     className="h-10 w-48 bg-gray-50 border-none rounded-xl text-[10px] font-bold focus-visible:ring-primary"
                   />
                </div>
-               <div className="flex items-center gap-3">
+               <div className="flex items-center gap-1.5 md:gap-3">
                   <button title="Notifications" className="relative p-2 text-gray-400 hover:text-black transition-colors">
                      <Bell className="w-5 h-5" />
                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
                   </button>
-                  <div className="w-px h-6 bg-gray-200 mx-2" />
-                  <div className="flex items-center gap-3 cursor-pointer group">
-                     <div className="w-10 h-10 rounded-xl bg-slate-50 border-2 border-slate-100 group-hover:border-primary transition-all overflow-hidden p-0.5">
+                  <div className="w-px h-6 bg-gray-200 mx-1 hidden md:block" />
+                  <div className="flex items-center cursor-pointer group">
+                     <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-slate-50 border-2 border-slate-100 group-hover:border-primary transition-all overflow-hidden p-0.5">
                         <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="Admin" className="rounded-lg" />
                      </div>
                   </div>
@@ -345,7 +351,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
           <div className="flex-1 flex overflow-hidden">
              {/* Main Content Area */}
-             <main className="flex-1 overflow-y-auto p-4 lg:p-10 scrollbar-hide bg-[#f8fafc]">
+             <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 lg:p-10 scrollbar-hide bg-[#f8fafc]">
                 <div className="max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
                    {children}
                 </div>
