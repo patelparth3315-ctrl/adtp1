@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&family=Dancing+Script:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Inter:wght@100..900&family=Poppins:wght@100..900&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@300..700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,6 +6,16 @@
 
 @layer base {
   :root {
+    /* Dynamic Theme Variables (HEX) */
+    --primary-hex: #FF5B00;
+    --secondary-hex: #1B2A4A;
+    --background-hex: #F5F5F5;
+    --foreground-hex: #212121;
+    --font-primary: 'Montserrat', sans-serif;
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Montserrat', sans-serif;
+
+    /* Shadcn Mapping (Approximate conversion or direct hex if tailwind config allows) */
     --background: 0 0% 96%;        /* #F5F5F5 - Klook Ghost Background */
     --foreground: 0 0% 13%;        /* #212121 */
     --card: 0 0% 100%;
@@ -80,18 +90,52 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: var(--font-body) !important;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading) !important;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-card/80 backdrop-blur-sm border border-border;
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.04)];
   }
   .font-handwriting {
-    font-family: 'Dancing Script', cursive !important;
+    font-family: 'Montserrat', sans-serif !important;
   }
   .klook-panel {
-    @apply bg-white border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.05)] rounded-[20px] p-6;
+    @apply bg-white border border-slate-100 shadow-premium rounded-[32px] p-8;
   }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-custom::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    @apply bg-slate-200/50 rounded-full hover:bg-slate-300 transition-colors;
+  }
+  .shadow-premium {
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 4px 10px -2px rgba(0, 0, 0, 0.02);
+  }
+  .shadow-luxury {
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08), 0 8px 20px -6px rgba(0, 0, 0, 0.04);
+  }
+}
+
+/* Smooth Transitions Global */
+* {
+  @apply transition-colors duration-200;
+}
+
+body {
+  @apply overflow-x-hidden;
+}
+
+input, button, .card, .modal {
+  @apply transition-all duration-300;
 }

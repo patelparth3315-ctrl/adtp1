@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { AdminModal } from "./AdminModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,261 +118,249 @@ export default function NewBookingModal({ open, onOpenChange, onSuccess }: NewBo
     }
   };
 
+  const footer = (
+    <>
+      <div className="flex flex-col">
+        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Balance Due</span>
+        <span className="text-xl font-black text-slate-900">₹{(form.totalAmount - (form.advancePaid || 0)).toLocaleString()}</span>
+      </div>
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl h-12 px-6 font-bold text-slate-600 border-slate-200">
+          Discard
+        </Button>
+        <Button 
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[10px] h-12 px-10 rounded-xl shadow-xl shadow-primary/20 transition-all active:scale-95"
+        >
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+          Create Booking
+        </Button>
+      </div>
+    </>
+  );
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xl p-0 overflow-hidden border-none shadow-2xl flex flex-col h-full bg-white">
-        <div className="flex flex-col h-full bg-white">
-          <div className="flex items-center justify-between px-6 py-4 border-b bg-white z-10 shrink-0">
-            <SheetTitle className="text-xl font-normal text-gray-800">New Booking</SheetTitle>
-            <SheetDescription className="sr-only">Create a new booking</SheetDescription>
-            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="h-8 px-4 text-xs font-medium text-gray-600 rounded">
-              Discard
-            </Button>
+    <AdminModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Create Booking"
+      description="Register a new expedition reservation"
+      footer={footer}
+    >
+      <div className="space-y-10">
+        {/* Customer Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Customer Information</h3>
           </div>
-
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <div className="p-6 space-y-8">
-              <div className="text-[11px] text-gray-600 leading-relaxed bg-white">
-                <span className="font-bold text-gray-900">ⓘ Note:</span> Complete the booking details below. Fields marked with <span className="text-red-500">*</span> are required.
-              </div>
-
-              {/* Customer Section */}
-              <section className="space-y-5">
-                 <h3 className="text-sm font-bold text-gray-800 pb-2 border-b">Customer Details</h3>
-               
-               <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Full Name <span className="text-red-500">*</span></Label>
-                   <Input 
-                     value={form.fullName} 
-                     onChange={e => setForm({ ...form, fullName: e.target.value })}
-                     placeholder="Full name of primary guest" 
-                     className="h-9 border-gray-300 text-sm shadow-sm"
-                   />
-                 </div>
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Mobile Number <span className="text-red-500">*</span></Label>
-                   <div className="flex h-9 rounded-md border border-gray-300 overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
-                     <div className="w-12 h-full bg-white border-r border-gray-300 flex items-center justify-center text-xs text-gray-500">
-                       +91
-                     </div>
-                     <Input 
-                       value={form.mobile} 
-                       onChange={e => setForm({ ...form, mobile: e.target.value })}
-                       placeholder="10-digit number" 
-                       className="h-full border-none rounded-none text-sm flex-1 focus-visible:ring-0 shadow-none"
-                     />
-                   </div>
-                 </div>
-               </div>
-
-               <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Email Address <span className="text-red-500">*</span></Label>
-                   <Input 
-                     type="email"
-                     value={form.email} 
-                     onChange={e => setForm({ ...form, email: e.target.value })}
-                     placeholder="customer@example.com" 
-                     className="h-9 border-gray-300 text-sm shadow-sm"
-                   />
-                 </div>
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Gender</Label>
-                   <Select value={form.gender} onValueChange={v => setForm({ ...form, gender: v })}>
-                     <SelectTrigger className="h-9 border-gray-300 text-sm shadow-sm">
-                       <SelectValue />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="Male">Male</SelectItem>
-                       <SelectItem value="Female">Female</SelectItem>
-                       <SelectItem value="Other">Other</SelectItem>
-                     </SelectContent>
-                   </Select>
-                 </div>
-               </div>
-
-               <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Age</Label>
-                   <Input 
-                     type="number"
-                     value={form.age} 
-                     onChange={e => setForm({ ...form, age: parseInt(e.target.value) || 0 })}
-                     className="h-9 border-gray-300 text-sm shadow-sm"
-                   />
-                 </div>
-               </div>
-            </section>
-
-              {/* Trip Section */}
-              <section className="space-y-5">
-                <h3 className="text-sm font-bold text-gray-800 pb-2 border-b">Trip Info</h3>
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[11px] font-bold text-gray-700">Select Trip <span className="text-red-500">*</span></Label>
-                        <button 
-                          type="button"
-                          onClick={() => setForm({ ...form, isManualTrip: !form.isManualTrip, tripId: "" })}
-                          className="text-[9px] font-bold text-primary hover:underline"
-                        >
-                          {form.isManualTrip ? "Select from list" : "Enter Code Manually"}
-                        </button>
-                      </div>
-                      {form.isManualTrip ? (
-                        <Input 
-                          value={form.tripId} 
-                          onChange={e => setForm({ ...form, tripId: e.target.value })}
-                          placeholder="e.g. MKA1" 
-                          className="h-9 border-gray-300 text-sm shadow-sm font-bold uppercase"
-                        />
-                      ) : (
-                        <Select value={form.tripId} onValueChange={handleTripChange}>
-                          <SelectTrigger className="h-9 border-gray-300 text-sm shadow-sm">
-                            <SelectValue placeholder={loadingTrips ? "Loading trips..." : "Select the expedition"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {trips.map(trip => (
-                              <SelectItem key={trip.id} value={trip.id} className="text-sm font-medium">
-                                {trip.title} (₹{trip.price})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-bold text-gray-700">Departure Date <span className="text-red-500">*</span></Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                        <Input 
-                          type="date"
-                          value={form.departureDate} 
-                          onChange={e => setForm({ ...form, departureDate: e.target.value })}
-                          className="h-9 border-gray-300 pl-9 text-sm shadow-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-               <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Room Type</Label>
-                   <Input 
-                     value={form.roomType} 
-                     onChange={e => setForm({ ...form, roomType: e.target.value })}
-                     placeholder="Double Sharing, etc." 
-                     className="h-9 border-gray-300 text-sm shadow-sm"
-                   />
-                 </div>
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Train Class</Label>
-                   <Select value={form.trainClass} onValueChange={v => setForm({ ...form, trainClass: v })}>
-                     <SelectTrigger className="h-9 border-gray-300 text-sm shadow-sm">
-                       <SelectValue />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="Sleeper">Sleeper</SelectItem>
-                       <SelectItem value="3AC">3AC</SelectItem>
-                       <SelectItem value="2AC">2AC</SelectItem>
-                       <SelectItem value="Flight">Flight</SelectItem>
-                     </SelectContent>
-                   </Select>
-                 </div>
-               </div>
-            </section>
-
-              {/* Financial Section */}
-              <section className="space-y-5">
-                 <h3 className="text-sm font-bold text-gray-800 pb-2 border-b">Financials</h3>
-
-               <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Total Amount (₹) <span className="text-red-500">*</span></Label>
-                   <div className="relative">
-                     <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                     <Input 
-                       type="number"
-                       value={form.totalAmount} 
-                       onChange={e => setForm({ ...form, totalAmount: parseFloat(e.target.value) || 0 })}
-                       className="h-9 border-gray-300 pl-9 text-sm shadow-sm"
-                     />
-                   </div>
-                 </div>
-                 <div className="space-y-1.5">
-                   <Label className="text-[11px] font-bold text-gray-700">Advance Paid (₹)</Label>
-                   <div className="relative">
-                     <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                     <Input 
-                       type="number"
-                       value={form.advancePaid} 
-                       onChange={e => setForm({ ...form, advancePaid: parseFloat(e.target.value) || 0 })}
-                       placeholder="0.00"
-                       className="h-9 border-gray-300 pl-9 text-sm shadow-sm"
-                     />
-                   </div>
-                 </div>
-               </div>
-
-               <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-bold text-gray-700">Payment Status</Label>
-                    <Select value={form.paymentStatus} onValueChange={(v: any) => setForm({ ...form, paymentStatus: v })}>
-                      <SelectTrigger className="h-9 border-gray-300 text-sm shadow-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Partial">Partial Payment</SelectItem>
-                        <SelectItem value="Paid">Fully Paid</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-bold text-gray-700">Payment Mode</Label>
-                    <Select value={form.paymentMode} onValueChange={(v: any) => setForm({ ...form, paymentMode: v })}>
-                      <SelectTrigger className="h-9 border-gray-300 text-sm shadow-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="UPI">UPI</SelectItem>
-                        <SelectItem value="Cash">Cash</SelectItem>
-                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-               </div>
-            </section>
-
-            <section className="space-y-2 pt-2">
-              <Label className="text-[11px] font-bold text-gray-700">Notes / Remarks</Label>
-              <Textarea 
-                value={form.notes}
-                onChange={e => setForm({ ...form, notes: e.target.value })}
-                placeholder="Any special requests or payment details..." 
-                className="min-h-[100px] border-gray-300 text-sm resize-none shadow-sm"
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Name *</Label>
+              <Input 
+                value={form.fullName} 
+                onChange={e => setForm({ ...form, fullName: e.target.value })}
+                placeholder="Primary guest name" 
               />
-            </section>
-          </div>
-        </div>
-
-        <div className="px-6 py-4 border-t bg-gray-50/80 shrink-0 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-500">Balance</span>
-              <span className="text-sm font-bold text-gray-900">₹{(form.totalAmount - (form.advancePaid || 0)).toLocaleString()}</span>
             </div>
-            <Button 
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="bg-[#2b72df] hover:bg-[#205abb] text-white font-medium text-sm h-10 px-6 rounded shadow-sm transition-colors"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Create Booking
-            </Button>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Mobile Number *</Label>
+              <div className="flex h-11 rounded-xl border border-slate-200 overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+                <div className="w-14 h-full bg-slate-50 border-r border-slate-200 flex items-center justify-center text-xs font-black text-slate-400">
+                  +91
+                </div>
+                <Input 
+                  value={form.mobile} 
+                  onChange={e => setForm({ ...form, mobile: e.target.value })}
+                  placeholder="10-digit number" 
+                  className="h-full border-none rounded-none flex-1 focus-visible:ring-0 shadow-none"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address *</Label>
+              <Input 
+                type="email"
+                value={form.email} 
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                placeholder="customer@example.com" 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Gender</Label>
+                <Select value={form.gender} onValueChange={v => setForm({ ...form, gender: v })}>
+                  <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Age</Label>
+                <Input 
+                  type="number"
+                  value={form.age} 
+                  onChange={e => setForm({ ...form, age: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Trip Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-primary" />
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Expedition Logistics</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between ml-1">
+                <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Select Trip *</Label>
+                <button 
+                  type="button"
+                  onClick={() => setForm({ ...form, isManualTrip: !form.isManualTrip, tripId: "" })}
+                  className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                >
+                  {form.isManualTrip ? "Select from list" : "Manual Code"}
+                </button>
+              </div>
+              {form.isManualTrip ? (
+                <Input 
+                  value={form.tripId} 
+                  onChange={e => setForm({ ...form, tripId: e.target.value })}
+                  placeholder="e.g. MKA1" 
+                  className="font-black uppercase tracking-widest"
+                />
+              ) : (
+                <Select value={form.tripId} onValueChange={handleTripChange}>
+                  <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                    <SelectValue placeholder={loadingTrips ? "Loading..." : "Select trip"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {trips.map(trip => (
+                      <SelectItem key={trip.id} value={trip.id}>
+                        {trip.title} (₹{trip.price})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Departure Date *</Label>
+              <Input 
+                type="date"
+                value={form.departureDate} 
+                onChange={e => setForm({ ...form, departureDate: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Room Type</Label>
+              <Input 
+                value={form.roomType} 
+                onChange={e => setForm({ ...form, roomType: e.target.value })}
+                placeholder="e.g. Triple Sharing" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Train Class</Label>
+              <Select value={form.trainClass} onValueChange={v => setForm({ ...form, trainClass: v })}>
+                <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sleeper">Sleeper</SelectItem>
+                  <SelectItem value="3AC">3AC</SelectItem>
+                  <SelectItem value="2AC">2AC</SelectItem>
+                  <SelectItem value="Flight">Flight</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </section>
+
+        {/* Financials */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-2">
+            <IndianRupee className="w-4 h-4 text-primary" />
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Financial Details</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Total Fee (₹) *</Label>
+              <Input 
+                type="number"
+                value={form.totalAmount} 
+                onChange={e => setForm({ ...form, totalAmount: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Advance Paid (₹)</Label>
+              <Input 
+                type="number"
+                value={form.advancePaid} 
+                onChange={e => setForm({ ...form, advancePaid: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Payment Status</Label>
+              <Select value={form.paymentStatus} onValueChange={(v: any) => setForm({ ...form, paymentStatus: v })}>
+                <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Partial">Partial Payment</SelectItem>
+                  <SelectItem value="Paid">Fully Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Payment Mode</Label>
+              <Select value={form.paymentMode} onValueChange={(v: any) => setForm({ ...form, paymentMode: v })}>
+                <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UPI">UPI</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <Label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Internal Notes</Label>
+          <Textarea 
+            value={form.notes}
+            onChange={e => setForm({ ...form, notes: e.target.value })}
+            placeholder="Special requests or payment remarks..." 
+            className="min-h-[120px] rounded-2xl border-slate-200 shadow-sm transition-all focus-visible:ring-primary/20 focus-visible:border-primary p-4"
+          />
+        </section>
+      </div>
+    </AdminModal>
   );
 }

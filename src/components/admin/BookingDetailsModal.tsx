@@ -434,8 +434,12 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
             
             <div className="bg-white p-8 rounded-2xl border shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="space-y-1">
-                <Label text="Base Price" />
-                <p className="text-xl font-bold text-gray-700">₹{(booking.basePrice || 0).toLocaleString()}</p>
+                <Label text="Total Travelers" />
+                <p className="text-xl font-bold text-gray-700">{booking.numberOfTravelers || 1}</p>
+              </div>
+              <div className="space-y-1">
+                <Label text="Base Amount" />
+                <p className="text-xl font-bold text-gray-700">₹{(booking.baseAmount || 0).toLocaleString()}</p>
               </div>
               <div className="space-y-1">
                 <Label text="GST (5%)" />
@@ -445,12 +449,12 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
                 <Label text="Total Amount" />
                 <p className="text-2xl font-black text-gray-900">₹{booking.totalAmount.toLocaleString()}</p>
               </div>
-              <div className="bg-emerald-50 p-4 rounded-xl space-y-1 border border-emerald-100">
+              <div className="bg-emerald-50 p-4 rounded-xl space-y-1 border border-emerald-100 md:col-span-2">
                 <Label text="Advance Paid" />
                 <p className="text-2xl font-black text-emerald-600">₹{booking.advancePaid.toLocaleString()}</p>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">via {booking.paymentMode}</p>
               </div>
-              <div className="bg-red-50 p-4 rounded-xl space-y-1 border border-red-100 md:col-span-2 lg:col-span-1">
+              <div className="bg-red-50 p-4 rounded-xl space-y-1 border border-red-100 md:col-span-2">
                 <Label text="Remaining Balance" />
                 <p className="text-2xl font-black text-red-600">₹{booking.remainingAmount.toLocaleString()}</p>
               </div>

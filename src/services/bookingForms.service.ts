@@ -10,6 +10,8 @@ export interface BookingFormRecord {
   sheetUrl: string;
   sheetId?: string;
   formId?: string;
+  paymentMode?: string;
+  bookingAmount?: number;
   createdBy?: string;
   createdAt: string;
 }
@@ -19,6 +21,8 @@ export const bookingFormsService = {
     tripName: string;
     date: string;
     tripId?: string;
+    paymentMode?: string;
+    bookingAmount?: number;
   }): Promise<BookingFormRecord> {
     const res = await api.post("/booking-forms/create", data);
     return res.data.data;

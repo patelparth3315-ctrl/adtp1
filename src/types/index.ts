@@ -172,6 +172,9 @@ export interface Booking {
   trainClass: 'Sleeper' | '3AC' | '2AC' | 'Flight';
   ticketStatus: 'Confirmed' | 'Waiting' | 'Not Booked';
   roomType: string;
+  numberOfTravelers?: number;
+  baseAmount?: number;
+  gstAmount?: number;
   totalAmount: number;
   advancePaid: number;
   remainingAmount: number;
@@ -403,6 +406,7 @@ export interface Quotation {
   inclusions: string[];
   exclusions: string[];
   coverImage: string;
+  heroImages?: string[];
   experiencePhotos?: string[];
   lowLevelHotels?: any[];
   highLevelHotels?: any[];
@@ -416,6 +420,10 @@ export interface Quotation {
     designation: string;
     photo?: string;
   };
+  staySummary?: { nights: number; location: string }[];
+  roomsInfo?: string;
+  mealsInfo?: string;
+  travelling?: { label: string; icon: string }[];
   viewCount?: number;
   createdAt: string;
   updatedAt: string;

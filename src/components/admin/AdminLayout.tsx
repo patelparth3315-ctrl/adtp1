@@ -141,15 +141,15 @@ function AdminSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-none bg-[#0f172a] text-white">
-      <SidebarContent className="bg-[#0f172a] text-white scrollbar-hide">
+    <Sidebar collapsible="icon" className="border-r border-slate-100 bg-white">
+      <SidebarContent className="bg-white scrollbar-hide">
         <div className="p-6 mb-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
-            <Plane className="h-6 w-6 text-black" />
+            <Plane className="h-6 w-6 text-white" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-black text-white text-xl tracking-tighter leading-none">Youth<span className="text-primary">Camping</span></span>
+              <span className="font-black text-slate-900 text-xl tracking-tighter leading-none">Youth<span className="text-primary">Camping</span></span>
               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60 mt-0.5">Admin Suite v4.0</span>
             </div>
           )}
@@ -179,13 +179,13 @@ function AdminSidebar() {
                       <SidebarMenuButton asChild className="h-12 rounded-xl transition-all duration-300">
                         <NavLink
                           to={item.url}
-                          className="flex items-center text-gray-400 hover:text-white hover:bg-white/5 px-4"
-                          activeClassName="bg-primary text-black font-black shadow-lg shadow-primary/10"
+                          className="flex items-center text-slate-500 hover:text-primary hover:bg-primary/5 px-4"
+                          activeClassName="bg-primary/10 text-primary font-black shadow-sm"
                         >
                           <item.icon className={cn("h-5 w-5 shrink-0", collapsed ? "mx-auto" : "mr-3")} />
                           {!collapsed && <span className="text-[11px] font-black uppercase tracking-tight flex-1 truncate">{item.title}</span>}
                           {!collapsed && item.badge && (
-                            <span className="bg-primary text-black text-[8px] font-black px-1.5 py-0.5 rounded-full ml-auto animate-pulse">
+                            <span className="bg-primary text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ml-auto animate-pulse">
                               {item.badge}
                             </span>
                           )}
@@ -199,9 +199,9 @@ function AdminSidebar() {
           );
         })}
 
-        <div className="mt-auto p-4 border-t border-white/5 space-y-4">
+        <div className="mt-auto p-4 border-t border-slate-50 space-y-4">
           <Button variant="ghost" size={collapsed ? "icon" : "default"} onClick={handleLogout}
-            className="w-full text-gray-500 hover:text-white hover:bg-white/5 justify-start h-12 rounded-xl">
+            className="w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 justify-start h-12 rounded-xl">
             <LogOut className="h-4 w-4 mr-2" />
             {!collapsed && <span className="text-[11px] font-black uppercase tracking-tight">Logout System</span>}
           </Button>
@@ -304,16 +304,16 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-4">
                {/* New Action Buttons (VacationLabs Style) */}
-               <div className="flex items-center gap-2">
+               <div className="flex items-center gap-3">
                   <Button 
                     onClick={() => setInquiryModalOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-md h-9 px-4 font-bold text-[11px] flex items-center gap-2"
+                    className="bg-primary hover:bg-primary/90 text-white rounded-xl h-10 px-5 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95"
                   >
                     <PlusCircle className="w-4 h-4" /> New inquiry
                   </Button>
                   <Button 
                     onClick={() => setBookingModalOpen(true)}
-                    className="bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-md h-9 px-4 font-bold text-[11px] flex items-center gap-2"
+                    className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-10 px-5 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-slate-200 transition-all active:scale-95"
                   >
                     <PlusCircle className="w-4 h-4" /> New booking
                   </Button>
@@ -335,8 +335,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   </button>
                   <div className="w-px h-6 bg-gray-200 mx-2" />
                   <div className="flex items-center gap-3 cursor-pointer group">
-                     <div className="w-10 h-10 rounded-xl bg-gray-100 border-2 border-gray-100 group-hover:border-primary transition-all overflow-hidden">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="Admin" />
+                     <div className="w-10 h-10 rounded-xl bg-slate-50 border-2 border-slate-100 group-hover:border-primary transition-all overflow-hidden p-0.5">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="Admin" className="rounded-lg" />
                      </div>
                   </div>
                </div>
@@ -345,8 +345,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
           <div className="flex-1 flex overflow-hidden">
              {/* Main Content Area */}
-             <main className="flex-1 overflow-y-auto p-1 lg:p-10 scrollbar-hide">
-                <div className="max-w-[1400px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
+             <main className="flex-1 overflow-y-auto p-4 lg:p-10 scrollbar-hide bg-[#f8fafc]">
+                <div className="max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
                    {children}
                 </div>
              </main>

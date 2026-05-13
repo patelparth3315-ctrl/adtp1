@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminModal } from "./AdminModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Trip, TripFormData, ItineraryDay, FAQ } from "@/types";
@@ -14,6 +14,7 @@ import { settingsService } from "@/services/settings.service";
 import { ImageUpload } from "./ImageUpload";
 import { attractionsService, Attraction } from "@/services/attractions.service";
 import api from "@/services/api";
+import { cn } from "@/lib/utils";
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -151,7 +152,70 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(form, editing?.id);
+      const normalize = (data: any) => {
+        const cleanDoc = (obj: any): any => {
+          if (Array.isArray(obj)) return obj.map(cleanDoc);
+          if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
+            const { _id, id, createdAt, updatedAt, __v, ...rest } = obj;
+            const result: any = {};
+            for (const key in rest) {
+              result[key] = cleanDoc(rest[key]);
+            }
+            return result;
+          }
+          return obj;
+        };
+
+        const clean = cleanDoc(data);
+        if (clean.difficulty) clean.difficulty = clean.difficulty.toLowerCase();
+        if (clean.status) clean.status = clean.status.toLowerCase();
+        if (clean.price) clean.price = Number(clean.price);
+        if (clean.maxGroupSize) clean.maxGroupSize = Number(clean.maxGroupSize);
+
+        if (clean.availableDates) {
+          clean.availableDates = clean.availableDates.map((d: any) => ({
+            date: d.date || d,
+            capacity: Number(d.capacity || 20),
+            bookedCount: Number(d.bookedCount || 0)
+          }));
+        }
+
+        if (clean.gallery) {
+          clean.gallery = clean.gallery.map((img: any, i: number) => ({
+            url: typeof img === 'string' ? img : img.url,
+            alt: img.alt || "",
+            order: Number(img.order || i)
+          }));
+        }
+
+        if (clean.accommodations) {
+          clean.accommodations = clean.accommodations.map((acc: any) => ({
+            ...acc,
+            gallery: (acc.gallery || []).map((g: any) => {
+              if (typeof g === 'string') return { url: g, category: 'All' };
+              return { url: g.url || "", category: g.category || "All" };
+            }).filter((g: any) => g.url)
+          }));
+        }
+
+        if (clean.reviews) {
+          clean.reviews = clean.reviews
+            .filter((rev: any) => rev.userName && rev.comment && String(rev.userName).trim() !== "" && String(rev.comment).trim() !== "")
+            .map((rev: any) => {
+              const original = (form.reviews || []).find((r: any) => r.userName === rev.userName);
+              return {
+                ...rev,
+                id: original?.id || original?._id || undefined,
+                _id: original?._id || original?.id || undefined
+              };
+            });
+        }
+        return clean;
+      };
+
+      const cleanData = normalize(form);
+      const editingId = editing?.id || (editing as any)?._id;
+      await onSave(cleanData, editingId);
       onOpenChange(false);
     } catch (err) {
       console.error(err);
@@ -228,61 +292,63 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
     setForm({ ...form, availableDates: [...new Set([...form.availableDates, ...newDates])].sort((a:any, b:any) => a.date.localeCompare(b.date)) });
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit Trip" : "Create Trip"}</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            Fill in the details below to {editing ? "update the" : "create a new"} expedition.
-          </DialogDescription>
-        </DialogHeader>
+  const footer = (
+    <div className="flex w-full items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Current Status</span>
+          <div className="flex items-center gap-2">
+            <div className={cn("w-2 h-2 rounded-full", form.status === 'published' ? 'bg-green-500' : 'bg-amber-500')} />
+            <span className="text-sm font-bold uppercase tracking-tight text-slate-900">{form.status || 'Draft'}</span>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl h-12 px-6 font-bold text-slate-600 border-slate-200">
+          Discard
+        </Button>
+        <Button 
+          onClick={handleSave}
+          disabled={saving}
+          className="bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[10px] h-12 px-10 rounded-xl shadow-xl shadow-primary/20 transition-all active:scale-95"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+          {editing ? "Update Experience" : "Create Experience"}
+        </Button>
+      </div>
+    </div>
+  );
 
-        <Tabs defaultValue="details" className="w-full">
-          <div className="mb-6 space-y-4">
-            <div className="flex flex-col gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Main Info</span>
-              <TabsList className="w-full grid grid-cols-4 h-auto gap-1 p-1 bg-muted/50 rounded-2xl border border-border/50">
+  return (
+    <AdminModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={editing ? "Update Experience" : "Create New Experience"}
+      description="Configure all details for this expedition"
+      footer={footer}
+      maxWidth="max-w-4xl"
+    >
+      <Tabs defaultValue="details" className="w-full">
+        <div className="mb-10 space-y-6">
+          <div className="space-y-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Configuration Modules</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <TabsList className="col-span-full h-auto p-1 bg-slate-50 rounded-2xl border border-slate-100 grid grid-cols-4 md:grid-cols-7 lg:grid-cols-11 gap-1">
                 <TabBtn value="details" label="Details" />
                 <TabBtn value="gallery" label="Gallery" />
                 <TabBtn value="pricing" label="Pricing" />
-                <TabBtn value="dates" label="Schedule" />
-              </TabsList>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Expedition Details</span>
-              <TabsList className="w-full grid grid-cols-5 h-auto gap-1 p-1 bg-muted/50 rounded-2xl border border-border/50">
-                <TabBtn value="itinerary" label="Itinerary" />
-                <TabBtn value="highlights" label="Highlights" />
-                <TabBtn value="inclexcl" label="Inc/Excl" />
+                <TabBtn value="dates" label="Dates" />
+                <TabBtn value="itinerary" label="Itin" />
+                <TabBtn value="highlights" label="High" />
+                <TabBtn value="inclexcl" label="Inc/Exc" />
                 <TabBtn value="faqs" label="FAQs" />
-                <TabBtn value="stay" label="Stay" />
-              </TabsList>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Assets & Marketing</span>
-              <TabsList className="w-full grid grid-cols-5 h-auto gap-1 p-1 bg-muted/50 rounded-2xl border border-border/50">
-                <TabBtn value="attractions" label="Attract" />
-                <TabBtn value="activities" label="Active" />
-                <TabBtn value="reels" label="Reels" />
-                <TabBtn value="reviews" label="Reviews" />
+                <TabBtn value="attractions" label="Attrs" />
                 <TabBtn value="seo" label="SEO" />
-              </TabsList>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Configuration</span>
-              <TabsList className="w-full grid grid-cols-5 h-auto gap-1 p-1 bg-muted/50 rounded-2xl border border-border/50">
-                <TabBtn value="addons" label="Addons" />
-                <TabBtn value="policies" label="Policies" />
-                <TabBtn value="videos" label="Videos" />
-                <TabBtn value="custom" label="Custom" />
-                <TabBtn value="advanced" label="Advanced" />
+                <TabBtn value="advanced" label="Adv" />
               </TabsList>
             </div>
           </div>
+        </div>
 
           <TabsContent value="details">
             <div className="space-y-6 pt-4">
@@ -643,7 +709,8 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                     <div className="flex items-center justify-between">
                       <Label className="text-[9px] uppercase opacity-50 font-black tracking-widest">Photos</Label>
                         <ImageUpload 
-                          label="Add Photo" 
+                          multiple
+                          label="Add Photo(s)" 
                           onUpload={url => updateDay(idx, "photos", [...(day.photos || []), url])} 
                         />
                     </div>
@@ -1738,7 +1805,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
           <TabsContent value="reviews" className="space-y-6 pt-6">
              <div className="flex items-center justify-between">
                <div className="space-y-1">
-                 <h3 className="text-xl font-black text-navy uppercase italic">Trip Testimonials</h3>
+                 <h3 className="text-xl font-black text-navy uppercase italic">Trip Reviews</h3>
                  <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Manage authentic feedback for this expedition</p>
                </div>
                <Button 
@@ -1844,7 +1911,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                                  updated[idx].comment = e.target.value;
                                  setForm({ ...form, reviews: updated });
                                }}
-                               placeholder="Write the testimonial here..."
+                               placeholder="Write the review here..."
                                className="rounded-2xl font-medium leading-relaxed bg-zinc-50 h-32 p-4"
                              />
                           </div>
@@ -1916,96 +1983,6 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
              </div>
           </TabsContent>
         </Tabs>
-
-        <div className="flex justify-end gap-3 pt-6 border-t mt-6">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
-          <Button onClick={async () => {
-            // Direct Data Normalization to ensure schema compliance
-            const normalize = (data: any) => {
-              // 1. Recursive cleaner for internal fields
-              const cleanDoc = (obj: any): any => {
-                if (Array.isArray(obj)) return obj.map(cleanDoc);
-                if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
-                  const { _id, id, createdAt, updatedAt, __v, ...rest } = obj;
-                  const result: any = {};
-                  for (const key in rest) {
-                    result[key] = cleanDoc(rest[key]);
-                  }
-                  return result;
-                }
-                return obj;
-              };
-
-              const clean = cleanDoc(data);
-              
-              // 2. Fix Enums & Specific Types
-              if (clean.difficulty) clean.difficulty = clean.difficulty.toLowerCase();
-              if (clean.status) clean.status = clean.status.toLowerCase();
-              if (clean.price) clean.price = Number(clean.price);
-              if (clean.maxGroupSize) clean.maxGroupSize = Number(clean.maxGroupSize);
-
-              // 3. Normalize Specific Arrays
-              if (clean.availableDates) {
-                clean.availableDates = clean.availableDates.map((d: any) => ({
-                  date: d.date || d,
-                  capacity: Number(d.capacity || 20),
-                  bookedCount: Number(d.bookedCount || 0)
-                }));
-              }
-
-              if (clean.gallery) {
-                clean.gallery = clean.gallery.map((img: any, i: number) => ({
-                  url: typeof img === 'string' ? img : img.url,
-                  alt: img.alt || "",
-                  order: Number(img.order || i)
-                }));
-              }
-
-              if (clean.accommodations) {
-                clean.accommodations = clean.accommodations.map((acc: any) => ({
-                  ...acc,
-                  gallery: (acc.gallery || []).map((g: any) => {
-                    if (typeof g === 'string') return { url: g, category: 'All' };
-                    return {
-                      url: g.url || "",
-                      category: g.category || "All"
-                    };
-                  }).filter((g: any) => g.url)
-                }));
-              }
-
-              // 4. Preserve Review IDs for Syncing (Re-map from original form)
-              if (clean.reviews) {
-                clean.reviews = clean.reviews
-                  .filter((rev: any) => rev.userName && rev.comment && String(rev.userName).trim() !== "" && String(rev.comment).trim() !== "")
-                  .map((rev: any) => {
-                    // Find the original review to get its ID
-                    const original = (form.reviews || []).find((r: any) => r.userName === rev.userName);
-                    return {
-                      ...rev,
-                      id: original?.id || original?._id || undefined,
-                      _id: original?._id || original?.id || undefined
-                    };
-                  });
-              }
-
-              return clean;
-            };
-
-            const cleanData = normalize(form);
-            setSaving(true);
-            try {
-              const editingId = editing?.id || (editing as any)?._id;
-              await onSave(cleanData, editingId);
-              onOpenChange(false);
-            } finally {
-              setSaving(false);
-            }
-          }} disabled={saving || !form.title} className="rounded-xl px-8 font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20">
-            {saving ? "Processing..." : editing ? "Update Trip" : "Launch Trip"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    </AdminModal>
   );
 }

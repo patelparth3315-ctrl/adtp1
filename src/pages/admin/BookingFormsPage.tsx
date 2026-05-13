@@ -43,7 +43,9 @@ export default function BookingFormsPage() {
   const [formData, setFormData] = useState({
     tripName: "",
     date: "",
-    tripId: ""
+    tripId: "",
+    paymentMode: "Full Payment",
+    bookingAmount: 0
   });
 
   const load = useCallback(async () => {
@@ -106,7 +108,9 @@ export default function BookingFormsPage() {
     const params = new URLSearchParams({
       trip: (form.tripName || '').trim(),
       date: (form.date || '').trim(),
-      tid: (form.tripId || '').trim()
+      tid: (form.tripId || '').trim(),
+      payMode: form.paymentMode || 'Full Payment',
+      bookAmt: (form.bookingAmount || 0).toString()
     });
     
     console.log("🔗 [Admin] Generated Booking Link:", `${baseUrl}/book?${params.toString()}`);
@@ -160,7 +164,9 @@ export default function BookingFormsPage() {
       await bookingFormsService.update(formToEdit.id || formToEdit._id!, {
         sheetUrl: formToEdit.sheetUrl,
         tripName: formToEdit.tripName,
-        date: formToEdit.date
+        date: formToEdit.date,
+        paymentMode: formToEdit.paymentMode,
+        bookingAmount: formToEdit.bookingAmount
       });
       toast.success("Link updated!");
       setEditOpen(false);
@@ -443,6 +449,41 @@ export default function BookingFormsPage() {
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  Payment Mode *
+                </label>
+                <Select 
+                  value={formData.paymentMode} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, paymentMode: v }))}
+                >
+                  <SelectTrigger className="h-12 rounded-xl">
+                    <SelectValue placeholder="Mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Full Payment">Full Payment</SelectItem>
+                    <SelectItem value="Partial Payment">Partial Payment</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.paymentMode === "Partial Payment" && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Booking Amount *
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 2000"
+                    value={formData.bookingAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bookingAmount: parseFloat(e.target.value) || 0 }))}
+                    className="h-12 rounded-xl font-bold"
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
               <strong>Note:</strong> If a form already exists for this trip + date, the existing one will be returned instead of creating a duplicate.
             </div>
@@ -571,6 +612,40 @@ export default function BookingFormsPage() {
                 <p className="text-[10px] text-muted-foreground mt-1 px-1">
                   If the automatic creation failed, you can manually paste the link here.
                 </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Payment Mode
+                  </label>
+                  <Select 
+                    value={formToEdit.paymentMode} 
+                    onValueChange={(v) => setFormToEdit({ ...formToEdit, paymentMode: v })}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl">
+                      <SelectValue placeholder="Mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Full Payment">Full Payment</SelectItem>
+                      <SelectItem value="Partial Payment">Partial Payment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formToEdit.paymentMode === "Partial Payment" && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      Booking Amount
+                    </label>
+                    <Input
+                      type="number"
+                      value={formToEdit.bookingAmount}
+                      onChange={(e) => setFormToEdit({ ...formToEdit, bookingAmount: parseFloat(e.target.value) || 0 })}
+                      className="h-12 rounded-xl font-bold"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

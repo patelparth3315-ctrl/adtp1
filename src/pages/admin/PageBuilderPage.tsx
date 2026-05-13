@@ -35,7 +35,7 @@ const SECTION_TYPES = [
   { type: 'hero', label: 'Hero Banner', icon: Layout, desc: 'High-impact cinematic hero with video/image background.' },
   { type: 'featured_trips', label: 'Featured Trips', icon: Megaphone, desc: 'Showcase specific trips in a grid or slider.' },
   { type: 'trending_trips', label: 'Trending Trips', icon: Users, desc: 'Display most popular trips based on views/bookings.' },
-  { type: 'testimonials', label: 'Testimonials', icon: MessageSquare, desc: 'Social proof with traveler reviews and ratings.' },
+  { type: 'reviews', label: 'Reviews', icon: MessageSquare, desc: 'Premium traveler stories and human moments.' },
   { type: 'cta_banner', label: 'CTA Banner', icon: Megaphone, desc: 'Call to action section with catchy headline and button.' },
   { type: 'image_gallery', label: 'Image Gallery', icon: ImageIcon, desc: 'Masonry or grid gallery of travel photos.' },
   { type: 'photo_grid', label: 'Photo Grid', icon: ImageIcon, desc: 'A clean 3-column grid for showcasing trip memories.' },
@@ -44,7 +44,6 @@ const SECTION_TYPES = [
   { type: 'journal', label: 'The Journal', icon: Type, desc: 'Display adventure stories and blog posts.' },
   { type: 'destinations', label: 'Destinations', icon: ImageIcon, desc: 'Portrait grid of international destinations.' },
   { type: 'cta_slider', label: 'CTA Slider', icon: Megaphone, desc: 'Multi-card CTA carousel for flagship expeditions.' },
-  { type: 'reviews', label: 'Reviews', icon: MessageSquare, desc: 'Premium traveler stories and human moments.' },
   { type: 'reality', label: 'The Reality Section', icon: Eye, desc: 'Display video reality checks and traveler experiences.' },
   { type: 'upcoming_trips', label: 'Upcoming Trips', icon: Megaphone, desc: 'Display a list of upcoming group departures.' },
   { type: 'bestie', label: 'Why Us (Bestie)', icon: Users, desc: 'Showcase why you are the traveler bestie.' },
@@ -1763,8 +1762,8 @@ export default function PageBuilderPage() {
                   {selectedSection.type === 'reviews' && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                       <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Main Heading</Label>
-                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" placeholder="Human Moments" />
+                        <Label className="text-xs font-black uppercase tracking-widest">Section Title (Reviews & Stories)</Label>
+                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" placeholder="What Our Travelers Say" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -1791,20 +1790,28 @@ export default function PageBuilderPage() {
                           </Select>
                         </div>
                       </div>
-                      <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Small Subtitle</Label>
-                        <Input value={selectedSection.draft.subtitle || ''} onChange={e => updateSelectedSection({ subtitle: e.target.value })} className="rounded-xl border-2 font-bold" placeholder="Stories" />
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Section Subtitle</Label>
+                        <Input value={selectedSection.draft.subtitle || ''} onChange={e => updateSelectedSection({ subtitle: e.target.value })} className="rounded-xl border-2" />
                       </div>
-                      <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Description</Label>
-                        <Textarea value={selectedSection.draft.description || ''} onChange={e => updateSelectedSection({ description: e.target.value })} className="min-h-[100px] rounded-2xl border-2 font-medium" placeholder="Every journey we map is a collection of thousands of small, beautiful moments..." />
-                      </div>
-                      <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Traveler Rating Text</Label>
-                        <Input value={selectedSection.draft.rating || ''} onChange={e => updateSelectedSection({ rating: e.target.value })} className="rounded-xl border-2 font-bold" placeholder="4.9/5" />
-                      </div>
-                      <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest text-center">Note: The review cards are pulled automatically from your verified database.</p>
+                      <div className="p-8 bg-primary/5 rounded-[32px] border-2 border-primary/10 flex flex-col items-center justify-center text-center gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-xl shadow-primary/10">
+                          <Star className="w-8 h-8 text-primary fill-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-black uppercase tracking-tight text-lg">Centralized Reviews</h4>
+                          <p className="text-[11px] text-muted-foreground font-medium max-w-sm mx-auto mt-1">
+                            This section automatically pulls featured traveler stories from your <span className="text-primary font-bold">Review Center</span>.
+                            Go to the sidebar to manage, verify, and feature specific reviews.
+                          </p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          className="rounded-xl font-black text-[10px] tracking-widest h-10 px-6 border-primary/30 text-primary hover:bg-primary hover:text-white"
+                          onClick={() => navigate('/admin/reviews')}
+                        >
+                          OPEN REVIEW CENTER
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -1845,151 +1852,7 @@ export default function PageBuilderPage() {
                               {opt.label}
                             </Button>
                           ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedSection.type === 'testimonials' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                      <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Section Title (Reviews & Testimonials)</Label>
-                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" placeholder="What Our Travelers Say" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Title Size</Label>
-                          <Select value={selectedSection.draft.titleSize || 'text-3xl'} onValueChange={v => updateSelectedSection({ titleSize: v })}>
-                            <SelectTrigger className="rounded-xl border-2 font-bold"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text-xl">Small (xl)</SelectItem>
-                              <SelectItem value="text-2xl">Medium (2xl)</SelectItem>
-                              <SelectItem value="text-3xl">Large (3xl)</SelectItem>
-                              <SelectItem value="text-4xl md:text-5xl">Extra Large (4xl-5xl)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Alignment</Label>
-                          <Select value={selectedSection.draft.titleAlign || 'left'} onValueChange={v => updateSelectedSection({ titleAlign: v })}>
-                            <SelectTrigger className="rounded-xl border-2 uppercase font-bold text-[10px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left" className="font-bold">LEFT</SelectItem>
-                              <SelectItem value="center" className="font-bold">CENTER</SelectItem>
-                              <SelectItem value="right" className="font-bold">RIGHT</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Section Subtitle</Label>
-                        <Input value={selectedSection.draft.subtitle || ''} onChange={e => updateSelectedSection({ subtitle: e.target.value })} className="rounded-xl border-2" />
-                      </div>
-                      <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase tracking-widest">Testimonials</Label>
-                        <div className="space-y-6">
-                          {(selectedSection.draft.items || []).map((item: any, i: number) => (
-                            <div key={i} className="bg-muted/20 p-6 rounded-3xl border-2 space-y-4">
-                              <div className="flex justify-between items-center">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Testimonial #{i+1}</Label>
-                                <Button variant="ghost" size="icon" onClick={() => {
-                                  const next = (selectedSection.draft.items || []).filter((_:any, idx:number) => idx !== i);
-                                  updateSelectedSection({ items: next });
-                                }}>
-                                  <Trash2 className="w-4 h-4 text-destructive" />
-                                </Button>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Author Name</Label>
-                                  <Input value={item.author || ''} onChange={e => {
-                                    const next = [...(selectedSection.draft.items || [])];
-                                    next[i] = { ...next[i], author: e.target.value };
-                                    updateSelectedSection({ items: next });
-                                  }} className="rounded-xl border-2 text-xs font-bold" placeholder="John Doe" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Location / Trip</Label>
-                                  <Input value={item.location || ''} onChange={e => {
-                                    const next = [...(selectedSection.draft.items || [])];
-                                    next[i] = { ...next[i], location: e.target.value };
-                                    updateSelectedSection({ items: next });
-                                  }} className="rounded-xl border-2 text-xs font-bold" placeholder="Manali Trip" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">City</Label>
-                                  <Input value={item.city || ''} onChange={e => {
-                                    const next = [...(selectedSection.draft.items || [])];
-                                    next[i] = { ...next[i], city: e.target.value };
-                                    updateSelectedSection({ items: next });
-                                  }} className="rounded-xl border-2 text-xs font-bold" placeholder="e.g. New York" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Instagram ID</Label>
-                                  <Input value={item.instagramId || ''} onChange={e => {
-                                    const next = [...(selectedSection.draft.items || [])];
-                                    next[i] = { ...next[i], instagramId: e.target.value };
-                                    updateSelectedSection({ items: next });
-                                  }} className="rounded-xl border-2 text-xs font-bold" placeholder="@johndoe" />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Quote</Label>
-                                <Textarea value={item.quote || ''} onChange={e => {
-                                  const next = [...(selectedSection.draft.items || [])];
-                                  next[i] = { ...next[i], quote: e.target.value };
-                                  updateSelectedSection({ items: next });
-                                }} className="rounded-xl border-2 text-xs font-bold min-h-[80px]" placeholder="An amazing experience..." />
-                              </div>
-                              <ImageUpload 
-                                label="Traveler Photo (Profile)"
-                                value={item.image} 
-                                onUpload={url => {
-                                  const next = [...(selectedSection.draft.items || [])];
-                                  next[i] = { ...next[i], image: url };
-                                  updateSelectedSection({ items: next });
-                                }} 
-                              />
-
-                              <div className="space-y-4">
-                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Location / Trip Photos (Gallery)</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                  {(item.locationImages || []).map((img: string, imgIdx: number) => (
-                                    <div key={imgIdx} className="relative group/img">
-                                      <img src={img} className="w-full h-32 object-cover rounded-xl border-2" />
-                                      <button 
-                                        onClick={() => {
-                                          const nextItems = [...(selectedSection.draft.items || [])];
-                                          nextItems[i].locationImages = nextItems[i].locationImages.filter((_:any, idx:number) => idx !== imgIdx);
-                                          updateSelectedSection({ items: nextItems });
-                                        }}
-                                        className="absolute top-2 right-2 p-1 bg-destructive text-white rounded-lg opacity-0 group-hover/img:opacity-100 transition-opacity"
-                                      >
-                                        <X className="w-3 h-3" />
-                                      </button>
-                                    </div>
-                                  ))}
-                                  <ImageUpload 
-                                    label="Add Location Image"
-                                    value=""
-                                    onUpload={url => {
-                                      const nextItems = [...(selectedSection.draft.items || [])];
-                                      if (!nextItems[i].locationImages) nextItems[i].locationImages = [];
-                                      nextItems[i].locationImages.push(url);
-                                      updateSelectedSection({ items: nextItems });
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          <Button variant="outline" className="w-full rounded-2xl border-2 border-dashed h-16 font-black text-[10px] tracking-widest gap-2" onClick={() => {
-                            const next = [...(selectedSection.draft.items || []), { author: '', quote: '', location: '', image: '' }];
-                            updateSelectedSection({ items: next });
-                          }}>
-                            <Plus className="w-4 h-4" /> ADD TESTIMONIAL
-                          </Button>
-                        </div>
+                           </div>
                       </div>
                     </div>
                   )}

@@ -10,6 +10,8 @@ interface ImageUploadProps {
   label?: string;
   value?: string;
   multiple?: boolean;
+  className?: string;
+  compact?: boolean;
 }
 
 /**
@@ -25,7 +27,7 @@ const formatUrl = (url: string | undefined): string => {
   return `${serverBase}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
-export function ImageUpload({ onUpload, label, value, multiple = false }: ImageUploadProps) {
+export function ImageUpload({ onUpload, label, value, multiple = false, className, compact = false }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -152,8 +154,8 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
   const displayUrl = formatUrl(value);
 
   return (
-    <div className="space-y-2">
-      {label && <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">{label}</Label>}
+    <div className={`space-y-2 ${className}`}>
+      {label && !compact && <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">{label}</Label>}
       
       {/* Hidden file input for replace functionality */}
       <Input 
@@ -170,7 +172,9 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`relative flex flex-col items-center justify-center gap-4 p-6 rounded-2xl border-2 border-dashed transition-all ${
+        className={`relative flex flex-col items-center justify-center transition-all ${
+          compact ? "p-2 gap-1" : "p-6 gap-4"
+        } rounded-2xl border-2 border-dashed ${
           isDragging ? "border-primary bg-primary/10 scale-[1.02]" : "border-primary/20 bg-muted/50 hover:bg-muted"
         }`}
       >
@@ -221,15 +225,17 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
           </div>
         ) : (
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
-              <Upload className="w-5 h-5" />
+            <div className={`${compact ? 'w-6 h-6' : 'w-12 h-12'} bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary`}>
+              <Upload className={`${compact ? 'w-3 h-3' : 'w-5 h-5'}`} />
             </div>
-            <div>
-              <p className="text-xs font-bold">Drag & drop your {multiple ? 'images' : 'image'} here</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
-                JPG, PNG, WEBP • Max 10MB
-              </p>
-            </div>
+            {!compact && (
+              <div>
+                <p className="text-xs font-bold">Drag & drop your {multiple ? 'images' : 'image'} here</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                  JPG, PNG, WEBP • Max 10MB
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -246,7 +252,7 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
           </div>
         )}
 
-        <div className="flex w-full gap-2 items-center justify-center mt-2">
+        <div className={`flex w-full gap-2 items-center justify-center ${compact ? 'mt-0' : 'mt-2'}`}>
           <Input 
             type="file" 
             accept="image/png, image/jpeg, image/webp" 
@@ -258,9 +264,11 @@ export function ImageUpload({ onUpload, label, value, multiple = false }: ImageU
           />
           <Label 
             htmlFor={`file-upload-${id}`}
-            className="flex items-center justify-center px-6 h-10 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest cursor-pointer hover:opacity-90 shadow-lg shadow-primary/20 transition-all"
+            className={`flex items-center justify-center rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest cursor-pointer hover:opacity-90 shadow-lg shadow-primary/20 transition-all ${
+              compact ? 'px-2 h-6' : 'px-6 h-10'
+            }`}
           >
-            Browse Files
+            {compact ? 'Add' : 'Browse Files'}
           </Label>
         </div>
       </div>

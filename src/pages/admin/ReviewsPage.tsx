@@ -199,7 +199,7 @@ export default function ReviewsPage() {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-black uppercase tracking-tight">Customer Reviews</h1>
-          <p className="text-muted-foreground text-sm font-medium italic">Manage trip-specific testimonials with photo verification.</p>
+          <p className="text-muted-foreground text-sm font-medium italic">Manage trip-specific reviews with photo verification.</p>
         </div>
         <Button onClick={openCreate} className="rounded-xl h-12 px-6 font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20"><Plus className="h-4 w-4 mr-2" />Add Review</Button>
       </div>
@@ -304,7 +304,7 @@ export default function ReviewsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Comment / Testimonial</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Comment / Review</Label>
               <Textarea className="rounded-3xl h-40 p-6 font-medium leading-relaxed" value={formData.comment} onChange={(e) => setFormData({...formData, comment: e.target.value})} placeholder="What did the traveler say about their experience?" />
             </div>
 
@@ -315,7 +315,7 @@ export default function ReviewsPage() {
           </div>
           <DialogFooter className="pt-6 border-t mt-6">
             <Button variant="outline" onClick={() => setModalOpen(false)} className="rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
-            <Button onClick={handleSave} className="rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">Save Testimonial</Button>
+            <Button onClick={handleSave} className="rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">Save Review</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

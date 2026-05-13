@@ -26,7 +26,13 @@ import {
     BadgePercent,
     Clock,
     Hotel as HotelIcon,
-    Sparkles
+    Sparkles,
+    Train,
+    Car,
+    Plane,
+    Ship,
+    MapPin as PickupIcon,
+    Bus
 } from "lucide-react";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { motion } from "framer-motion";
@@ -70,7 +76,12 @@ export default function QuotationFormPage() {
         inclusions: [],
         exclusions: [],
         coverImage: "",
+        heroImages: [],
         experiencePhotos: [],
+        staySummary: [],
+        roomsInfo: "",
+        mealsInfo: "",
+        travelling: [],
         expiryHours: 48, // Default 48h
         expert: {
             name: "Bhautik Bhut",
@@ -382,38 +393,38 @@ ${formData.expert?.designation}`;
 
                                         <div className="space-y-3">
                                             <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Day Sightseeing Photos</Label>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                            <div className="flex flex-wrap gap-3">
                                                 {(day.photos || []).map((photoUrl: string, pIdx: number) => (
-                                                    <div key={pIdx} className="relative aspect-square rounded-xl overflow-hidden group/thumb border-2 border-white shadow-sm">
+                                                    <div key={pIdx} className="relative w-24 h-24 rounded-xl overflow-hidden group/thumb border shadow-sm">
                                                         <img src={formatUrl(photoUrl)} className="w-full h-full object-cover" />
                                                         <button 
                                                             type="button" 
                                                             onClick={() => {
-                                                                const newList = [...formData.itinerary!];
-                                                                newList[idx].photos = newList[idx].photos.filter((_: any, i: number) => i !== pIdx);
-                                                                setFormData({...formData, itinerary: newList});
+                                                                const newItinerary = [...formData.itinerary!];
+                                                                newItinerary[idx].photos = newItinerary[idx].photos.filter((_: any, i: number) => i !== pIdx);
+                                                                setFormData({...formData, itinerary: newItinerary});
                                                             }}
-                                                            className="absolute top-1 right-1 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+                                                            className="absolute top-1 right-1 bg-rose-500 text-white p-1 rounded-lg opacity-0 group-hover/thumb:opacity-100 transition-opacity"
                                                         >
-                                                            <Trash2 size={12} />
+                                                            <Trash2 size={10} />
                                                         </button>
                                                     </div>
                                                 ))}
-                                                <div className="aspect-square">
-                                                    <ImageUpload 
-                                                        multiple={true}
-                                                        onUpload={(url) => {
-                                                            setFormData(prev => {
-                                                                const itinerary = [...(prev.itinerary || [])];
-                                                                if (!itinerary[idx].photos) itinerary[idx].photos = [];
-                                                                if (!itinerary[idx].photos.includes(url)) {
-                                                                    itinerary[idx].photos.push(url);
-                                                                }
-                                                                return { ...prev, itinerary };
-                                                            });
-                                                        }}
-                                                    />
-                                                </div>
+                                                <ImageUpload 
+                                                    compact
+                                                    multiple={true}
+                                                    className="w-24"
+                                                    onUpload={(url) => {
+                                                        setFormData(prev => {
+                                                            const newItinerary = [...(prev.itinerary || [])];
+                                                            if (!newItinerary[idx].photos) newItinerary[idx].photos = [];
+                                                            if (!newItinerary[idx].photos.includes(url)) {
+                                                                newItinerary[idx].photos.push(url);
+                                                            }
+                                                            return { ...prev, itinerary: newItinerary };
+                                                        });
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                     </motion.div>
@@ -519,6 +530,7 @@ ${formData.expert?.designation}`;
                                         <div className="md:col-span-1">
                                             <Label className="text-[10px] font-black uppercase opacity-50 mb-2 block">Hotel Image</Label>
                                             <ImageUpload 
+                                                compact
                                                 value={hotel.image} 
                                                 onUpload={(url) => {
                                                     const newList = [...formData.lowLevelHotels!];
@@ -560,7 +572,43 @@ ${formData.expert?.designation}`;
                                             </div>
                                             <div className="space-y-1">
                                                 <Label className="text-[10px] font-bold uppercase opacity-60">Room Type/Meals</Label>
-                                                <Input placeholder="e.g. Superior / Breakfast" className="rounded-xl h-10 text-xs" />
+                                                <Input value={hotel.roomType || ""} onChange={e => {
+                                                    const newList = [...formData.lowLevelHotels!];
+                                                    newList[idx].roomType = e.target.value;
+                                                    setFormData({...formData, lowLevelHotels: newList});
+                                                }} placeholder="e.g. Superior / Breakfast" className="rounded-xl h-10 text-xs" />
+                                            </div>
+                                            <div className="col-span-2 space-y-3 pt-2 border-t border-slate-50">
+                                                <Label className="text-[10px] font-black uppercase opacity-40">Hotel Gallery</Label>
+                                                <div className="flex flex-wrap gap-3">
+                                                    {(hotel.photos || []).map((url, pIdx) => (
+                                                        <div key={pIdx} className="relative w-20 h-20 rounded-xl overflow-hidden border shadow-sm group/hotelimg">
+                                                            <img src={formatUrl(url)} className="w-full h-full object-cover" />
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const newList = [...formData.lowLevelHotels!];
+                                                                    newList[idx].photos = newList[idx].photos!.filter((_, i) => i !== pIdx);
+                                                                    setFormData({...formData, lowLevelHotels: newList});
+                                                                }}
+                                                                className="absolute top-1 right-1 bg-rose-500 text-white p-1 rounded-lg opacity-0 group-hover/hotelimg:opacity-100 transition-opacity"
+                                                            >
+                                                                <Trash2 size={10} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    <ImageUpload 
+                                                        compact
+                                                        multiple
+                                                        className="w-20"
+                                                        onUpload={(url) => {
+                                                            const newList = [...formData.lowLevelHotels!];
+                                                            if (!newList[idx].photos) newList[idx].photos = [];
+                                                            newList[idx].photos!.push(url);
+                                                            setFormData({...formData, lowLevelHotels: newList});
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -593,6 +641,7 @@ ${formData.expert?.designation}`;
                                         <div className="md:col-span-1">
                                             <Label className="text-[10px] font-black uppercase opacity-50 mb-2 block">Hotel Image</Label>
                                             <ImageUpload 
+                                                compact
                                                 value={hotel.image} 
                                                 onUpload={(url) => {
                                                     const newList = [...formData.highLevelHotels!];
@@ -634,7 +683,43 @@ ${formData.expert?.designation}`;
                                             </div>
                                             <div className="space-y-1">
                                                 <Label className="text-[10px] font-bold uppercase opacity-60">Room Type/Meals</Label>
-                                                <Input placeholder="e.g. Deluxe Sea View / Breakfast" className="rounded-xl h-10 text-xs" />
+                                                <Input value={hotel.roomType || ""} onChange={e => {
+                                                    const newList = [...formData.highLevelHotels!];
+                                                    newList[idx].roomType = e.target.value;
+                                                    setFormData({...formData, highLevelHotels: newList});
+                                                }} placeholder="e.g. Deluxe Sea View / Breakfast" className="rounded-xl h-10 text-xs" />
+                                            </div>
+                                            <div className="col-span-2 space-y-3 pt-2 border-t border-slate-50">
+                                                <Label className="text-[10px] font-black uppercase opacity-40">Hotel Gallery</Label>
+                                                <div className="flex flex-wrap gap-3">
+                                                    {(hotel.photos || []).map((url, pIdx) => (
+                                                        <div key={pIdx} className="relative w-20 h-20 rounded-xl overflow-hidden border shadow-sm group/hotelimg">
+                                                            <img src={formatUrl(url)} className="w-full h-full object-cover" />
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const newList = [...formData.highLevelHotels!];
+                                                                    newList[idx].photos = newList[idx].photos!.filter((_, i) => i !== pIdx);
+                                                                    setFormData({...formData, highLevelHotels: newList});
+                                                                }}
+                                                                className="absolute top-1 right-1 bg-rose-500 text-white p-1 rounded-lg opacity-0 group-hover/hotelimg:opacity-100 transition-opacity"
+                                                            >
+                                                                <Trash2 size={10} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    <ImageUpload 
+                                                        compact
+                                                        multiple
+                                                        className="w-20"
+                                                        onUpload={(url) => {
+                                                            const newList = [...formData.highLevelHotels!];
+                                                            if (!newList[idx].photos) newList[idx].photos = [];
+                                                            newList[idx].photos!.push(url);
+                                                            setFormData({...formData, highLevelHotels: newList});
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -667,7 +752,7 @@ ${formData.expert?.designation}`;
                         </div>
 
                         <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Experience & Activity Gallery</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Hero Slider & Experience Gallery</Label>
                             <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                                 {(formData.experiencePhotos || []).map((photoUrl: string, pIdx: number) => (
                                     <div key={pIdx} className="relative aspect-[3/4] rounded-2xl overflow-hidden group/thumb border-2 border-white shadow-sm">
@@ -794,9 +879,41 @@ ${formData.expert?.designation}`;
                                     onUpload={(url) => setFormData({...formData, coverImage: url})} 
                                 />
                             </div>
+
+                            <div className="space-y-3 pt-4 border-t border-slate-100">
+                                <Label className="text-[10px] font-bold uppercase opacity-60">Hero Slider Gallery (Additional Photos)</Label>
+                                <div className="flex flex-wrap gap-3">
+                                    {(formData.heroImages || []).map((url, idx) => (
+                                        <div key={idx} className="relative w-32 h-20 rounded-xl overflow-hidden border shadow-sm group/item">
+                                            <img src={formatUrl(url)} className="w-full h-full object-cover" />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => {
+                                                    const newList = (formData.heroImages || []).filter((_, i) => i !== idx);
+                                                    setFormData({...formData, heroImages: newList});
+                                                }}
+                                                className="absolute top-1 right-1 bg-rose-500 text-white p-1 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                            >
+                                                <Trash2 size={10} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <ImageUpload 
+                                        compact
+                                        multiple
+                                        className="w-32"
+                                        onUpload={(url) => {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                heroImages: [...(prev.heroImages || []), url]
+                                            }));
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                         <p className="text-[9px] text-muted-foreground italic leading-relaxed uppercase tracking-widest font-black opacity-40">
-                            The main background image for the quotation hero section.
+                            The main background images for the quotation hero section.
                         </p>
                     </GlassCard>
 
@@ -945,6 +1062,174 @@ ${formData.expert?.designation}`;
                             </div>
                         </GlassCard>
                     )}
+
+                    {/* Summary & Logistics Configuration */}
+                        <GlassCard className="p-6 space-y-6">
+                            <div className="flex items-center justify-between border-b pb-4">
+                                <Label className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2 text-primary">
+                                    <Sparkles size={16} /> Summary & Logistics
+                                </Label>
+                            </div>
+
+                            {/* Stay & Meals Manual Override */}
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-bold uppercase opacity-60">Stay Summary (Nights Breakdown)</Label>
+                                <div className="space-y-3">
+                                    {(formData.staySummary || []).map((item, idx) => (
+                                        <div key={idx} className="flex gap-3 items-end">
+                                            <div className="w-20">
+                                                <Label className="text-[9px] uppercase opacity-50">Nights</Label>
+                                                <Input 
+                                                    type="number"
+                                                    value={item.nights}
+                                                    onChange={(e) => {
+                                                        const newList = [...formData.staySummary!];
+                                                        newList[idx].nights = parseInt(e.target.value) || 1;
+                                                        setFormData({...formData, staySummary: newList});
+                                                    }}
+                                                    className="h-9 text-xs"
+                                                />
+                                            </div>
+                                            <div className="flex-grow">
+                                                <Label className="text-[9px] uppercase opacity-50">Location</Label>
+                                                <Input 
+                                                    value={item.location}
+                                                    onChange={(e) => {
+                                                        const newList = [...formData.staySummary!];
+                                                        newList[idx].location = e.target.value;
+                                                        setFormData({...formData, staySummary: newList});
+                                                    }}
+                                                    className="h-9 text-xs"
+                                                />
+                                            </div>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-9 w-9 text-rose-500 hover:bg-rose-50"
+                                                onClick={() => {
+                                                    const newList = formData.staySummary!.filter((_, i) => i !== idx);
+                                                    setFormData({...formData, staySummary: newList});
+                                                }}
+                                            >
+                                                <Trash2 size={14} />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="w-full h-9 border-dashed text-primary font-bold text-[10px] uppercase"
+                                        onClick={() => setFormData({...formData, staySummary: [...(formData.staySummary || []), { nights: 1, location: "" }]})}
+                                    >
+                                        <Plus size={14} className="mr-2" /> Add Stay Point
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold uppercase opacity-60">Rooms Info</Label>
+                                    <Input 
+                                        value={formData.roomsInfo || ""}
+                                        onChange={(e) => setFormData({...formData, roomsInfo: e.target.value})}
+                                        placeholder="e.g. 1 Rooms at all location"
+                                        className="h-9 text-xs"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold uppercase opacity-60">Meals Info</Label>
+                                    <Input 
+                                        value={formData.mealsInfo || ""}
+                                        onChange={(e) => setFormData({...formData, mealsInfo: e.target.value})}
+                                        placeholder="e.g. Breakfast at Property"
+                                        className="h-9 text-xs"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Travelling Flow Manual Override */}
+                            <div className="space-y-4 pt-4 border-t border-slate-50">
+                                <Label className="text-[10px] font-bold uppercase opacity-60">Travelling Flow (Icons & Text)</Label>
+                                <div className="space-y-4">
+                                    {(formData.travelling || []).map((item, idx) => (
+                                        <div key={idx} className="flex gap-4 items-start p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="space-y-2 shrink-0">
+                                                <Label className="text-[9px] font-black uppercase opacity-40">Pick Icon</Label>
+                                                <div className="grid grid-cols-4 gap-1.5 p-1.5 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                                    {[
+                                                        { id: "plane", icon: Plane },
+                                                        { id: "train", icon: Train },
+                                                        { id: "car", icon: Car },
+                                                        { id: "bus", icon: Bus },
+                                                        { id: "ship", icon: Ship },
+                                                        { id: "pickup", icon: PickupIcon },
+                                                        { id: "hotel", icon: HotelIcon },
+                                                    ].map((opt) => (
+                                                        <button
+                                                            key={opt.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newList = [...formData.travelling!];
+                                                                newList[idx].icon = opt.id;
+                                                                setFormData({...formData, travelling: newList});
+                                                            }}
+                                                            className={`p-2 rounded-lg transition-all ${item.icon === opt.id ? 'bg-primary text-white shadow-md' : 'bg-white text-slate-400 hover:bg-slate-100'}`}
+                                                        >
+                                                            <opt.icon size={14} />
+                                                        </button>
+                                                    ))}
+                                                    <div className="col-span-4 h-px bg-slate-200 my-1" />
+                                                    <div className="col-span-4">
+                                                        <Input 
+                                                            value={item.icon.length > 10 ? "" : item.icon}
+                                                            onChange={(e) => {
+                                                                const newList = [...formData.travelling!];
+                                                                newList[idx].icon = e.target.value;
+                                                                setFormData({...formData, travelling: newList});
+                                                            }}
+                                                            placeholder="Emoji"
+                                                            className="h-8 text-[10px] text-center rounded-lg bg-white border-slate-200"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 min-w-0 space-y-2">
+                                                <Label className="text-[9px] font-black uppercase opacity-40">Step Description</Label>
+                                                <Input 
+                                                    value={item.label}
+                                                    onChange={(e) => {
+                                                        const newList = [...formData.travelling!];
+                                                        newList[idx].label = e.target.value;
+                                                        setFormData({...formData, travelling: newList});
+                                                    }}
+                                                    placeholder="e.g. Airport Pickup"
+                                                    className="h-10 text-xs rounded-xl font-bold border-slate-200"
+                                                />
+                                            </div>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-9 w-9 text-rose-500 hover:bg-rose-50"
+                                                onClick={() => {
+                                                    const newList = formData.travelling!.filter((_, i) => i !== idx);
+                                                    setFormData({...formData, travelling: newList});
+                                                }}
+                                            >
+                                                <Trash2 size={14} />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="w-full h-9 border-dashed text-primary font-bold text-[10px] uppercase"
+                                        onClick={() => setFormData({...formData, travelling: [...(formData.travelling || []), { icon: "🚗", label: "" }]})}
+                                    >
+                                        <Plus size={14} className="mr-2" /> Add Travel Step
+                                    </Button>
+                                </div>
+                            </div>
+                        </GlassCard>
                 </div>
             </div>
         </div>
