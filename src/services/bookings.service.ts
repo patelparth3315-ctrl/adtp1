@@ -56,12 +56,12 @@ export const bookingsService = {
     }
   },
 
-  async createTrip(data: { tripCode: string; tripName: string }): Promise<BookingTrip> {
+  async createTrip(data: { tripCode: string; tripName: string; price?: number }): Promise<BookingTrip> {
     const res = await api.post("/bookings/trips", data);
     return res.data.data;
   },
 
-  async updateTrip(id: string, data: any): Promise<BookingTrip> {
+  async updateTrip(id: string, data: { tripCode?: string; tripName?: string; price?: number }): Promise<BookingTrip> {
     const res = await api.put(`/bookings/trips/${id}`, data);
     return res.data.data;
   },

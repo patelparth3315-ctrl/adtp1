@@ -148,6 +148,7 @@ export interface BookingTrip {
   tripName: string;
   isActive: boolean;
   formLink?: string;
+  price?: number;
   createdAt: string;
   updatedAt: string;
 }

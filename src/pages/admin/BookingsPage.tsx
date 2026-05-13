@@ -15,6 +15,7 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
   const [trips, setTrips] = useState<BookingTrip[]>([]);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -26,13 +27,13 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
     setLoading(true);
     try {
       if (editId) {
-        await bookingsService.updateTrip(editId, { tripCode: code.toUpperCase(), tripName: name });
+        await bookingsService.updateTrip(editId, { tripCode: code.toUpperCase(), tripName: name, price: parseFloat(price) || 0 });
         toast.success("Trip updated!");
       } else {
-        await bookingsService.createTrip({ tripCode: code.toUpperCase(), tripName: name });
+        await bookingsService.createTrip({ tripCode: code.toUpperCase(), tripName: name, price: parseFloat(price) || 0 });
         toast.success("Trip created!");
       }
-      setCode(""); setName(""); setEditId(null);
+      setCode(""); setName(""); setPrice(""); setEditId(null);
       load(); onRefresh();
     } catch (e: any) { toast.error(e?.response?.data?.message || "Failed"); }
     setLoading(false);
@@ -42,12 +43,14 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
     setEditId(t.id);
     setCode(t.tripCode);
     setName(t.tripName);
+    setPrice(t.price?.toString() || "");
   };
 
   const cancelEdit = () => {
     setEditId(null);
     setCode("");
     setName("");
+    setPrice("");
   };
 
   const copyLink = (link?: string) => {
@@ -67,6 +70,7 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
           <div className="flex gap-2">
             <Input placeholder="Code" value={code} onChange={e => setCode(e.target.value)} className="w-28 uppercase font-bold" />
             <Input placeholder="Trip Name" value={name} onChange={e => setName(e.target.value)} className="flex-1" />
+            <Input type="number" placeholder="Price" value={price} onChange={e => setPrice(e.target.value)} className="w-24" />
             {editId ? (
               <div className="flex gap-1">
                 <Button onClick={handleSave} disabled={loading} size="sm" className="bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest rounded-lg">Update</Button>
@@ -82,6 +86,7 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
                 <div>
                   <span className="font-black text-primary text-[10px] mr-2">{t.tripCode}</span>
                   <span className="font-bold text-gray-700 text-sm">{t.tripName}</span>
+                  <span className="ml-2 text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">₹{t.price?.toLocaleString() || 0}</span>
                 </div>
                 <div className="flex gap-1">
                   <Button size="sm" variant="ghost" className="text-blue-500" onClick={() => startEdit(t)} title="Edit trip">
@@ -109,7 +114,7 @@ function TripManager({ open, onClose, onRefresh }: { open: boolean; onClose: () 
 }
 
 // ── CONFIRM BOOKING MODAL ──
-function ConfirmModal({ booking, onClose, onDone }: { booking: Booking | null; onClose: () => void; onDone: () => void }) {
+function ConfirmModal({ booking, trips, onClose, onDone }: { booking: Booking | null; trips: BookingTrip[]; onClose: () => void; onDone: () => void }) {
   const [total, setTotal] = useState("");
   const [advance, setAdvance] = useState("");
   const [mode, setMode] = useState("UPI");
@@ -119,8 +124,15 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: Booking | null; o
   useEffect(() => {
     if (booking) {
       setEmail(booking.email || "");
+      // Auto-feed total amount from trip price if available
+      const trip = trips.find(t => t.tripCode === booking.tripId);
+      if (trip && trip.price) {
+        setTotal(trip.price.toString());
+      } else {
+        setTotal("");
+      }
     }
-  }, [booking]);
+  }, [booking, trips]);
 
   if (!booking) return null;
 
@@ -210,6 +222,11 @@ export default function BookingsPage() {
   const [search, setSearch] = useState("");
   const [filterTrip, setFilterTrip] = useState("all");
   const [filterPayment, setFilterPayment] = useState("all");
+  const [bookingStart, setBookingStart] = useState("");
+  const [bookingEnd, setBookingEnd] = useState("");
+  const [depStart, setDepStart] = useState("");
+  const [depEnd, setDepEnd] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showTrips, setShowTrips] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState<Booking | null>(null);
   const [editTarget, setEditTarget] = useState<Booking | null>(null);
@@ -235,13 +252,49 @@ export default function BookingsPage() {
   useEffect(() => { fetchAll(); }, []);
 
   const filtered = bookings.filter(b => {
+    // 1. High-level Tab Filter (Status)
     if (b.status !== tab) return false;
+    
+    // 2. Trip Filter
     if (filterTrip !== 'all' && b.tripId !== filterTrip) return false;
+    
+    // 3. Payment/Status Dropdown Filter
+    if (statusFilter !== 'all' && b.paymentStatus?.toLowerCase() !== statusFilter.toLowerCase()) return false;
     if (tab === 'confirmed' && filterPayment !== 'all' && b.paymentStatus?.toLowerCase() !== filterPayment) return false;
+    
+    // 4. Search Filter
     if (search) {
       const s = search.toLowerCase();
-      return b.fullName?.toLowerCase().includes(s) || b.mobile?.includes(s) || b.bookingId?.toLowerCase().includes(s);
+      const match = b.fullName?.toLowerCase().includes(s) || 
+                    b.mobile?.includes(s) || 
+                    b.bookingId?.toLowerCase().includes(s) ||
+                    b.email?.toLowerCase().includes(s);
+      if (!match) return false;
     }
+
+    // 5. Booking Date Range (createdAt)
+    if (bookingStart || bookingEnd) {
+      const bDate = new Date(b.createdAt);
+      if (bookingStart && bDate < new Date(bookingStart)) return false;
+      if (bookingEnd) {
+        const end = new Date(bookingEnd);
+        end.setHours(23, 59, 59, 999);
+        if (bDate > end) return false;
+      }
+    }
+
+    // 6. Departure Date Range (departureDate)
+    if (depStart || depEnd) {
+      if (!b.departureDate) return false;
+      const dDate = new Date(b.departureDate);
+      if (depStart && dDate < new Date(depStart)) return false;
+      if (depEnd) {
+        const end = new Date(depEnd);
+        end.setHours(23, 59, 59, 999);
+        if (dDate > end) return false;
+      }
+    }
+
     return true;
   });
 
@@ -261,7 +314,8 @@ export default function BookingsPage() {
       advancePaid: b.advancePaid, 
       paymentMode: b.paymentMode, 
       paymentStatus: b.paymentStatus, 
-      notes: b.notes || '' 
+      notes: b.notes || '',
+      departureDate: b.departureDate || ''
     });
   };
 
@@ -278,6 +332,17 @@ export default function BookingsPage() {
     try { await bookingsService.delete(id); toast.success("Deleted"); fetchAll(); } catch { toast.error("Failed"); }
   };
 
+  const clearFilters = () => {
+    setSearch("");
+    setFilterTrip("all");
+    setFilterPayment("all");
+    setBookingStart("");
+    setBookingEnd("");
+    setDepStart("");
+    setDepEnd("");
+    setStatusFilter("all");
+  };
+
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
   const confirmedCount = bookings.filter(b => b.status === 'confirmed').length;
 
@@ -290,46 +355,96 @@ export default function BookingsPage() {
           <p className="text-sm text-gray-500 mt-1">Sales → Form → Client → Confirm → Track</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setShowTrips(true)} variant="outline" className="font-bold text-xs uppercase tracking-widest">
+          <Button onClick={clearFilters} variant="ghost" className="text-xs font-bold uppercase text-gray-400">
+            Clear Filters
+          </Button>
+          <Button onClick={() => setShowTrips(true)} variant="outline" className="font-bold text-xs uppercase tracking-widest bg-white">
             <Link2 className="w-4 h-4 mr-2" /> Manage Trips
           </Button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2">
-        <button onClick={() => setTab('pending')} className={cn("px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", tab === 'pending' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-white text-gray-500 border border-slate-100 hover:bg-slate-50")}>
-          <Clock className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" /> Pending ({pendingCount})
-        </button>
-        <button onClick={() => setTab('confirmed')} className={cn("px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", tab === 'confirmed' ? "bg-slate-900 text-white shadow-lg shadow-slate-200" : "bg-white text-gray-500 border border-slate-100 hover:bg-slate-50")}>
-          <CheckCircle className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" /> Confirmed ({confirmedCount})
-        </button>
-      </div>
+      {/* Main Grid for Filters and Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Sidebar Filters */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Tabs - Moved inside sidebar for compactness if needed, or kept above */}
+          <div className="flex flex-col gap-2">
+            <button onClick={() => setTab('pending')} className={cn("flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", tab === 'pending' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-white text-gray-500 border border-slate-100 hover:bg-slate-50")}>
+              <span><Clock className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" /> Pending</span>
+              <span className="bg-white/20 px-2 py-0.5 rounded-full">{pendingCount}</span>
+            </button>
+            <button onClick={() => setTab('confirmed')} className={cn("flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", tab === 'confirmed' ? "bg-slate-900 text-white shadow-lg shadow-slate-200" : "bg-white text-gray-500 border border-slate-100 hover:bg-slate-50")}>
+              <span><CheckCircle className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" /> Confirmed</span>
+              <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">{confirmedCount}</span>
+            </button>
+          </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input placeholder="Search name, mobile, ID..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-10 rounded-xl" />
+          <div className="bg-white p-5 rounded-2xl border shadow-sm space-y-6">
+            {/* Search */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <ChevronDown className="w-3 h-3" /> Search For A Booking
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input placeholder="booking ID, name, email..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-11 rounded-xl bg-slate-50 border-none text-sm" />
+              </div>
+            </div>
+
+            {/* Booking Dates */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <ChevronDown className="w-3 h-3" /> Booking Dates
+              </label>
+              <div className="space-y-2">
+                <Input type="date" value={bookingStart} onChange={e => setBookingStart(e.target.value)} className="h-10 rounded-xl bg-slate-50 border-none text-xs font-bold" />
+                <Input type="date" value={bookingEnd} onChange={e => setBookingEnd(e.target.value)} className="h-10 rounded-xl bg-slate-50 border-none text-xs font-bold" />
+              </div>
+            </div>
+
+            {/* Departure Dates */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <ChevronDown className="w-3 h-3" /> Departure Dates
+              </label>
+              <div className="space-y-2">
+                <Input type="date" value={depStart} onChange={e => setDepStart(e.target.value)} className="h-10 rounded-xl bg-slate-50 border-none text-xs font-bold" />
+                <Input type="date" value={depEnd} onChange={e => setDepEnd(e.target.value)} className="h-10 rounded-xl bg-slate-50 border-none text-xs font-bold" />
+              </div>
+            </div>
+
+            {/* Trips */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <ChevronDown className="w-3 h-3" /> Trips
+              </label>
+              <select value={filterTrip} onChange={e => setFilterTrip(e.target.value)} className="w-full h-11 px-3 border-none rounded-xl text-sm font-bold bg-slate-50">
+                <option value="all">Pick a trip</option>
+                {trips.map(t => <option key={t.id} value={t.tripCode}>{t.tripCode} — {t.tripName}</option>)}
+              </select>
+            </div>
+
+            {/* Booking Status */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <ChevronDown className="w-3 h-3" /> Booking Status
+              </label>
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full h-11 px-3 border-none rounded-xl text-sm font-bold bg-slate-50">
+                <option value="all">Filter by Booking status</option>
+                <option value="pending">Pending Payment</option>
+                <option value="partial">Partial Payment</option>
+                <option value="paid">Paid</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <select value={filterTrip} onChange={e => setFilterTrip(e.target.value)} className="h-10 px-3 border rounded-xl text-xs font-bold bg-white">
-          <option value="all">All Trips</option>
-          {trips.map(t => <option key={t.id} value={t.tripCode}>{t.tripCode} — {t.tripName}</option>)}
-        </select>
-        {tab === 'confirmed' && (
-          <select value={filterPayment} onChange={e => setFilterPayment(e.target.value)} className="h-10 px-3 border rounded-xl text-xs font-bold bg-white">
-            <option value="all">All Payment</option>
-            <option value="pending">Pending</option>
-            <option value="partial">Partial</option>
-            <option value="paid">Paid</option>
-          </select>
-        )}
-      </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        {/* Right Side - Table */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 border-b">
                 <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Booking ID</th>
@@ -385,14 +500,16 @@ export default function BookingsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
+    </div>
 
-      {/* Trip Manager */}
+    {/* Trip Manager */}
       <TripManager open={showTrips} onClose={() => setShowTrips(false)} onRefresh={fetchAll} />
 
       {/* Confirm Modal */}
-      <ConfirmModal booking={confirmTarget} onClose={() => setConfirmTarget(null)} onDone={() => { setConfirmTarget(null); fetchAll(); }} />
+      <ConfirmModal booking={confirmTarget} trips={trips} onClose={() => setConfirmTarget(null)} onDone={() => { setConfirmTarget(null); fetchAll(); }} />
 
       {/* Edit Modal */}
       {editTarget && (

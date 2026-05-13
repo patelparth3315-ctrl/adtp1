@@ -78,12 +78,15 @@ export default function InquiriesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-black text-foreground uppercase tracking-tighter">Sales CRM</h1>
-        <div className="flex gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tighter">Sales CRM</h1>
+          <p className="text-muted-foreground text-xs md:text-sm font-medium italic">Track leads, monitor response times, and manage conversions.</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 w-full lg:w-auto">
           <StatCard label="Avg Response" value={`${stats.avgResponse}m`} />
           <StatCard label="Conv Rate" value={`${Math.round((stats.converted / stats.total) * 100 || 0)}%`} />
-          <StatCard label="Pipeline Value" value={`₹${stats.revenue.toLocaleString()}`} />
+          <StatCard label="Pipeline Value" value={`₹${stats.revenue.toLocaleString()}`} className="col-span-2 sm:col-span-1" />
         </div>
       </div>
 
@@ -95,21 +98,23 @@ export default function InquiriesPage() {
       ) : (
         <div className="space-y-3">
           {inquiries.map((inq) => (
-            <div key={inq.id} className={`rounded-[32px] border bg-card p-8 flex items-start justify-between gap-6 transition-all hover:shadow-xl ${!inq.read ? "border-primary/50 shadow-lg shadow-primary/5 bg-primary/5" : "border-border"}`}>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-3">
-                  <p className="font-black text-xl text-card-foreground uppercase tracking-tight">{inq.name}</p>
-                  {inq.isDuplicate && <span className="text-[10px] font-black bg-orange-100 text-orange-600 px-3 py-1 rounded-full uppercase tracking-widest">Duplicate</span>}
-                  {!inq.read && <StatusBadge variant="default">New Lead</StatusBadge>}
+            <div key={inq.id} className={`rounded-[24px] md:rounded-[32px] border bg-card p-5 md:p-8 flex flex-col sm:flex-row items-start justify-between gap-4 md:gap-6 transition-all hover:shadow-xl ${!inq.read ? "border-primary/50 shadow-lg shadow-primary/5 bg-primary/5" : "border-border"}`}>
+              <div className="flex-1 min-w-0 w-full">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
+                  <p className="font-black text-lg md:text-xl text-card-foreground uppercase tracking-tight truncate">{inq.name}</p>
+                  <div className="flex gap-2">
+                    {inq.isDuplicate && <span className="text-[9px] md:text-[10px] font-black bg-orange-100 text-orange-600 px-2 md:px-3 py-1 rounded-full uppercase tracking-widest">Duplicate</span>}
+                    {!inq.read && <StatusBadge variant="default" className="text-[9px] md:text-[10px] px-2 md:px-3">New Lead</StatusBadge>}
+                  </div>
                 </div>
-                {inq.tripTitle && <p className="text-sm font-bold text-primary mb-3">Expedition: {inq.tripTitle}</p>}
-                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">{inq.message || "No message provided."}</p>
-                <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                {inq.tripTitle && <p className="text-xs md:text-sm font-bold text-primary mb-2 md:mb-3">Expedition: {inq.tripTitle}</p>}
+                <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-4">{inq.message || "No message provided."}</p>
+                <div className="flex flex-wrap gap-3 md:gap-4 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">
                   <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {formatDate(inq.createdAt)}</span>
                   {inq.responseTimeMinutes && <span className="text-green-500">Replied in {inq.responseTimeMinutes}m</span>}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="w-12 h-12 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm" onClick={() => handleView(inq)}>
+              <Button variant="ghost" size="icon" className="w-10 h-10 md:w-12 md:h-12 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm shrink-0 self-end sm:self-center" onClick={() => handleView(inq)}>
                 <Eye className="h-5 w-5" />
               </Button>
             </div>
@@ -118,7 +123,7 @@ export default function InquiriesPage() {
       )}
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent aria-describedby="inquiry-details">
+        <DialogContent aria-describedby="inquiry-details" className="max-w-2xl w-[95vw] sm:w-full max-h-[95dvh] overflow-y-auto custom-scrollbar p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Inquiry from {selected?.name}</DialogTitle>
             <p id="inquiry-details" className="text-xs text-muted-foreground">Detailed view of lead information and sales history.</p>
@@ -146,9 +151,9 @@ export default function InquiriesPage() {
                   <p className="text-sm font-medium text-card-foreground">{selected.tripTitle}</p>
                 </div>
               )}
-              <div className="bg-primary/5 rounded-[32px] p-8 border border-primary/10 space-y-6">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">CRM ACTION PANEL</h4>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="bg-primary/5 rounded-[24px] md:rounded-[32px] p-4 md:p-8 border border-primary/10 space-y-4 md:space-y-6">
+                <h4 className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-primary">CRM ACTION PANEL</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-500">Status</label>
                     <select 
@@ -202,11 +207,11 @@ export default function InquiriesPage() {
   );
 }
 
-function StatCard({ label, value }: { label: string, value: string }) {
+function StatCard({ label, value, className = "" }: { label: string, value: string, className?: string }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-[24px] px-6 py-4 shadow-sm flex flex-col justify-center">
-       <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</span>
-       <span className="text-xl font-black text-black tracking-tight">{value}</span>
+    <div className={`bg-white border border-gray-100 rounded-[20px] md:rounded-[24px] px-4 md:px-6 py-3 md:py-4 shadow-sm flex flex-col justify-center ${className}`}>
+       <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</span>
+       <span className="text-lg md:text-xl font-black text-black tracking-tight">{value}</span>
     </div>
   );
 }

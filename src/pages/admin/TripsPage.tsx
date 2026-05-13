@@ -184,20 +184,20 @@ export default function TripsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Trips</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setSortModalOpen(true)} className="rounded-xl font-bold border-primary/20 hover:border-primary/40 text-primary">
-            <GripVertical className="h-4 w-4 mr-2" />
-            Reorder
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Trips</h1>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setSortModalOpen(true)} className="flex-1 sm:flex-none rounded-xl font-bold border-primary/20 hover:border-primary/40 text-primary h-11 px-4">
+            <GripVertical className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Reorder</span>
           </Button>
-          <Button variant="outline" onClick={handleShuffle} className="rounded-xl font-bold border-primary/20 hover:border-primary/40 text-primary">
-            <Shuffle className="h-4 w-4 mr-2" />
-            Shuffle
+          <Button variant="outline" onClick={handleShuffle} className="flex-1 sm:flex-none rounded-xl font-bold border-primary/20 hover:border-primary/40 text-primary h-11 px-4">
+            <Shuffle className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Shuffle</span>
           </Button>
-          <Button onClick={openCreate} className="rounded-xl font-bold shadow-lg shadow-primary/20">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Trip
+          <Button onClick={openCreate} className="flex-1 sm:flex-none rounded-xl font-bold shadow-lg shadow-primary/20 h-11 px-6">
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="sm:inline">Add Trip</span>
           </Button>
         </div>
       </div>

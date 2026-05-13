@@ -185,116 +185,316 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    const logoUrl = `${window.location.origin}/logo.png`;
+
     const invoiceHtml = `
-      <html>
+      <!DOCTYPE html>
+      <html lang="en">
         <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>Invoice - ${booking.bookingId}</title>
           <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo { font-size: 24px; font-weight: 900; color: #1e293b; letter-spacing: -1px; }
-            .invoice-details { text-align: right; }
-            .invoice-details p { margin: 2px 0; font-size: 12px; color: #64748b; font-weight: 600; }
-            .section { margin-bottom: 30px; }
-            .section-title { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; margin-bottom: 15px; letter-spacing: 1px; }
-            .grid { display: grid; grid-template-cols: 1fr 1fr; gap: 40px; }
+            /* ── Reset & Base ── */
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              color: #1e293b;
+              background: #fff;
+              font-size: 13px;
+              line-height: 1.5;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+
+            /* ── A4 Page Setup ── */
+            @page {
+              size: A4 portrait;
+              margin: 18mm 16mm 18mm 16mm;
+            }
+            @media print {
+              html, body { width: 210mm; min-height: 297mm; }
+              .no-print { display: none !important; }
+              .page-break { page-break-before: always; }
+            }
+
+            /* ── Invoice Wrapper ── */
+            .invoice-wrapper {
+              max-width: 780px;
+              margin: 0 auto;
+              padding: 48px 48px 40px;
+              background: #fff;
+            }
+
+            /* ── Header ── */
+            .header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding-bottom: 24px;
+              margin-bottom: 32px;
+              border-bottom: 2px solid #e2e8f0;
+            }
+            .logo-wrap img {
+              height: 52px;
+              width: auto;
+              max-width: 200px;
+              object-fit: contain;
+              image-rendering: -webkit-optimize-contrast;
+              image-rendering: crisp-edges;
+              display: block;
+            }
+            .invoice-meta { text-align: right; }
+            .invoice-meta .invoice-title {
+              font-size: 22px;
+              font-weight: 900;
+              letter-spacing: -0.5px;
+              color: #1e293b;
+              text-transform: uppercase;
+              margin-bottom: 6px;
+            }
+            .invoice-meta p {
+              font-size: 11px;
+              color: #64748b;
+              font-weight: 600;
+              margin: 2px 0;
+              letter-spacing: 0.5px;
+              text-transform: uppercase;
+            }
+            .invoice-meta .status-badge {
+              display: inline-block;
+              margin-top: 8px;
+              padding: 3px 12px;
+              border-radius: 20px;
+              font-size: 10px;
+              font-weight: 900;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              background: #dcfce7;
+              color: #16a34a;
+              border: 1px solid #bbf7d0;
+            }
+
+            /* ── Info Grid ── */
+            .info-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 24px;
+              margin-bottom: 32px;
+            }
+            .info-card {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              padding: 18px 20px;
+            }
+            .section-title {
+              font-size: 9px;
+              font-weight: 900;
+              text-transform: uppercase;
+              color: #94a3b8;
+              letter-spacing: 1.5px;
+              margin-bottom: 14px;
+              padding-bottom: 8px;
+              border-bottom: 1px solid #e2e8f0;
+            }
             .info-item { margin-bottom: 10px; }
-            .info-label { font-size: 9px; font-weight: 900; text-transform: uppercase; color: #94a3b8; margin-bottom: 2px; }
-            .info-value { font-size: 14px; font-weight: 600; color: #1e293b; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { text-align: left; font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding: 12px; border-bottom: 2px solid #f1f5f9; }
-            td { padding: 12px; font-size: 13px; border-bottom: 1px solid #f8fafc; }
-            .total-section { margin-top: 40px; float: right; width: 300px; }
-            .total-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
-            .total-row.grand-total { border-bottom: none; margin-top: 10px; padding-top: 15px; border-top: 2px solid #1e293b; }
-            .total-row.grand-total .label { font-size: 14px; font-weight: 900; }
-            .total-row.grand-total .value { font-size: 18px; font-weight: 900; color: #1e293b; }
-            .footer { margin-top: 100px; font-size: 10px; color: #94a3b8; text-align: center; line-height: 1.5; }
-            @media print { .no-print { display: none; } }
+            .info-item:last-child { margin-bottom: 0; }
+            .info-label {
+              font-size: 9px;
+              font-weight: 900;
+              text-transform: uppercase;
+              color: #94a3b8;
+              letter-spacing: 1px;
+              margin-bottom: 2px;
+            }
+            .info-value {
+              font-size: 14px;
+              font-weight: 700;
+              color: #1e293b;
+            }
+
+            /* ── Table ── */
+            .table-section { margin-bottom: 32px; }
+            .table-section .section-title { margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+            table { width: 100%; border-collapse: collapse; }
+            thead tr { background: #f1f5f9; }
+            th {
+              text-align: left;
+              font-size: 9px;
+              font-weight: 900;
+              color: #64748b;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              padding: 10px 14px;
+              border-bottom: 2px solid #e2e8f0;
+            }
+            td {
+              padding: 12px 14px;
+              font-size: 13px;
+              color: #334155;
+              border-bottom: 1px solid #f1f5f9;
+            }
+            tr:last-child td { border-bottom: none; }
+
+            /* ── Totals ── */
+            .totals-wrap {
+              display: flex;
+              justify-content: flex-end;
+              margin-bottom: 40px;
+            }
+            .totals-box {
+              width: 320px;
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              overflow: hidden;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 10px 16px;
+              border-bottom: 1px solid #f1f5f9;
+              font-size: 13px;
+            }
+            .total-row:last-child { border-bottom: none; }
+            .total-row .lbl { color: #64748b; font-weight: 600; }
+            .total-row .val { font-weight: 700; color: #1e293b; }
+            .total-row.grand {
+              background: #1e293b;
+              border-bottom: none;
+            }
+            .total-row.grand .lbl { color: #94a3b8; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+            .total-row.grand .val { color: #fff; font-size: 18px; font-weight: 900; }
+            .total-row .val.green { color: #059669; }
+
+            /* ── Footer ── */
+            .footer {
+              border-top: 1px solid #e2e8f0;
+              padding-top: 20px;
+              text-align: center;
+              font-size: 10px;
+              color: #94a3b8;
+              line-height: 1.8;
+            }
+            .footer p { margin: 0; }
           </style>
         </head>
         <body>
-          <div class="header">
-            <div class="logo">YOUTHCAMPING.</div>
-            <div class="invoice-details">
-              <p>INVOICE NO: ${booking.bookingId}</p>
-              <p>DATE: ${new Date().toLocaleDateString('en-IN')}</p>
-              <p>STATUS: ${booking.paymentStatus.toUpperCase()}</p>
-            </div>
-          </div>
+          <div class="invoice-wrapper">
 
-          <div class="grid">
-            <div class="section">
-              <div class="section-title">Guest Details</div>
-              <div class="info-item">
-                <div class="info-label">Full Name</div>
-                <div class="info-value">${booking.fullName}</div>
+            <!-- Header -->
+            <div class="header">
+              <div class="logo-wrap">
+                <img
+                  src="${logoUrl}"
+                  alt="Company Logo"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                />
+                <span style="display:none; font-size:22px; font-weight:900; color:#1e293b; letter-spacing:-1px;">YOUTHCAMPING.</span>
               </div>
-              <div class="info-item">
-                <div class="info-label">Mobile Number</div>
-                <div class="info-value">+91 ${booking.mobile}</div>
+              <div class="invoice-meta">
+                <div class="invoice-title">Invoice</div>
+                <p>Invoice No: ${booking.bookingId}</p>
+                <p>Date: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                <span class="status-badge">${booking.paymentStatus}</span>
               </div>
             </div>
-            <div class="section">
-              <div class="section-title">Travel Details</div>
-              <div class="info-item">
-                <div class="info-label">Train Class / Transport</div>
-                <div class="info-value">${booking.trainClass} (${booking.ticketStatus})</div>
+
+            <!-- Guest & Travel Info -->
+            <div class="info-grid">
+              <div class="info-card">
+                <div class="section-title">Guest Details</div>
+                <div class="info-item">
+                  <div class="info-label">Full Name</div>
+                  <div class="info-value">${booking.fullName}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Mobile Number</div>
+                  <div class="info-value">+91 ${booking.mobile}</div>
+                </div>
+                ${booking.email ? `
+                <div class="info-item">
+                  <div class="info-label">Email</div>
+                  <div class="info-value" style="font-size:12px">${booking.email}</div>
+                </div>` : ''}
               </div>
-              <div class="info-item">
-                <div class="info-label">Room Type</div>
-                <div class="info-value">${booking.roomType}</div>
+              <div class="info-card">
+                <div class="section-title">Travel Details</div>
+                <div class="info-item">
+                  <div class="info-label">Trip</div>
+                  <div class="info-value">${booking.tripName || booking.tripId}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Train Class / Transport</div>
+                  <div class="info-value">${booking.trainClass} &mdash; ${booking.ticketStatus}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Room Type</div>
+                  <div class="info-value">${booking.roomType || 'N/A'}</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="section">
-            <div class="section-title">Booking Summary</div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Quantity</th>
-                  <th style="text-align: right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Base Trip Package - ${booking.trainClass}</td>
-                  <td>1 Adult</td>
-                  <td style="text-align: right">₹${booking.totalAmount.toLocaleString()}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="total-section">
-            <div class="total-row">
-              <span class="label">Total Amount</span>
-              <span class="value">₹${booking.totalAmount.toLocaleString()}</span>
+            <!-- Booking Summary Table -->
+            <div class="table-section">
+              <div class="section-title">Booking Summary</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th style="text-align:right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Trip Package &mdash; ${booking.tripName || booking.tripId} (${booking.trainClass})</td>
+                    <td>1 Traveller</td>
+                    <td style="text-align:right; font-weight:700">&#8377;${booking.totalAmount.toLocaleString('en-IN')}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div class="total-row">
-              <span class="label">Advance Paid</span>
-              <span class="value" style="color: #059669">-₹${booking.advancePaid.toLocaleString()}</span>
-            </div>
-            <div class="total-row grand-total">
-              <span class="label">Balance Due</span>
-              <span class="value">₹${booking.remainingAmount.toLocaleString()}</span>
-            </div>
-          </div>
 
-          <div style="clear: both"></div>
+            <!-- Totals -->
+            <div class="totals-wrap">
+              <div class="totals-box">
+                <div class="total-row">
+                  <span class="lbl">Total Amount</span>
+                  <span class="val">&#8377;${booking.totalAmount.toLocaleString('en-IN')}</span>
+                </div>
+                <div class="total-row">
+                  <span class="lbl">Advance Paid</span>
+                  <span class="val green">&minus;&#8377;${booking.advancePaid.toLocaleString('en-IN')}</span>
+                </div>
+                <div class="total-row grand">
+                  <span class="lbl">Balance Due</span>
+                  <span class="val">&#8377;${booking.remainingAmount.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="footer">
-            <p>Thank you for booking with YouthCamping!</p>
-            <p>This is a computer-generated invoice and does not require a signature.</p>
-            <p>For support, please contact us at support@youthcamping.com</p>
+            <!-- Footer -->
+            <div class="footer">
+              <p>Thank you for booking with us. We look forward to serving you.</p>
+              <p>This is a computer-generated invoice and does not require a physical signature.</p>
+              <p>For support, contact us at support@youthcamping.com</p>
+            </div>
+
           </div>
 
           <script>
             window.onload = function() {
-              window.print();
-              setTimeout(() => { window.close(); }, 500);
+              // Wait for logo image to load before printing
+              var img = document.querySelector('.logo-wrap img');
+              if (img && !img.complete) {
+                img.onload = function() { window.print(); setTimeout(function(){ window.close(); }, 800); };
+                img.onerror = function() { window.print(); setTimeout(function(){ window.close(); }, 800); };
+              } else {
+                window.print();
+                setTimeout(function(){ window.close(); }, 800);
+              }
             };
           </script>
         </body>

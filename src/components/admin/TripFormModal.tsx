@@ -357,7 +357,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                 value={form.heroImage}
                 onUpload={(url) => setForm({ ...form, heroImage: url })}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest opacity-50">Trip Title</Label>
                   <Input id="title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: slugify(e.target.value) })} className="rounded-xl font-bold" />
@@ -377,7 +377,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                   <p className="text-[8px] text-muted-foreground ml-1">Editable anytime. Use short codes like MKA1 for easy tracking.</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="order" className="text-[10px] font-black uppercase tracking-widest opacity-50">Display Order</Label>
                   <Input 
@@ -401,7 +401,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Description</Label>
                 <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} className="rounded-xl" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Duration</Label>
                   <Input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} className="rounded-xl" />
@@ -436,7 +436,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Start / End</Label>
                   <Input value={form.startEnd || ""} onChange={(e) => setForm({ ...form, startEnd: e.target.value })} placeholder="Manali to Manali" className="rounded-xl" />
@@ -605,7 +605,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                 <Label className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
                   <Star className="w-3 h-3" /> Sticky Action Card
                 </Label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[9px] uppercase font-black opacity-50">Sticky Price (₹)</Label>
                     <Input type="number" value={form.stickyCardPrice || 0} onChange={(e) => setForm({ ...form, stickyCardPrice: Number(e.target.value) })} className="rounded-xl h-10" />
@@ -647,7 +647,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
             <div className="space-y-6 pt-4">
               <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-4">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Bulk Generate Dates</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-[9px] uppercase font-black opacity-50">Start Date</Label>
                     <Input type="date" value={repeatStartDate} onChange={(e) => setRepeatStartDate(e.target.value)} className="h-9 text-xs rounded-xl" />
@@ -1028,7 +1028,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                        </div>
 
                        <div className="md:col-span-2 space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Nights in Location</Label>
                                 <Input value={item.nights} placeholder="e.g. 2 Nights in Havelock" onChange={(e) => {
@@ -1409,7 +1409,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                        <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Focus Keyword</Label>
                        <Input value={form.seo?.focusKeyword || ""} onChange={(e) => setForm({ ...form, seo: { ...form.seo, focusKeyword: e.target.value } })} className="rounded-xl border-none bg-muted/50 h-10" />
@@ -1454,7 +1454,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
           </TabsContent>
           <TabsContent value="advanced">
             <div className="space-y-8 pt-4">
-               <div className="grid grid-cols-2 gap-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Departure City</Label>
                     <Input value={form.departureCity} onChange={(e) => setForm({ ...form, departureCity: e.target.value })} placeholder="e.g. Ahmedabad" className="rounded-xl h-10" />
@@ -1464,7 +1464,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                     <Input value={form.ageLimit} onChange={(e) => setForm({ ...form, ageLimit: e.target.value })} placeholder="e.g. 15-35 Years" className="rounded-xl h-10" />
                   </div>
                </div>
-               <div className="grid grid-cols-2 gap-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Max Group Size</Label>
                     <Input type="number" value={form.maxGroupSize} onChange={(e) => setForm({ ...form, maxGroupSize: Number(e.target.value) })} className="rounded-xl h-10" />
@@ -1679,7 +1679,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
           </TabsContent>
           <TabsContent value="advanced">
             <div className="space-y-8 pt-4">
-               <div className="grid grid-cols-2 gap-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Departure City</Label>
                     <Input value={form.departureCity} onChange={(e) => setForm({ ...form, departureCity: e.target.value })} placeholder="e.g. Ahmedabad" className="rounded-xl h-10" />
@@ -1689,7 +1689,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                     <Input value={form.ageLimit} onChange={(e) => setForm({ ...form, ageLimit: e.target.value })} placeholder="e.g. 15-35 Years" className="rounded-xl h-10" />
                   </div>
                </div>
-               <div className="grid grid-cols-2 gap-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Max Group Size</Label>
                     <Input type="number" value={form.maxGroupSize} onChange={(e) => setForm({ ...form, maxGroupSize: Number(e.target.value) })} className="rounded-xl h-10" />
@@ -1756,7 +1756,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                           />
                        </div>
 
-                       <div className="grid grid-cols-2 gap-4">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                              <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Cover Image</Label>
                              <div className="flex flex-col gap-3">
@@ -1838,7 +1838,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                        {/* Left side: Basic Info */}
                        <div className="space-y-6">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Reviewer Name</Label>
                                 <Input 
@@ -1867,7 +1867,7 @@ export default function TripFormModal({ open, onOpenChange, editing, onSave }: T
                              </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div className="space-y-2">
                                 <Label className="text-[10px] font-black uppercase tracking-widest opacity-40">Trip Type Label</Label>
                                 <Input 

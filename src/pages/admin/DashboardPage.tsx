@@ -87,20 +87,20 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Profit Summary Card ─── */}
-      <div className="rounded-[32px] border-2 border-border bg-card p-8">
+      <div className="rounded-[24px] md:rounded-[32px] border-2 border-border bg-card p-5 md:p-8">
         <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-6">Profit Overview</h3>
-        <div className="grid grid-cols-3 gap-6">
-          <div className="text-center p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Customer Revenue</p>
-            <p className="text-3xl font-black text-emerald-700">₹{(Number(stats?.totalRevenue) || 0).toLocaleString()}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="text-center p-4 md:p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Customer Revenue</p>
+            <p className="text-2xl md:text-3xl font-black text-emerald-700">₹{(Number(stats?.totalRevenue) || 0).toLocaleString()}</p>
           </div>
-          <div className="text-center p-6 bg-red-50 rounded-2xl border border-red-100">
-            <p className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-2">Vendor Costs</p>
-            <p className="text-3xl font-black text-red-700">₹{(Number(stats?.totalVendorCost) || 0).toLocaleString()}</p>
+          <div className="text-center p-4 md:p-6 bg-red-50 rounded-2xl border border-red-100">
+            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-red-600 mb-2">Vendor Costs</p>
+            <p className="text-2xl md:text-3xl font-black text-red-700">₹{(Number(stats?.totalVendorCost) || 0).toLocaleString()}</p>
           </div>
-          <div className={`text-center p-6 rounded-2xl border ${profit >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-            <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>Net Profit</p>
-            <p className={`text-3xl font-black ${profit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+          <div className={`text-center p-4 md:p-6 rounded-2xl border ${profit >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+            <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-2 ${profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>Net Profit</p>
+            <p className={`text-2xl md:text-3xl font-black ${profit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
               ₹{profit.toLocaleString()}
             </p>
             <p className="text-[10px] font-bold text-muted-foreground mt-1">{profitMargin}% margin</p>
@@ -127,16 +127,16 @@ export default function DashboardPage() {
             <tbody className="divide-y border-t">
               {stats?.recentBookings?.map((b) => (
                 <tr key={b.id} className="hover:bg-muted/10 transition-colors">
-                  <td className="px-8 py-5 font-bold uppercase text-xs">{b.userName}</td>
-                  <td className="px-8 py-5 text-muted-foreground font-medium">{b.tripTitle}</td>
-                  <td className="px-8 py-5 font-black">₹{b.amount.toLocaleString()}</td>
-                  <td className="px-8 py-5">
-                    <span className={`font-bold ${(b.paidAmount || 0) >= b.amount ? 'text-emerald-600' : (b.paidAmount || 0) > 0 ? 'text-amber-600' : 'text-red-500'}`}>
+                  <td className="px-4 md:px-8 py-5 font-bold uppercase text-[10px] md:text-xs whitespace-nowrap">{b.userName}</td>
+                  <td className="px-4 md:px-8 py-5 text-muted-foreground font-medium text-xs md:text-sm whitespace-nowrap">{b.tripTitle}</td>
+                  <td className="px-4 md:px-8 py-5 font-black text-xs md:text-sm">₹{b.amount.toLocaleString()}</td>
+                  <td className="px-4 md:px-8 py-5">
+                    <span className={`font-bold text-xs md:text-sm ${(b.paidAmount || 0) >= b.amount ? 'text-emerald-600' : (b.paidAmount || 0) > 0 ? 'text-amber-600' : 'text-red-500'}`}>
                       ₹{(b.paidAmount || 0).toLocaleString()}
                     </span>
                   </td>
-                  <td className="px-8 py-5">
-                    <StatusBadge variant={getBookingBadgeVariant(b.status)}>{b.status}</StatusBadge>
+                  <td className="px-4 md:px-8 py-5">
+                    <StatusBadge variant={getBookingBadgeVariant(b.status)} className="text-[9px] md:text-[10px] px-2">{b.status}</StatusBadge>
                   </td>
                 </tr>
               ))}

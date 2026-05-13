@@ -196,12 +196,12 @@ export default function ReviewsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-black uppercase tracking-tight">Customer Reviews</h1>
-          <p className="text-muted-foreground text-sm font-medium italic">Manage trip-specific reviews with photo verification.</p>
+          <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight">Customer Reviews</h1>
+          <p className="text-muted-foreground text-xs md:text-sm font-medium italic">Manage trip-specific reviews with photo verification.</p>
         </div>
-        <Button onClick={openCreate} className="rounded-xl h-12 px-6 font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20"><Plus className="h-4 w-4 mr-2" />Add Review</Button>
+        <Button onClick={openCreate} className="w-full sm:w-auto rounded-xl h-12 px-6 font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20"><Plus className="h-4 w-4 mr-2" />Add Review</Button>
       </div>
 
       <DataTable
@@ -211,12 +211,12 @@ export default function ReviewsPage() {
       />
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-3xl rounded-[40px] p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="max-w-3xl w-[95vw] sm:w-full rounded-[24px] sm:rounded-[40px] p-4 sm:p-10 max-h-[95dvh] overflow-y-auto custom-scrollbar">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black uppercase tracking-tight">{editing ? 'Edit Review' : 'Add New Review'}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-8 py-4">
-            <div className="grid grid-cols-2 gap-6">
+          <div className="grid gap-4 sm:gap-8 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                <div className="space-y-2">
                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Customer Name</Label>
                  <Input className="rounded-xl h-12 font-bold" value={formData.userName} onChange={(e) => setFormData({...formData, userName: e.target.value})} placeholder="e.g. Deep Bhuvar" />
@@ -227,7 +227,7 @@ export default function ReviewsPage() {
                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                <div className="space-y-2">
                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Linked Trip</Label>
                  <Select 
@@ -253,7 +253,7 @@ export default function ReviewsPage() {
                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                <div className="space-y-2">
                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rating (1-5)</Label>
                  <Input type="number" min="1" max="5" className="rounded-xl h-12 font-bold" value={formData.rating} onChange={(e) => setFormData({...formData, rating: parseInt(e.target.value)})} />
@@ -264,7 +264,7 @@ export default function ReviewsPage() {
                </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                <div className="space-y-4">
                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Customer Profile Photo</Label>
                  <ImageUpload 
@@ -313,9 +313,9 @@ export default function ReviewsPage() {
                <Label htmlFor="isFeatured" className="text-sm font-bold opacity-70">Feature this review on Home page</Label>
             </div>
           </div>
-          <DialogFooter className="pt-6 border-t mt-6">
-            <Button variant="outline" onClick={() => setModalOpen(false)} className="rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
-            <Button onClick={handleSave} className="rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">Save Review</Button>
+          <DialogFooter className="pt-6 border-t mt-6 flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setModalOpen(false)} className="w-full sm:w-auto rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest">Cancel</Button>
+            <Button onClick={handleSave} className="w-full sm:w-auto rounded-xl h-12 px-10 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">Save Review</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

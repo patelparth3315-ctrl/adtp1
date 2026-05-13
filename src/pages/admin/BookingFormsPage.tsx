@@ -199,29 +199,29 @@ export default function BookingFormsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* ─── Header ─── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-foreground uppercase tracking-tighter">Booking Forms</h1>
-          <p className="text-sm text-muted-foreground font-medium mt-1">
+          <h1 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tighter">Booking Forms</h1>
+          <p className="text-xs md:text-sm text-muted-foreground font-medium mt-1">
             Generate Google Form links per trip & date — auto-synced to Google Sheets
           </p>
         </div>
         <Button
           onClick={() => setCreateOpen(true)}
-          className="rounded-xl h-11 px-6 font-black uppercase text-[10px] tracking-widest gap-2"
+          className="w-full sm:w-auto rounded-xl h-11 px-6 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-primary/20"
         >
           <Plus className="h-4 w-4" /> Generate Form Link
         </Button>
       </div>
 
       {/* ─── Info Banner ─── */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-2xl p-6 flex items-start gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-          <Link2 className="h-6 w-6 text-emerald-700" />
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-2xl p-4 md:p-6 flex flex-col sm:flex-row items-start gap-4">
+        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+          <Link2 className="h-5 w-5 md:h-6 md:w-6 text-emerald-700" />
         </div>
         <div>
-          <h3 className="font-black text-sm uppercase tracking-tight text-emerald-900">How It Works</h3>
-          <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
+          <h3 className="font-black text-xs md:text-sm uppercase tracking-tight text-emerald-900">How It Works</h3>
+          <p className="text-[10px] md:text-xs text-emerald-700 mt-1 leading-relaxed">
             <strong>1.</strong> Select a trip and travel date →{" "}
             <strong>2.</strong> System creates a Google Form + Sheet →{" "}
             <strong>3.</strong> Share the link with clients →{" "}
@@ -231,34 +231,34 @@ export default function BookingFormsPage() {
       </div>
 
       {/* ─── Stats Row ─── */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white border-2 border-border rounded-2xl p-5 flex items-center gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        <div className="bg-white border-2 border-border rounded-2xl p-4 md:p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Link2 className="h-5 w-5 text-primary" />
           </div>
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Total Forms</p>
-            <p className="text-2xl font-black">{forms.length}</p>
+            <p className="text-xl md:text-2xl font-black">{forms.length}</p>
           </div>
         </div>
-        <div className="bg-white border-2 border-border rounded-2xl p-5 flex items-center gap-4">
+        <div className="bg-white border-2 border-border rounded-2xl p-4 md:p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
             <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
           </div>
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Unique Trips</p>
-            <p className="text-2xl font-black">
+            <p className="text-xl md:text-2xl font-black">
               {new Set(forms.map(f => f.tripName)).size}
             </p>
           </div>
         </div>
-        <div className="bg-white border-2 border-border rounded-2xl p-5 flex items-center gap-4">
+        <div className="bg-white border-2 border-border rounded-2xl p-4 md:p-5 flex items-center gap-4 sm:col-span-2 lg:col-span-1">
           <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
             <CalendarDays className="h-5 w-5 text-blue-600" />
           </div>
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Travel Dates</p>
-            <p className="text-2xl font-black">
+            <p className="text-xl md:text-2xl font-black">
               {new Set(forms.map(f => f.date)).size}
             </p>
           </div>
@@ -389,7 +389,7 @@ export default function BookingFormsPage() {
 
       {/* ─── CREATE MODAL ─── */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-[480px]">
+        <DialogContent className="sm:max-w-[480px] w-[95vw] max-h-[95dvh] overflow-y-auto custom-scrollbar p-4 md:p-6 rounded-[24px] md:rounded-[32px]">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-tight text-lg">
               Generate Booking Form
@@ -514,7 +514,7 @@ export default function BookingFormsPage() {
 
       {/* ─── SHARE MODAL ─── */}
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent className="sm:max-w-[480px]">
+        <DialogContent className="sm:max-w-[480px] w-[95vw] max-h-[95dvh] overflow-y-auto custom-scrollbar p-4 md:p-6 rounded-[24px] md:rounded-[32px]">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-tight flex items-center gap-2">
               <Share2 className="h-5 w-5 text-primary" /> Share Booking Link
@@ -578,7 +578,7 @@ export default function BookingFormsPage() {
 
       {/* ─── EDIT MODAL ─── */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-[480px]">
+        <DialogContent className="sm:max-w-[480px] w-[95vw] max-h-[95dvh] overflow-y-auto custom-scrollbar p-4 md:p-6 rounded-[24px] md:rounded-[32px]">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-tight text-lg">
               Edit Booking Form Link
@@ -667,8 +667,7 @@ export default function BookingFormsPage() {
 
       {/* ─── DELETE CONFIRMATION ─── */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-
-        <AlertDialogContent className="rounded-3xl border-2">
+        <AlertDialogContent className="rounded-[24px] md:rounded-3xl border-2 w-[95vw] max-w-[400px] p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-black uppercase tracking-tight text-xl">
               Are you absolutely sure?

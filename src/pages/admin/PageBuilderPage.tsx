@@ -3,7 +3,7 @@ import {
   Layout, Megaphone, Users, MessageSquare, ImageIcon, Type, 
   Plus, Trash2, GripVertical, Eye, Send, 
   MoreVertical, Copy, Lock, Unlock, Save, Undo2, Redo2, History,
-  Loader2, CheckCircle2, AlertCircle, ChevronRight, X, Menu, PanelLeftClose
+  Loader2, CheckCircle2, AlertCircle, ChevronRight, X, Menu, PanelLeftClose, Star
 } from "lucide-react";
 import { pageBuilderService } from "@/services/page-builder.service";
 import { tripsService } from "@/services/trips.service";
@@ -53,12 +53,9 @@ const SECTION_TYPES = [
 
 const PADDING_OPTIONS = [
   { label: 'None', value: '0px' },
-  { label: 'Small', value: '40px' },
-  { label: 'Medium', value: '80px' },
+  { label: 'Normal', value: '80px' },
   { label: 'Large', value: '120px' },
 ];
-
-const PRESET_COLORS = ['#ffffff', '#1B2A4A', '#D4541A', '#C4DAD2', '#f8f9fa', '#000000'];
 
 const DEFAULT_HOME_LAYOUT = [
   {
@@ -76,7 +73,7 @@ const DEFAULT_HOME_LAYOUT = [
     type: 'social_proof',
     name: 'Trust Stats',
     draft: {
-      backgroundColor: '#1B2A4A',
+      backgroundColor: '#ffffff',
       padding: '24px',
       stats: [
         { icon: "Users", label: "10,000+ Travelers" },
@@ -328,16 +325,15 @@ export default function PageBuilderPage() {
         return { 
           headline: 'Every great story starts with someone who decided to go.', 
           subheadline: '10,000+ travelers. Trusted since 2019.', 
-          videoUrl: 'https://www.youtube.com/embed/j6hb-iOZalE',
+          videoUrl: '',
           backgroundColor: '#ffffff',
-          padding: '0px',
-          fontSize: 'large'
+          padding: '0px'
         };
       case 'bestie':
         return { backgroundColor: '#C4DAD2', padding: '80px', title: 'Reasons To Make Us Your Travel Bestie', reasons: [] };
       case 'social_proof':
         return { 
-          backgroundColor: '#1B2A4A', 
+          backgroundColor: '#ffffff', 
           padding: '24px', 
           stats: [
             { icon: "Users", label: "10,000+ Travelers" },
@@ -662,86 +658,105 @@ export default function PageBuilderPage() {
         <main className="flex-1 bg-background overflow-hidden flex flex-col relative">
           {selectedSection ? (
             <ScrollArea className="flex-1">
-              <div className="max-w-4xl mx-auto p-3 sm:p-6 md:p-8 lg:p-12 space-y-6 md:space-y-12">
+              <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 md:space-y-8">
                 {/* ── Meta Settings ── */}
-                <section className="space-y-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 border-b border-border pb-4 sm:pb-6">
-                    <div className="bg-primary/10 p-3 rounded-2xl">
+                <section className="bg-muted/30 p-6 rounded-2xl border-2 border-border space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-primary/10 p-2.5 rounded-xl">
                       {(() => {
                         const Icon = SECTION_TYPES.find(t => t.type === selectedSection.type)?.icon || Layout;
-                        return <Icon className="w-6 h-6 text-primary" />;
+                        return <Icon className="w-5 h-5 text-primary" />;
                       })()}
                     </div>
                     <div className="flex-1">
                       <Input 
                         value={selectedSection.name || ''} 
                         onChange={e => updateSelectedSectionMeta({ name: e.target.value })}
-                        className="text-2xl font-black uppercase tracking-tight border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
-                        placeholder="Internal Section Name..."
-                        disabled={selectedSection.locked}
+                        className="text-lg font-black uppercase tracking-tight border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
+                        placeholder="Internal Label..."
                       />
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1 italic">Internal label only — not visible to customers</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => deleteSection(selectedSection.id)}
-                        className="rounded-xl border-2 border-destructive/20 text-destructive hover:bg-destructive hover:text-white font-black text-[10px] tracking-widest gap-2 h-10 px-4"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> DELETE SECTION
-                      </Button>
                     </div>
                   </div>
+                  
+                  <div className="space-y-2 mt-4 pt-4 border-t border-border/50">
+                    <Label className="text-[10px] font-black uppercase opacity-40">Section Top Label (Optional)</Label>
+                    <Input 
+                      placeholder="e.g. EXPLORE MORE"
+                      value={selectedSection.draft.topLabel || ''} 
+                      onChange={e => updateSelectedSection({ topLabel: e.target.value })}
+                      className="h-9 rounded-lg text-xs font-bold"
+                    />
+                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-muted/20 rounded-[32px] border-2 border-border/50">
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Background Color</Label>
-                      <div className="flex flex-col gap-3">
-                        <Input 
-                          type="text" 
-                          value={selectedSection.draft.backgroundColor || '#ffffff'} 
-                          onChange={e => updateSelectedSection({ backgroundColor: e.target.value })}
-                          className="font-mono text-xs rounded-xl"
-                          disabled={selectedSection.locked}
-                        />
-                        <div className="flex gap-2">
-                          {PRESET_COLORS.map(c => (
-                            <button 
-                              key={c}
-                              onClick={() => updateSelectedSection({ backgroundColor: c })}
-                              className={`w-6 h-6 rounded-full border-2 ${selectedSection.draft.backgroundColor === c ? 'border-primary' : 'border-transparent'}`}
-                              style={{ backgroundColor: c }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Section Padding</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {PADDING_OPTIONS.map(p => (
-                          <Button 
-                            key={p.value}
-                            variant={selectedSection.draft.padding === p.value ? 'default' : 'outline'}
-                            onClick={() => updateSelectedSection({ padding: p.value })}
-                            className="text-[10px] font-bold h-9 rounded-xl"
-                            disabled={selectedSection.locked}
-                          >
-                            {p.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Anchor ID (#link)</Label>
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Background Color</Label>
                       <Input 
-                        value={selectedSection.draft.anchorId || ''} 
-                        onChange={e => updateSelectedSection({ anchorId: e.target.value })}
-                        placeholder="e.g. tour-list"
-                        className="rounded-xl font-bold text-xs"
-                        disabled={selectedSection.locked}
+                        value={selectedSection.draft.backgroundColor || '#ffffff'} 
+                        onChange={e => updateSelectedSection({ backgroundColor: e.target.value })}
+                        className="h-9 rounded-lg font-mono text-xs"
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Section Spacing</Label>
+                      <Select value={selectedSection.draft.padding || '0px'} onValueChange={v => updateSelectedSection({ padding: v })}>
+                        <SelectTrigger className="h-9 rounded-lg text-xs font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl shadow-xl">
+                          {PADDING_OPTIONS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Title Font Size</Label>
+                      <Input 
+                        placeholder="e.g. 42px or 3rem"
+                        value={selectedSection.draft.titleSize || ''} 
+                        onChange={e => updateSelectedSection({ titleSize: e.target.value })}
+                        className="h-9 rounded-lg text-xs font-bold"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Title Font Weight</Label>
+                      <Select value={selectedSection.draft.titleWeight || '900'} onValueChange={v => updateSelectedSection({ titleWeight: v })}>
+                        <SelectTrigger className="h-9 rounded-lg text-xs font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl shadow-xl">
+                          <SelectItem value="300">Light (300)</SelectItem>
+                          <SelectItem value="400">Regular (400)</SelectItem>
+                          <SelectItem value="500">Medium (500)</SelectItem>
+                          <SelectItem value="600">Semi-Bold (600)</SelectItem>
+                          <SelectItem value="700">Bold (700)</SelectItem>
+                          <SelectItem value="800">Extra-Bold (800)</SelectItem>
+                          <SelectItem value="900">Black (900)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Title Style</Label>
+                      <Select value={selectedSection.draft.titleStyle || 'standard'} onValueChange={v => updateSelectedSection({ titleStyle: v })}>
+                        <SelectTrigger className="h-9 rounded-lg text-xs font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl shadow-xl">
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="boxed">Boxed (Rounded Border)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-40">Wavy Edges</Label>
+                      <Select value={selectedSection.draft.wavyEdges ? 'true' : 'false'} onValueChange={v => updateSelectedSection({ wavyEdges: v === 'true' })}>
+                        <SelectTrigger className="h-9 rounded-lg text-xs font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl shadow-xl">
+                          <SelectItem value="false">None (Flat)</SelectItem>
+                          <SelectItem value="true">Scalloped (Wavy)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </section>
@@ -750,34 +765,17 @@ export default function PageBuilderPage() {
                 <div className={selectedSection.locked ? 'opacity-50 pointer-events-none' : ''}>
                   {selectedSection.type === 'hero' && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                          <div className="md:col-span-3 space-y-4">
-                            <div className="flex justify-between">
-                              <Label className="text-xs font-black uppercase tracking-widest">Main Headline</Label>
-                              <span className="text-[10px] font-bold opacity-30">{(selectedSection.draft.headline || '').length}/80</span>
-                            </div>
-                            <Input 
-                              maxLength={80}
-                              value={selectedSection.draft.headline || ''} 
-                              onChange={e => updateSelectedSection({ headline: e.target.value })}
-                              className="text-xl font-bold h-14 rounded-2xl border-2"
-                            />
+                        <div className="space-y-4">
+                          <div className="flex justify-between">
+                            <Label className="text-xs font-black uppercase tracking-widest">Main Headline</Label>
+                            <span className="text-[10px] font-bold opacity-30">{(selectedSection.draft.headline || '').length}/80</span>
                           </div>
-                          <div className="space-y-4">
-                            <Label className="text-[10px] font-black uppercase tracking-widest">Font Size</Label>
-                            <Select value={selectedSection.draft.fontSize || 'large'} onValueChange={v => updateSelectedSection({ fontSize: v })}>
-                              <SelectTrigger className="h-14 rounded-2xl border-2 font-bold uppercase text-[10px] tracking-widest">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="rounded-2xl shadow-2xl border-2">
-                                <SelectItem value="small">Small</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="large">Large</SelectItem>
-                                <SelectItem value="xlarge">X-Large</SelectItem>
-                                <SelectItem value="cinematic">Cinematic</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          <Input 
+                            maxLength={80}
+                            value={selectedSection.draft.headline || ''} 
+                            onChange={e => updateSelectedSection({ headline: e.target.value })}
+                            className="text-lg font-bold h-12 rounded-xl border-2"
+                          />
                         </div>
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Subheadline / Tagline (Animated)</Label>
@@ -878,7 +876,7 @@ export default function PageBuilderPage() {
                   )}
 
                   {(selectedSection.type === 'featured_trips' || selectedSection.type === 'trending_trips') && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                        <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Section Title</Label>
                         <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" />
@@ -911,7 +909,7 @@ export default function PageBuilderPage() {
                   )}
 
                   {selectedSection.type === 'image_gallery' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Gallery Title</Label>
                         <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" />
@@ -962,7 +960,7 @@ export default function PageBuilderPage() {
                   )}
 
                   {selectedSection.type === 'photo_grid' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="grid grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <Label className="text-xs font-black uppercase tracking-widest">Main Title</Label>
@@ -1020,7 +1018,7 @@ export default function PageBuilderPage() {
 
                       {/* ── VIDEO SECTION ── */}
                       {selectedSection.type === 'video_section' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6">
                           <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
                               <Label className="text-xs font-black uppercase tracking-widest">Section Title</Label>
@@ -1095,7 +1093,7 @@ export default function PageBuilderPage() {
 
                       {/* ── REALITY SECTION ── */}
                       {selectedSection.type === 'reality' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6">
                           <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
                               <Label className="text-xs font-black uppercase tracking-widest">Main Title</Label>
@@ -1177,7 +1175,7 @@ export default function PageBuilderPage() {
                       )}
 
                       {selectedSection.type === 'cta_banner' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
 
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Banner Title</Label>
@@ -1207,35 +1205,10 @@ export default function PageBuilderPage() {
 
                   {/* ── UPCOMING TRIPS SECTION ── */}
                   {selectedSection.type === 'upcoming_trips' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Section Heading</Label>
-                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" placeholder="Upcoming Community Trips" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Title Size</Label>
-                          <Select value={selectedSection.draft.titleSize || 'text-3xl md:text-4xl'} onValueChange={v => updateSelectedSection({ titleSize: v })}>
-                            <SelectTrigger className="rounded-xl border-2"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text-2xl">Small (2xl)</SelectItem>
-                              <SelectItem value="text-3xl md:text-4xl">Medium (3xl-4xl)</SelectItem>
-                              <SelectItem value="text-4xl md:text-5xl">Large (4xl-5xl)</SelectItem>
-                              <SelectItem value="text-5xl md:text-7xl">Extra Large (5xl-7xl)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Alignment</Label>
-                          <Select value={selectedSection.draft.titleAlign || 'left'} onValueChange={v => updateSelectedSection({ titleAlign: v })}>
-                            <SelectTrigger className="rounded-xl border-2 uppercase font-bold text-[10px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left" className="font-bold">LEFT</SelectItem>
-                              <SelectItem value="center" className="font-bold">CENTER</SelectItem>
-                              <SelectItem value="right" className="font-bold">RIGHT</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-lg font-bold h-12 rounded-xl border-2" placeholder="Upcoming Community Trips" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Section Subtitle</Label>
@@ -1378,34 +1351,10 @@ export default function PageBuilderPage() {
 
                   {/* ── BESTIE SECTION ── */}
                   {selectedSection.type === 'bestie' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Main Title</Label>
-                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Title Size</Label>
-                          <Select value={selectedSection.draft.titleSize || 'text-2xl md:text-4xl'} onValueChange={v => updateSelectedSection({ titleSize: v })}>
-                            <SelectTrigger className="rounded-xl border-2"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text-xl">Small (xl)</SelectItem>
-                              <SelectItem value="text-2xl md:text-4xl">Medium (2xl-4xl)</SelectItem>
-                              <SelectItem value="text-4xl md:text-6xl">Large (4xl-6xl)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Alignment</Label>
-                          <Select value={selectedSection.draft.titleAlign || 'center'} onValueChange={v => updateSelectedSection({ titleAlign: v })}>
-                            <SelectTrigger className="rounded-xl border-2 uppercase font-bold text-[10px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left" className="font-bold">LEFT</SelectItem>
-                              <SelectItem value="center" className="font-bold">CENTER</SelectItem>
-                              <SelectItem value="right" className="font-bold">RIGHT</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-lg font-bold h-12 rounded-xl border-2" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Section Subtitle</Label>
@@ -1466,34 +1415,10 @@ export default function PageBuilderPage() {
                   )}
 
                   {selectedSection.type === 'destinations' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Section Title</Label>
-                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Title Size</Label>
-                          <Select value={selectedSection.draft.titleSize || 'text-2xl md:text-3xl'} onValueChange={v => updateSelectedSection({ titleSize: v })}>
-                            <SelectTrigger className="rounded-xl border-2"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text-xl">Small (xl)</SelectItem>
-                              <SelectItem value="text-2xl md:text-3xl">Medium (2xl-3xl)</SelectItem>
-                              <SelectItem value="text-4xl md:text-5xl">Large (4xl-5xl)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Alignment</Label>
-                          <Select value={selectedSection.draft.titleAlign || 'left'} onValueChange={v => updateSelectedSection({ titleAlign: v })}>
-                            <SelectTrigger className="rounded-xl border-2 uppercase font-bold text-[10px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left" className="font-bold">LEFT</SelectItem>
-                              <SelectItem value="center" className="font-bold">CENTER</SelectItem>
-                              <SelectItem value="right" className="font-bold">RIGHT</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-lg font-bold h-12 rounded-xl border-2" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Section Subtitle</Label>
@@ -1695,7 +1620,7 @@ export default function PageBuilderPage() {
                   )}
 
                   {selectedSection.type === 'photo_slider' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest text-primary">Cinematic Photo Slider</Label>
                         <div className="grid grid-cols-2 gap-4">
@@ -1736,7 +1661,7 @@ export default function PageBuilderPage() {
 
                   {/* ── SOCIAL PROOF SECTION ── */}
                   {selectedSection.type === 'social_proof' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Trust Stats</Label>
                         <div className="grid grid-cols-2 gap-4">
@@ -1774,35 +1699,10 @@ export default function PageBuilderPage() {
                     </div>
                   )}
                   {selectedSection.type === 'reviews' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Section Title (Reviews & Stories)</Label>
-                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-xl font-bold h-14 rounded-2xl border-2" placeholder="What Our Travelers Say" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Title Size</Label>
-                          <Select value={selectedSection.draft.titleSize || 'text-3xl'} onValueChange={v => updateSelectedSection({ titleSize: v })}>
-                            <SelectTrigger className="rounded-xl border-2 font-bold"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text-xl">Small (xl)</SelectItem>
-                              <SelectItem value="text-2xl">Medium (2xl)</SelectItem>
-                              <SelectItem value="text-3xl">Large (3xl)</SelectItem>
-                              <SelectItem value="text-4xl md:text-5xl">Extra Large (4xl-5xl)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Alignment</Label>
-                          <Select value={selectedSection.draft.titleAlign || 'left'} onValueChange={v => updateSelectedSection({ titleAlign: v })}>
-                            <SelectTrigger className="rounded-xl border-2 uppercase font-bold text-[10px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left" className="font-bold">LEFT</SelectItem>
-                              <SelectItem value="center" className="font-bold">CENTER</SelectItem>
-                              <SelectItem value="right" className="font-bold">RIGHT</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Input value={selectedSection.draft.title || ''} onChange={e => updateSelectedSection({ title: e.target.value })} className="text-lg font-bold h-12 rounded-xl border-2" placeholder="What Our Travelers Say" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black opacity-50 uppercase tracking-widest">Section Subtitle</Label>
@@ -1831,13 +1731,13 @@ export default function PageBuilderPage() {
                   )}
 
                   {selectedSection.type === 'rich_text' && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-6">
                       <div className="space-y-4">
                         <Label className="text-xs font-black uppercase tracking-widest">Section Title (Optional)</Label>
                         <Input 
                           value={selectedSection.draft.title || ''} 
                           onChange={e => updateSelectedSection({ title: e.target.value })} 
-                          className="text-xl font-bold h-14 rounded-2xl border-2" 
+                          className="text-lg font-bold h-12 rounded-xl border-2" 
                           placeholder="e.g. Our Story" 
                         />
                       </div>
@@ -1850,23 +1750,15 @@ export default function PageBuilderPage() {
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">Tip: Use Shift+Enter for single line breaks. Paste your content here.</p>
                       </div>
                       <div className="space-y-4 pt-4 border-t border-border">
-                        <Label className="text-xs font-black uppercase tracking-widest">Content Width Control</Label>
-                        <div className="grid grid-cols-3 gap-4">
-                          {[
-                            { label: 'Narrow (Reading)', value: 'narrow' },
-                            { label: 'Standard (Medium)', value: 'standard' },
-                            { label: 'Full Width', value: 'full' }
-                          ].map(opt => (
-                            <Button 
-                              key={opt.value}
-                              variant={selectedSection.draft.maxWidth === opt.value ? 'default' : 'outline'}
-                              onClick={() => updateSelectedSection({ maxWidth: opt.value })}
-                              className="text-[10px] font-bold h-12 rounded-xl border-2"
-                            >
-                              {opt.label}
-                            </Button>
-                          ))}
-                           </div>
+                        <Label className="text-xs font-black uppercase tracking-widest">Content Width</Label>
+                        <Select value={selectedSection.draft.maxWidth || 'standard'} onValueChange={v => updateSelectedSection({ maxWidth: v })}>
+                          <SelectTrigger className="h-12 rounded-xl border-2 font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="narrow">Narrow</SelectItem>
+                            <SelectItem value="standard">Standard</SelectItem>
+                            <SelectItem value="full">Full Width</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   )}
