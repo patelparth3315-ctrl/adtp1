@@ -18,8 +18,8 @@ interface ImageUploadProps {
  * Converts a relative upload path to a full URL for display.
  * Handles: /uploads/... paths, full http URLs, and empty values.
  */
-const formatUrl = (url: string | undefined): string => {
-  if (!url) return "";
+const formatUrl = (url: any): string => {
+  if (!url || typeof url !== 'string') return "";
   if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("blob:")) return url;
   // Build absolute URL from the API base
   const apiBase = api.defaults.baseURL || "http://localhost:8888/api";
@@ -122,7 +122,7 @@ export function ImageUpload({ onUpload, label, value, multiple = false, classNam
     if (!value) return;
     
     // Only attempt server delete for local uploads
-    if (value.startsWith('/uploads/')) {
+    if (typeof value === 'string' && value.startsWith('/uploads/')) {
       try {
         await api.delete("/upload/photo", { data: { url: value } });
         console.log("[ImageUpload] ✅ Server file deleted:", value);

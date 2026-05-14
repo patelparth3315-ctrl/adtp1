@@ -41,8 +41,8 @@ import { quotationsService } from "@/services/quotations.service";
 import { Quotation } from "@/types";
 import api from "@/services/api";
 
-const formatUrl = (url: string | undefined): string => {
-    if (!url) return "";
+const formatUrl = (url: any): string => {
+    if (!url || typeof url !== 'string') return "";
     if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("blob:")) return url;
     const apiBase = api.defaults.baseURL || "http://localhost:8888/api";
     const serverBase = apiBase.replace('/api', '');
