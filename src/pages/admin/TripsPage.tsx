@@ -183,32 +183,47 @@ export default function TripsPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Trips</h1>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={() => setSortModalOpen(true)} className="flex-1 sm:flex-none rounded-xl font-bold border-primary/20 hover:border-primary/40 text-primary h-11 px-4">
-            <GripVertical className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Reorder</span>
+    <div className="space-y-10 pb-24">
+      {/* ─── Page Title ─── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Expeditions</h1>
+          <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">Global Trip Catalog & Inventory</p>
+        </div>
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => setSortModalOpen(true)} 
+            variant="outline" 
+            className="h-12 px-6 rounded-2xl border-slate-100 font-bold text-[10px] uppercase tracking-widest bg-white hover:bg-slate-50"
+          >
+            <GripVertical className="w-4 h-4 mr-2" /> Reorder
           </Button>
-          <Button variant="outline" onClick={handleShuffle} className="flex-1 sm:flex-none rounded-xl font-bold border-primary/20 hover:border-primary/40 text-primary h-11 px-4">
-            <Shuffle className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Shuffle</span>
+          <Button 
+            onClick={handleShuffle} 
+            variant="outline" 
+            className="h-12 px-6 rounded-2xl border-slate-100 font-bold text-[10px] uppercase tracking-widest bg-white hover:bg-slate-50"
+          >
+            <Shuffle className="w-4 h-4 mr-2" /> Shuffle
           </Button>
-          <Button onClick={openCreate} className="flex-1 sm:flex-none rounded-xl font-bold shadow-lg shadow-primary/20 h-11 px-6">
-            <Plus className="h-4 w-4 sm:mr-2" />
-            <span className="sm:inline">Add Trip</span>
+          <Button 
+            onClick={openCreate} 
+            className="h-12 px-8 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-slate-200"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Launch New Trip
           </Button>
         </div>
       </div>
 
-      <DataTable
-        columns={columns} data={filtered} loading={loading}
-        searchKey="title" searchPlaceholder="Search trips..."
-        emptyMessage="No trips yet" emptyIcon={<Map className="h-10 w-10 text-muted-foreground" />}
-        filters={[{ key: "status", label: "Status", options: [{ label: "Published", value: "published" }, { label: "Draft", value: "draft" }] }]}
-        onFilterChange={(_, v) => setStatusFilter(v)}
-      />
+      <div className="modern-card p-0 overflow-hidden shadow-premium">
+        <DataTable
+          columns={columns} data={filtered} loading={loading}
+          searchKey="title" searchPlaceholder="Search trips..."
+          emptyMessage="No trips found in the expedition manifest" 
+          emptyIcon={<Map className="h-12 w-12 text-slate-200" />}
+          filters={[{ key: "status", label: "Status", options: [{ label: "Published", value: "published" }, { label: "Draft", value: "draft" }] }]}
+          onFilterChange={(_, v) => setStatusFilter(v)}
+        />
+      </div>
 
       <TripFormModal open={modalOpen} onOpenChange={setModalOpen} editing={editing} onSave={handleSave} />
 

@@ -28,8 +28,8 @@ interface DataTableProps<T> {
 }
 
 export function DataTable<T extends Record<string, any>>({
-  columns, data = [], loading, searchPlaceholder = "Search...", searchKey,
-  filters, onFilterChange, pageSize = 10, emptyMessage = "No data found", emptyIcon,
+  columns, data = [], loading, searchPlaceholder = "Search records...", searchKey,
+  filters, onFilterChange, pageSize = 10, emptyMessage = "No records found", emptyIcon,
   rowKey = "id" as keyof T,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
@@ -49,63 +49,79 @@ export function DataTable<T extends Record<string, any>>({
     if (col.render) return col.render(item);
     const value = item[col.key];
     if (value === null || value === undefined) return "";
-    if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4">
         {searchKey && (
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder={searchPlaceholder} value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} className="pl-9" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input 
+              placeholder={searchPlaceholder} 
+              value={search} 
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }} 
+              className="pl-11 h-12 rounded-2xl bg-white border-slate-100 shadow-sm focus-visible:ring-primary font-medium text-sm" 
+            />
           </div>
         )}
         {filters?.map((f) => (
           <Select key={f.key} defaultValue="all" onValueChange={(v) => onFilterChange?.(f.key, v)}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder={f.label} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              {f.options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            <SelectTrigger className="w-full sm:w-[180px] h-12 rounded-2xl bg-white border-slate-100 shadow-sm font-bold text-[10px] uppercase tracking-widest">
+              <SelectValue placeholder={f.label} />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl border-slate-100">
+              <SelectItem value="all" className="font-bold text-[10px] uppercase tracking-widest">All {f.label}</SelectItem>
+              {f.options.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="font-bold text-[10px] uppercase tracking-widest">
+                  {o.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         ))}
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="modern-card p-0 overflow-hidden shadow-premium">
+        <div className="responsive-table">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
+              <tr className="border-b border-slate-50">
                 {columns.map((col) => (
-                  <th key={col.key} className={cn("px-4 py-3 text-left font-medium text-muted-foreground", col.className)}>{col.header}</th>
+                  <th key={col.key} className={cn("px-8 py-5 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400", col.className)}>
+                    {col.header}
+                  </th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-50">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border">
+                  <tr key={i}>
                     {columns.map((col) => (
-                      <td key={col.key} className="px-4 py-3"><div className="h-4 bg-muted animate-pulse rounded w-24" /></td>
+                      <td key={col.key} className="px-8 py-6">
+                        <div className="h-4 bg-slate-50 animate-pulse rounded-lg w-full max-w-[120px]" />
+                      </td>
                     ))}
                   </tr>
                 ))
               ) : paged.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-4 py-12 text-center text-muted-foreground">
-                    <div className="flex flex-col items-center gap-2">
-                      {emptyIcon}
-                      <p>{emptyMessage}</p>
+                  <td colSpan={columns.length} className="px-8 py-20 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-200">
+                        {emptyIcon || <Search className="w-8 h-8" />}
+                      </div>
+                      <p className="text-xs font-medium text-slate-400 italic">{emptyMessage}</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 paged.map((item, i) => (
-                  <tr key={String(item[rowKey] || i)} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr key={String(item[rowKey] || i)} className="hover:bg-slate-50/50 transition-all group">
                     {columns.map((col) => (
-                      <td key={col.key} className={cn("px-4 py-3 text-card-foreground", col.className)}>
+                      <td key={col.key} className={cn("px-8 py-6 text-slate-600 font-medium", col.className)}>
                         {renderCellValue(item, col)}
                       </td>
                     ))}
@@ -118,15 +134,27 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex items-center justify-between px-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length}
           </p>
-          <div className="flex gap-1">
-            <Button variant="outline" size="icon" onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => setPage((p) => p - 1)} 
+              disabled={page === 0}
+              className="h-10 w-10 rounded-xl border-slate-100 hover:bg-slate-50"
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={() => setPage((p) => p + 1)} disabled={page >= totalPages - 1}>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => setPage((p) => p + 1)} 
+              disabled={page >= totalPages - 1}
+              className="h-10 w-10 rounded-xl border-slate-100 hover:bg-slate-50"
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

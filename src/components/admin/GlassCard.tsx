@@ -10,19 +10,20 @@ interface GlassCardProps extends HTMLMotionProps<"div"> {
 const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
     ({ className, children, variant = "light", ...props }, ref) => {
         const variants = {
-            light: "bg-white/70 border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[20px]",
-            dark: "bg-black/40 border-white/10 shadow-2xl backdrop-blur-xl text-white",
+            light: "bg-white border-slate-100 shadow-premium hover:shadow-luxury hover:border-primary/5",
+            dark: "bg-slate-900 border-white/10 shadow-2xl text-white",
             orange: "bg-primary/5 border-primary/10 shadow-xl shadow-primary/5",
         };
 
         return (
             <motion.div
                 ref={ref}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className={cn(
-                    "backdrop-blur-md rounded-[2rem] border p-8 transition-all hover:shadow-2xl",
+                    "rounded-[2.5rem] border p-10 transition-all duration-500",
                     variants[variant],
                     className
                 )}

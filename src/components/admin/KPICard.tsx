@@ -12,22 +12,30 @@ interface KPICardProps {
 
 export function KPICard({ title, value, icon, change, loading, className }: KPICardProps) {
   return (
-    <div className={cn("rounded-xl bg-card border border-border p-6 animate-fade-in", className)}>
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-muted-foreground">{title}</span>
-        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-          {icon}
+    <div className={cn("modern-card group relative overflow-hidden", className)}>
+      <div className="absolute -right-4 -top-4 w-24 h-24 bg-slate-50 rounded-full blur-2xl group-hover:bg-primary/5 transition-colors duration-500" />
+      <div className="relative z-10 flex flex-col justify-between h-full space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="h-12 w-12 rounded-2xl bg-orange-50 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500">
+            {icon}
+          </div>
+          {change && (
+            <div className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+               <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">{change}</span>
+            </div>
+          )}
         </div>
-      </div>
-      <div className="mt-3">
-        {loading ? (
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        ) : (
-          <>
-            <p className="text-2xl font-bold text-card-foreground">{value}</p>
-            {change && <p className="text-xs text-success mt-1">{change}</p>}
-          </>
-        )}
+        
+        <div className="space-y-1">
+          <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{title}</h4>
+          {loading ? (
+            <div className="h-8 w-32 bg-slate-50 animate-pulse rounded-lg" />
+          ) : (
+            <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">
+              {value}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

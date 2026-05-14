@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Copy, Trash2, CheckCircle, Clock, Filter, X, Link2, Users, ChevronDown, Edit } from "lucide-react";
+import { Plus, Search, Copy, Trash2, CheckCircle, Clock, Filter, X, Link2, Users, ChevronDown, Edit, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -252,17 +252,10 @@ export default function BookingsPage() {
   useEffect(() => { fetchAll(); }, []);
 
   const filtered = bookings.filter(b => {
-    // 1. High-level Tab Filter (Status)
     if (b.status !== tab) return false;
-    
-    // 2. Trip Filter
     if (filterTrip !== 'all' && b.tripId !== filterTrip) return false;
-    
-    // 3. Payment/Status Dropdown Filter
     if (statusFilter !== 'all' && b.paymentStatus?.toLowerCase() !== statusFilter.toLowerCase()) return false;
     if (tab === 'confirmed' && filterPayment !== 'all' && b.paymentStatus?.toLowerCase() !== filterPayment) return false;
-    
-    // 4. Search Filter
     if (search) {
       const s = search.toLowerCase();
       const match = b.fullName?.toLowerCase().includes(s) || 
@@ -271,8 +264,6 @@ export default function BookingsPage() {
                     b.email?.toLowerCase().includes(s);
       if (!match) return false;
     }
-
-    // 5. Booking Date Range (createdAt)
     if (bookingStart || bookingEnd) {
       const bDate = new Date(b.createdAt);
       if (bookingStart && bDate < new Date(bookingStart)) return false;
@@ -282,8 +273,6 @@ export default function BookingsPage() {
         if (bDate > end) return false;
       }
     }
-
-    // 6. Departure Date Range (departureDate)
     if (depStart || depEnd) {
       if (!b.departureDate) return false;
       const dDate = new Date(b.departureDate);
@@ -294,7 +283,6 @@ export default function BookingsPage() {
         if (dDate > end) return false;
       }
     }
-
     return true;
   });
 
@@ -347,218 +335,299 @@ export default function BookingsPage() {
   const confirmedCount = bookings.filter(b => b.status === 'confirmed').length;
 
   return (
-    <div className="p-6 md:p-8 space-y-6 bg-[#f8fafc] min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Booking System</h1>
-          <p className="text-sm text-gray-500 mt-1">Sales → Form → Client → Confirm → Track</p>
+    <div className="space-y-10 pb-24">
+      {/* ─── Page Title ─── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Reservations</h1>
+          <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">Manage Guest Bookings & Trips</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={clearFilters} variant="ghost" className="text-xs font-bold uppercase text-gray-400">
-            Clear Filters
-          </Button>
-          <Button onClick={() => setShowTrips(true)} variant="outline" className="font-bold text-xs uppercase tracking-widest bg-white">
+        <div className="flex gap-3">
+          <Button onClick={() => setShowTrips(true)} variant="outline" className="h-12 px-6 rounded-2xl border-slate-100 font-bold text-[10px] uppercase tracking-widest bg-white hover:bg-slate-50">
             <Link2 className="w-4 h-4 mr-2" /> Manage Trips
+          </Button>
+          <Button onClick={clearFilters} variant="ghost" className="h-12 px-6 rounded-2xl font-bold text-[10px] uppercase tracking-widest text-slate-400 hover:text-slate-900">
+            Reset Filters
           </Button>
         </div>
       </div>
 
-      {/* Main Grid for Filters and Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Sidebar Filters */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Tabs - Moved inside sidebar for compactness if needed, or kept above */}
-          <div className="flex flex-col gap-2">
-            <button onClick={() => setTab('pending')} className={cn("flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", tab === 'pending' ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-white text-gray-500 border border-slate-100 hover:bg-slate-50")}>
-              <span><Clock className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" /> Pending</span>
-              <span className="bg-white/20 px-2 py-0.5 rounded-full">{pendingCount}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+        {/* ─── Sidebar Filters ─── */}
+        <div className="lg:col-span-1 space-y-8">
+          {/* Tab Selection */}
+          <div className="p-2 bg-slate-100 rounded-[24px] flex flex-col gap-1">
+            <button 
+              onClick={() => setTab('pending')} 
+              className={cn(
+                "flex items-center justify-between px-6 py-4 rounded-[20px] text-[10px] font-bold uppercase tracking-widest transition-all duration-300", 
+                tab === 'pending' ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4" />
+                <span>Pending</span>
+              </div>
+              <span className={cn("px-2.5 py-0.5 rounded-lg text-[9px]", tab === 'pending' ? "bg-slate-900 text-white" : "bg-slate-200 text-slate-400")}>
+                {pendingCount}
+              </span>
             </button>
-            <button onClick={() => setTab('confirmed')} className={cn("flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", tab === 'confirmed' ? "bg-slate-900 text-white shadow-lg shadow-slate-200" : "bg-white text-gray-500 border border-slate-100 hover:bg-slate-50")}>
-              <span><CheckCircle className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" /> Confirmed</span>
-              <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">{confirmedCount}</span>
+            <button 
+              onClick={() => setTab('confirmed')} 
+              className={cn(
+                "flex items-center justify-between px-6 py-4 rounded-[20px] text-[10px] font-bold uppercase tracking-widest transition-all duration-300", 
+                tab === 'confirmed' ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-4 h-4" />
+                <span>Confirmed</span>
+              </div>
+              <span className={cn("px-2.5 py-0.5 rounded-lg text-[9px]", tab === 'confirmed' ? "bg-slate-900 text-white" : "bg-slate-200 text-slate-400")}>
+                {confirmedCount}
+              </span>
             </button>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border shadow-sm space-y-6">
+          <div className="modern-card p-8 space-y-8">
             {/* Search */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <ChevronDown className="w-3 h-3" /> Search For A Booking
-              </label>
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Quick Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input placeholder="booking ID, name, email..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-11 rounded-xl bg-slate-50 border-none text-sm" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input 
+                  placeholder="ID, Name, Email..." 
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)} 
+                  className="pl-11 h-12 rounded-2xl bg-slate-50 border-none text-sm font-medium" 
+                />
               </div>
             </div>
 
-            {/* Booking Dates */}
-            <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <ChevronDown className="w-3 h-3" /> Booking Dates
-              </label>
-              <div className="space-y-2">
+            <div className="h-px bg-slate-50" />
+
+            {/* Filter Group: Dates */}
+            <div className="space-y-4">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Booking Range</label>
+              <div className="grid grid-cols-1 gap-2">
                 <Input type="date" value={bookingStart} onChange={e => setBookingStart(e.target.value)} className="h-10 rounded-xl bg-slate-50 border-none text-xs font-bold" />
                 <Input type="date" value={bookingEnd} onChange={e => setBookingEnd(e.target.value)} className="h-10 rounded-xl bg-slate-50 border-none text-xs font-bold" />
               </div>
             </div>
 
-            {/* Departure Dates */}
-            <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <ChevronDown className="w-3 h-3" /> Departure Dates
-              </label>
-              <div className="space-y-2">
-                <Input type="date" value={depStart} onChange={e => setDepStart(e.target.value)} className="h-10 rounded-xl bg-slate-50 border-none text-xs font-bold" />
-                <Input type="date" value={depEnd} onChange={e => setDepEnd(e.target.value)} className="h-10 rounded-xl bg-slate-50 border-none text-xs font-bold" />
-              </div>
+            <div className="space-y-4">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Expedition Trip</label>
+              <Select value={filterTrip} onValueChange={setFilterTrip}>
+                <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-none font-bold text-[11px] uppercase">
+                  <SelectValue placeholder="All Expeditions" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-slate-100 shadow-luxury">
+                  <SelectItem value="all" className="font-bold text-[10px] uppercase">All Trips</SelectItem>
+                  {trips.map(t => (
+                    <SelectItem key={t.id} value={t.tripCode} className="font-bold text-[10px] uppercase">
+                      {t.tripCode} — {t.tripName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Trips */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <ChevronDown className="w-3 h-3" /> Trips
-              </label>
-              <select value={filterTrip} onChange={e => setFilterTrip(e.target.value)} className="w-full h-11 px-3 border-none rounded-xl text-sm font-bold bg-slate-50">
-                <option value="all">Pick a trip</option>
-                {trips.map(t => <option key={t.id} value={t.tripCode}>{t.tripCode} — {t.tripName}</option>)}
-              </select>
-            </div>
-
-            {/* Booking Status */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <ChevronDown className="w-3 h-3" /> Booking Status
-              </label>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full h-11 px-3 border-none rounded-xl text-sm font-bold bg-slate-50">
-                <option value="all">Filter by Booking status</option>
-                <option value="pending">Pending Payment</option>
-                <option value="partial">Partial Payment</option>
-                <option value="paid">Paid</option>
-              </select>
+            <div className="space-y-4">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Payment Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-none font-bold text-[11px] uppercase">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-slate-100 shadow-luxury">
+                  <SelectItem value="all" className="font-bold text-[10px] uppercase">All Status</SelectItem>
+                  <option value="pending">Pending Payment</option>
+                  <option value="partial">Partial Payment</option>
+                  <option value="paid">Paid</option>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
 
-        {/* Right Side - Table */}
+        {/* ─── Bookings Table ─── */}
         <div className="lg:col-span-3">
-          <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+          <div className="modern-card p-0 overflow-hidden shadow-premium">
+            <div className="responsive-table">
               <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 border-b">
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Booking ID</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Name</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Mobile</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Trip</th>
-                {tab === 'confirmed' && <>
-                  <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Total</th>
-                  <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Advance</th>
-                  <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Remaining</th>
-                  <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                </>}
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {loading ? (
-                <tr><td colSpan={10} className="px-4 py-12 text-center text-gray-400 animate-pulse font-bold">Loading...</td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={10} className="px-4 py-12 text-center text-gray-400 font-bold">No {tab} bookings found</td></tr>
-              ) : filtered.map(b => (
-                <tr key={b.id} className="hover:bg-primary/5 transition-colors cursor-pointer group" onClick={() => setDetailsTarget(b)}>
-                  <td className="px-4 py-3"><span className="font-mono text-[11px] font-black text-primary bg-primary/5 px-2 py-1 rounded">{b.bookingId}</span></td>
-                  <td className="px-4 py-3 font-bold text-sm text-slate-700">{b.fullName}</td>
-                  <td className="px-4 py-3 text-xs text-slate-400 font-medium">{b.mobile}</td>
-                  <td className="px-4 py-3"><span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-black">{b.tripId}</span></td>
-                  {tab === 'confirmed' && <>
-                    <td className="px-4 py-3 font-bold text-sm">₹{Number(b.totalAmount || 0).toLocaleString()}</td>
-                    <td className="px-4 py-3 font-bold text-sm text-emerald-600">₹{Number(b.advancePaid || 0).toLocaleString()}</td>
-                    <td className="px-4 py-3 font-black text-sm text-red-600">₹{Number(b.remainingAmount || 0).toLocaleString()}</td>
-                    <td className="px-4 py-3">
-                      <span className={cn("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border",
-                        b.paymentStatus === 'Paid' ? "text-emerald-600 bg-emerald-50 border-emerald-200" :
-                        b.paymentStatus === 'Partial' ? "text-amber-600 bg-amber-50 border-amber-200" :
-                        "text-red-600 bg-red-50 border-red-200"
-                      )}>{b.paymentStatus || 'Pending'}</span>
-                    </td>
-                  </>}
-                  <td className="px-4 py-3 text-[10px] text-gray-400">
-                    {b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : 'N/A'}
-                  </td>
-                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex justify-end gap-1">
-                      {tab === 'pending' && (
-                        <Button size="sm" className="bg-emerald-600 text-white text-[10px] font-bold h-7 px-3" onClick={() => setConfirmTarget(b)}>Confirm</Button>
+                <thead>
+                  <tr className="border-b border-slate-50">
+                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Reference</th>
+                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Guest</th>
+                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Expedition</th>
+                    {tab === 'confirmed' && (
+                      <>
+                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Total</th>
+                        <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Balance</th>
+                      </>
+                    )}
+                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Date</th>
+                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i}>
+                        <td colSpan={7} className="px-8 py-6">
+                          <div className="h-4 bg-slate-50 animate-pulse rounded-lg w-full" />
+                        </td>
+                      </tr>
+                    ))
+                  ) : filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-8 py-24 text-center">
+                        <div className="space-y-4">
+                          <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto text-slate-200">
+                             <Users className="w-8 h-8" />
+                          </div>
+                          <p className="text-xs font-medium text-slate-300 italic">No {tab} reservations found</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filtered.map(b => (
+                    <tr 
+                      key={b.id} 
+                      className="hover:bg-slate-50/50 transition-all cursor-pointer group" 
+                      onClick={() => setDetailsTarget(b)}
+                    >
+                      <td className="px-8 py-6">
+                        <span className="font-mono text-[11px] font-bold text-slate-900 bg-slate-50 px-2 py-1 rounded-lg">
+                          {b.bookingId}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="space-y-1">
+                          <p className="text-[13px] font-bold text-slate-900">{b.fullName}</p>
+                          <p className="text-[10px] font-medium text-slate-400 tracking-tight">{b.mobile}</p>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">{b.tripId}</span>
+                      </td>
+                      {tab === 'confirmed' && (
+                        <>
+                          <td className="px-8 py-6">
+                            <p className="text-[13px] font-bold text-slate-900">₹{Number(b.totalAmount || 0).toLocaleString()}</p>
+                          </td>
+                          <td className="px-8 py-6">
+                             <div className="space-y-1">
+                                <p className={cn("text-[13px] font-bold", (b.remainingAmount || 0) > 0 ? "text-rose-500" : "text-emerald-500")}>
+                                  ₹{Number(b.remainingAmount || 0).toLocaleString()}
+                                </p>
+                                <span className={cn("text-[9px] font-bold uppercase px-2 py-0.5 rounded-lg", 
+                                  b.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-600" : 
+                                  b.paymentStatus === 'Partial' ? "bg-amber-50 text-amber-600" : "bg-rose-50 text-rose-500"
+                                )}>
+                                  {b.paymentStatus}
+                                </span>
+                             </div>
+                          </td>
+                        </>
                       )}
-                      <Button size="sm" variant="ghost" className="text-[10px] h-7 px-3 font-black uppercase tracking-widest hover:text-primary hover:bg-primary/5" onClick={() => openEdit(b)}>Edit</Button>
-                      <Button size="sm" variant="ghost" className="text-rose-500 text-[10px] h-7 px-2 hover:bg-rose-50" onClick={() => handleDelete(b.id)}><Trash2 className="w-3 h-3" /></Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <td className="px-8 py-6">
+                        <p className="text-[11px] font-bold text-slate-400">
+                          {b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : 'N/A'}
+                        </p>
+                      </td>
+                      <td className="px-8 py-6 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-end gap-2">
+                          {tab === 'pending' && (
+                            <Button 
+                              size="sm" 
+                              onClick={() => setConfirmTarget(b)}
+                              className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold h-9 px-4 rounded-xl"
+                            >
+                              Confirm
+                            </Button>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => openEdit(b)}
+                            className="h-9 w-9 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-900"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDelete(b.id)}
+                            className="h-9 w-9 rounded-xl hover:bg-rose-50 text-rose-400 hover:text-rose-500"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    {/* Trip Manager */}
+      {/* ─── Modals ─── */}
       <TripManager open={showTrips} onClose={() => setShowTrips(false)} onRefresh={fetchAll} />
-
-      {/* Confirm Modal */}
       <ConfirmModal booking={confirmTarget} trips={trips} onClose={() => setConfirmTarget(null)} onDone={() => { setConfirmTarget(null); fetchAll(); }} />
-
-      {/* Edit Modal */}
+      
       {editTarget && (
         <Dialog open={!!editTarget} onOpenChange={v => !v && setEditTarget(null)}>
-          <DialogContent className="sm:max-w-[500px] p-0 border-none rounded-2xl overflow-hidden">
-            <DialogHeader className="bg-slate-900 px-6 py-4 text-white">
-              <DialogTitle className="font-black uppercase tracking-[0.2em] text-xs">Edit: {editTarget.bookingId}</DialogTitle>
-              <DialogDescription className="sr-only">Edit this booking details directly.</DialogDescription>
-            </DialogHeader>
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-[10px] font-bold uppercase text-gray-400">Full Name</label><Input value={editForm.fullName} onChange={e => setEditForm({...editForm, fullName: e.target.value})} /></div>
-                <div><label className="text-[10px] font-bold uppercase text-gray-400">Mobile</label><Input value={editForm.mobile} onChange={e => setEditForm({...editForm, mobile: e.target.value})} /></div>
-                <div><label className="text-[10px] font-bold uppercase text-gray-400">Age</label><Input type="number" value={editForm.age} onChange={e => setEditForm({...editForm, age: e.target.value})} /></div>
-                <div><label className="text-[10px] font-bold uppercase text-gray-400">Gender</label>
-                  <Select value={editForm.gender} onValueChange={v => setEditForm({...editForm, gender: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select>
+          <DialogContent className="sm:max-w-[500px] p-0 border-none rounded-[32px] overflow-hidden shadow-luxury">
+            <div className="p-10 space-y-8">
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-slate-900">Edit Reservation</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref: {editTarget.bookingId}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Full Name</label>
+                  <Input value={editForm.fullName} onChange={e => setEditForm({...editForm, fullName: e.target.value})} className="h-12 rounded-2xl bg-slate-50 border-none" />
                 </div>
-                <div className="col-span-2"><label className="text-[10px] font-bold uppercase text-gray-400">Email Address</label><Input value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} placeholder="customer@example.com" /></div>
-                <div className="col-span-2">
-                  <label className="text-[10px] font-bold uppercase text-gray-400">Assigned Trip</label>
-                  <Select value={editForm.tripId} onValueChange={v => setEditForm({...editForm, tripId: v})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {trips.map(t => (
-                        <SelectItem key={t.id} value={t.tripCode}>{t.tripCode} — {t.tripName}</SelectItem>
-                      ))}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Mobile</label>
+                  <Input value={editForm.mobile} onChange={e => setEditForm({...editForm, mobile: e.target.value})} className="h-12 rounded-2xl bg-slate-50 border-none" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Age</label>
+                  <Input type="number" value={editForm.age} onChange={e => setEditForm({...editForm, age: e.target.value})} className="h-12 rounded-2xl bg-slate-50 border-none" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Gender</label>
+                  <Select value={editForm.gender} onValueChange={v => setEditForm({...editForm, gender: v})}>
+                    <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-none"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div><label className="text-[10px] font-bold uppercase text-gray-400">Room Type</label><Input value={editForm.roomType} onChange={e => setEditForm({...editForm, roomType: e.target.value})} /></div>
-                <div><label className="text-[10px] font-bold uppercase text-gray-400">Train Class</label>
-                  <Select value={editForm.trainClass} onValueChange={v => setEditForm({...editForm, trainClass: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Sleeper">Sleeper</SelectItem><SelectItem value="3AC">3AC</SelectItem><SelectItem value="2AC">2AC</SelectItem><SelectItem value="Flight">Flight</SelectItem></SelectContent></Select>
+                <div className="col-span-2 space-y-2">
+                   <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Email</label>
+                   <Input value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} className="h-12 rounded-2xl bg-slate-50 border-none" />
                 </div>
-                {editTarget.status === 'confirmed' && <>
-                  <div><label className="text-[10px] font-bold uppercase text-gray-400">Total</label><Input type="number" value={editForm.totalAmount} onChange={e => setEditForm({...editForm, totalAmount: e.target.value})} /></div>
-                  <div><label className="text-[10px] font-bold uppercase text-gray-400">Advance</label><Input type="number" value={editForm.advancePaid} onChange={e => setEditForm({...editForm, advancePaid: e.target.value})} /></div>
-                  <div><label className="text-[10px] font-bold uppercase text-gray-400">Payment Status</label>
-                    <Select value={editForm.paymentStatus} onValueChange={v => setEditForm({...editForm, paymentStatus: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Pending">Pending</SelectItem><SelectItem value="Partial">Partial</SelectItem><SelectItem value="Paid">Paid</SelectItem></SelectContent></Select>
-                  </div>
-                </>}
               </div>
-              <div><label className="text-[10px] font-bold uppercase text-gray-400">Notes</label><textarea value={editForm.notes} onChange={e => setEditForm({...editForm, notes: e.target.value})} className="w-full border rounded-xl p-3 text-sm min-h-[60px]" /></div>
-              <Button onClick={saveEdit} className="w-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest h-12 rounded-xl shadow-lg shadow-primary/20">Save Changes</Button>
+
+              <div className="space-y-4">
+                <Button onClick={saveEdit} className="w-full bg-slate-900 hover:bg-slate-800 text-white h-14 rounded-2xl font-bold text-sm shadow-xl shadow-slate-200">
+                  Update Reservation
+                </Button>
+                <Button variant="ghost" onClick={() => setEditTarget(null)} className="w-full h-12 rounded-2xl font-bold text-xs text-slate-400 hover:text-slate-900">
+                  Discard Changes
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* Details Modal */}
       <BookingDetailsModal 
         open={!!detailsTarget} 
         onOpenChange={v => !v && setDetailsTarget(null)} 

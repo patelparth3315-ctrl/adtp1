@@ -149,16 +149,16 @@ function AdminSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-slate-100 bg-white">
+    <Sidebar collapsible="icon" className="border-r border-slate-100/50 bg-white shadow-sm">
       <SidebarContent className="bg-white scrollbar-hide">
-        <div className="p-6 mb-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
+        <div className="p-8 mb-6 flex items-center gap-4">
+          <div className="h-11 w-11 rounded-2xl bg-slate-900 flex items-center justify-center flex-shrink-0 shadow-lg shadow-slate-200">
             <Plane className="h-6 w-6 text-white" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-black text-slate-900 text-xl tracking-tighter leading-none">Youth<span className="text-primary">Camping</span></span>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60 mt-0.5">Admin Suite v4.0</span>
+              <span className="font-bold text-slate-900 text-xl tracking-tight leading-none">Youth<span className="text-primary">Camping</span></span>
+              <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-slate-400 mt-1">Admin v4.0</span>
             </div>
           )}
         </div>
@@ -174,26 +174,26 @@ function AdminSidebar() {
           if (filteredItems.length === 0) return null;
 
           return (
-            <SidebarGroup key={gIdx} className="px-3">
+            <SidebarGroup key={gIdx} className="px-4">
               {group.label && !collapsed && (
-                <SidebarGroupLabel className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2 px-3 mt-4">
+                <SidebarGroupLabel className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3 px-4 mt-6">
                   {group.label}
                 </SidebarGroupLabel>
               )}
               <SidebarGroupContent>
-                <SidebarMenu className="gap-1">
+                <SidebarMenu className="gap-1.5">
                   {filteredItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild className="h-12 rounded-xl transition-all duration-300">
+                      <SidebarMenuButton asChild className="h-11 rounded-2xl transition-all duration-300">
                         <NavLink
                           to={item.url}
-                          className="flex items-center text-slate-500 hover:text-primary hover:bg-primary/5 px-4"
-                          activeClassName="bg-primary/10 text-primary font-black shadow-sm"
+                          className="flex items-center text-slate-500 hover:text-slate-900 hover:bg-slate-50 px-4 group/item"
+                          activeClassName="bg-slate-900 text-white font-bold shadow-luxury"
                         >
-                          <item.icon className={cn("h-5 w-5 shrink-0", collapsed ? "mx-auto" : "mr-3")} />
-                          {!collapsed && <span className="text-[11px] font-black uppercase tracking-tight flex-1 truncate">{item.title}</span>}
+                          <item.icon className={cn("h-4.5 w-4.5 shrink-0", collapsed ? "mx-auto" : "mr-4 opacity-70 group-hover/item:opacity-100")} />
+                          {!collapsed && <span className="text-[12px] font-medium tracking-tight flex-1 truncate">{item.title}</span>}
                           {!collapsed && item.badge && (
-                            <span className="bg-primary text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ml-auto animate-pulse">
+                            <span className="bg-primary/10 text-primary text-[8px] font-bold px-2 py-0.5 rounded-full ml-auto">
                               {item.badge}
                             </span>
                           )}
@@ -207,11 +207,11 @@ function AdminSidebar() {
           );
         })}
 
-        <div className="mt-auto p-4 border-t border-slate-50 space-y-4">
+        <div className="mt-auto p-6 border-t border-slate-50">
           <Button variant="ghost" size={collapsed ? "icon" : "default"} onClick={handleLogout}
-            className="w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 justify-start h-12 rounded-xl">
-            <LogOut className="h-4 w-4 mr-2" />
-            {!collapsed && <span className="text-[11px] font-black uppercase tracking-tight">Logout System</span>}
+            className="w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 justify-start h-11 rounded-2xl px-4">
+            <LogOut className="h-4 w-4 mr-3" />
+            {!collapsed && <span className="text-[12px] font-medium tracking-tight">Logout System</span>}
           </Button>
         </div>
       </SidebarContent>
@@ -293,56 +293,57 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-[#f8fafc] font-['Inter']">
+      <div className="min-h-screen flex w-full bg-[#FAFAFB]">
         <AdminSidebar />
         
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           {/* Top Navbar */}
-          <header className="h-14 md:h-16 flex items-center justify-between border-b bg-white px-3 sm:px-4 md:px-8 shrink-0 z-20 shadow-sm">
-            <div className="flex items-center gap-2 md:gap-4 min-w-0">
-               <SidebarTrigger className="text-gray-500 hover:text-black hover:bg-gray-100 h-9 w-9 md:h-10 md:w-10 rounded-xl shrink-0" />
-               <h2 className="font-black text-gray-900 uppercase tracking-tighter text-sm md:text-lg leading-none truncate">
+          <header className="h-16 md:h-20 flex items-center justify-between border-b bg-white/80 backdrop-blur-md px-6 sm:px-8 md:px-12 shrink-0 z-20 sticky top-0">
+            <div className="flex items-center gap-6 min-w-0">
+               <SidebarTrigger className="text-slate-400 hover:text-slate-900 hover:bg-slate-100 h-10 w-10 rounded-2xl shrink-0" />
+               <div className="h-8 w-px bg-slate-100 hidden md:block" />
+               <h2 className="font-bold text-slate-900 text-lg md:text-xl tracking-tight leading-none truncate">
                  {location.pathname === "/admin" || location.pathname === "/" 
-                   ? "Dashboard" 
+                   ? "Dashboard Overview" 
                    : (location.pathname.split("/").filter(Boolean).pop() || "Page").replace(/-/g, " ")}
                </h2>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 shrink-0">
-               {/* Action Buttons - hidden on small mobile, icons only on tablet */}
-               <div className="hidden sm:flex items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-4 shrink-0">
+               {/* Action Buttons */}
+               <div className="hidden sm:flex items-center gap-3">
                   <Button 
                     onClick={() => setInquiryModalOpen(true)}
-                    className="bg-primary hover:bg-primary/90 text-white rounded-xl h-9 md:h-10 px-3 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-primary/20 transition-all active:scale-95"
+                    className="bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-2xl h-11 px-6 font-bold text-[11px] uppercase tracking-wider flex items-center gap-2 transition-all border border-slate-200"
                   >
-                    <PlusCircle className="w-4 h-4" /><span className="hidden lg:inline">New inquiry</span>
+                    <Plus className="w-4 h-4" /><span className="hidden lg:inline">New inquiry</span>
                   </Button>
                   <Button 
                     onClick={() => setBookingModalOpen(true)}
-                    className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-9 md:h-10 px-3 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-slate-200 transition-all active:scale-95"
+                    className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-11 px-6 font-bold text-[11px] uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-primary/20 transition-all"
                   >
-                    <PlusCircle className="w-4 h-4" /><span className="hidden lg:inline">New booking</span>
+                    <Plus className="w-4 h-4" /><span className="hidden lg:inline">New booking</span>
                   </Button>
                </div>
 
-               <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
+               <div className="w-px h-8 bg-slate-100 mx-2 hidden sm:block" />
 
                <div className="relative hidden xl:block">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
-                    placeholder="Search anything..." 
-                    className="h-10 w-48 bg-gray-50 border-none rounded-xl text-[10px] font-bold focus-visible:ring-primary"
+                    placeholder="Search panel..." 
+                    className="h-11 w-56 bg-slate-50 border-none rounded-2xl text-[12px] font-medium focus-visible:ring-primary pl-10"
                   />
                </div>
-               <div className="flex items-center gap-1.5 md:gap-3">
-                  <button title="Notifications" className="relative p-2 text-gray-400 hover:text-black transition-colors">
+               <div className="flex items-center gap-3">
+                  <button title="Notifications" className="relative w-11 h-11 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors bg-slate-50 rounded-2xl border border-slate-100">
                      <Bell className="w-5 h-5" />
-                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
+                     <span className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
                   </button>
-                  <div className="w-px h-6 bg-gray-200 mx-1 hidden md:block" />
+                  <div className="w-px h-8 bg-slate-100 mx-1 hidden md:block" />
                   <div className="flex items-center cursor-pointer group">
-                     <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-slate-50 border-2 border-slate-100 group-hover:border-primary transition-all overflow-hidden p-0.5">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="Admin" className="rounded-lg" />
+                     <div className="w-11 h-11 rounded-2xl bg-slate-100 border-2 border-transparent group-hover:border-primary transition-all overflow-hidden p-0.5">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="Admin" className="rounded-xl w-full h-full object-cover" />
                      </div>
                   </div>
                </div>
@@ -351,69 +352,56 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
           <div className="flex-1 flex overflow-hidden">
              {/* Main Content Area */}
-             <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 lg:p-10 scrollbar-hide bg-[#f8fafc]">
-                <div className="max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
+             <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 sm:p-8 lg:p-12 no-scrollbar">
+                <div className="max-w-[1440px] mx-auto">
                    {children}
                 </div>
              </main>
 
-             {/* VacationLabs Help Sidebar */}
+             {/* Help Sidebar */}
              {showHelpPanel && (
-               <aside className="w-[340px] border-l bg-white hidden xl:flex flex-col overflow-y-auto p-8 scrollbar-hide animate-in slide-in-from-right-4 duration-500">
-                  <div className="space-y-10">
-                     <section className="space-y-6">
+               <aside className="w-[380px] border-l bg-white hidden 2xl:flex flex-col overflow-y-auto p-12 no-scrollbar">
+                  <div className="space-y-12">
+                     <section className="space-y-8">
                         <div className="flex items-center justify-between">
-                           <h3 className="font-black text-xs uppercase tracking-widest text-gray-900">Need Help?</h3>
-                           <HelpCircle className="w-4 h-4 text-primary" />
+                           <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400">Resources</h3>
+                           <HelpCircle className="w-4 h-4 text-slate-300" />
                         </div>
-                        <div className="bg-primary/5 rounded-[32px] p-6 border-2 border-primary/10 relative overflow-hidden group">
-                           <div className="absolute -right-4 -top-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                           <div className="relative z-10 space-y-4">
-                              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-xl">
-                                 <BookOpen className="w-6 h-6 text-primary" />
+                        <div className="bg-slate-50 rounded-[40px] p-10 border border-slate-100 relative overflow-hidden group">
+                           <div className="relative z-10 space-y-6">
+                              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-premium">
+                                 <BookOpen className="w-6 h-6 text-slate-900" />
                               </div>
-                              <h4 className="font-black text-sm uppercase tracking-tight">Knowledge Base</h4>
-                              <p className="text-[11px] text-gray-500 font-medium leading-relaxed italic">
-                                 Self-help tutorial with answers to commonly asked questions about system configuration.
-                              </p>
-                              <Button className="w-full h-11 bg-black text-white rounded-xl text-[10px] font-black uppercase tracking-widest">
-                                 View Articles <ExternalLink className="w-3 h-3 ml-2" />
+                              <div className="space-y-2">
+                                <h4 className="font-bold text-lg tracking-tight text-slate-900">Knowledge Base</h4>
+                                <p className="text-[12px] text-slate-500 font-medium leading-relaxed">
+                                   Learn how to configure your platform with our step-by-step tutorials.
+                                </p>
+                              </div>
+                              <Button className="w-full h-12 bg-slate-900 text-white rounded-2xl text-[11px] font-bold uppercase tracking-wider">
+                                 Read Articles <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                            </div>
                         </div>
                      </section>
 
-                     <section className="space-y-6">
-                        <h3 className="font-black text-xs uppercase tracking-widest text-gray-900">Admin Companion</h3>
-                        <div className="bg-gray-900 rounded-[32px] p-8 text-white relative overflow-hidden group">
-                           <div className="absolute right-0 bottom-0 opacity-10 translate-x-1/4 translate-y-1/4 transition-transform group-hover:scale-110">
-                              <Plane className="w-40 h-40" />
-                           </div>
-                           <div className="relative z-10 space-y-4">
-                              <div className="flex gap-1 text-primary">
-                                 <Star className="w-3 h-3 fill-primary" />
-                                 <Star className="w-3 h-3 fill-primary" />
-                                 <Star className="w-3 h-3 fill-primary" />
-                                 <Star className="w-3 h-3 fill-primary" />
-                                 <Star className="w-3 h-3 fill-primary" />
+                     <section className="space-y-8">
+                        <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400">Pro Tips</h3>
+                        <div className="bg-primary rounded-[40px] p-10 text-white relative overflow-hidden shadow-luxury">
+                           <div className="relative z-10 space-y-6">
+                              <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center">
+                                 <Sparkles className="w-6 h-6 text-white" />
                               </div>
-                              <h4 className="font-black text-lg leading-tight">Master the platform like a pro.</h4>
-                              <p className="text-[11px] text-gray-400 font-medium">Join our weekly webinars to learn about advanced growth features.</p>
-                              <button className="text-[10px] font-black uppercase text-primary tracking-widest border-b-2 border-primary pb-1 hover:text-white hover:border-white transition-all">
+                              <div className="space-y-2">
+                                <h4 className="font-bold text-xl tracking-tight leading-tight">Master the platform like a pro.</h4>
+                                <p className="text-[12px] text-white/80 font-medium">Join our weekly webinars to learn about advanced growth features.</p>
+                              </div>
+                              <button className="text-[11px] font-bold uppercase text-white tracking-widest border-b-2 border-white/30 pb-1 hover:border-white transition-all w-fit">
                                  Secure your spot
                               </button>
                            </div>
                         </div>
                      </section>
-
-                     <div className="pt-20 text-center space-y-4">
-                        <img 
-                          src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
-                          alt="Google Play" 
-                          className="h-12 mx-auto cursor-pointer hover:scale-105 transition-transform"
-                        />
-                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Manage on the move</p>
-                     </div>
                   </div>
                </aside>
              )}

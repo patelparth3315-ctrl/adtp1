@@ -213,16 +213,17 @@ export default function PageBuilderPage() {
         tripsService.getAll()
       ]);
       
-      if (userData.role === 'agent') {
+      if (userData?.role === 'agent') {
         toast.error("Access denied");
         navigate("/admin/dashboard");
         return;
       }
 
-      setSections(layoutData.sections || []);
+      const sections = layoutData?.sections || [];
+      setSections(sections);
       setDbTrips(tripsData || []);
-      if (layoutData.sections?.length > 0) {
-        setSelectedSectionId(layoutData.sections[0].id);
+      if (sections.length > 0) {
+        setSelectedSectionId(sections[0].id);
       }
     } catch (err) {
       toast.error("Failed to load layout");
@@ -497,7 +498,7 @@ export default function PageBuilderPage() {
   );
 
   return (
-    <div className="fixed inset-0 top-14 md:top-16 left-0 md:left-[3rem] lg:left-64 bg-background z-10 flex flex-col overflow-hidden border-l border-border">
+    <div className="fixed inset-0 top-16 md:top-20 left-0 md:left-[3rem] lg:left-64 bg-background z-30 flex flex-col overflow-hidden border-l border-border">
       <Toaster position="top-right" />
       
       {/* ── TOOLBAR ── */}

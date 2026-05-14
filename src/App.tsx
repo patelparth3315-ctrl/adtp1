@@ -73,6 +73,7 @@ const App = () => (
               <Route path="/admin/seo" element={<AdminRoute><SeoCenterPage /></AdminRoute>} />
               <Route path="/admin/inquiry-form" element={<AdminRoute><InquiryFormPage /></AdminRoute>} />
               <Route path="/admin/page-builder" element={<AdminRoute><PageBuilderPage /></AdminRoute>} />
+              <Route path="/admin/page_builder" element={<AdminRoute><PageBuilderPage /></AdminRoute>} />
               <Route path="/admin/preview" element={<AdminRoute><PreviewPage /></AdminRoute>} />
               <Route path="/admin/inquiries" element={<AdminRoute><InquiriesPage /></AdminRoute>} />
               <Route path="/admin/media" element={<AdminRoute><MediaPage /></AdminRoute>} />

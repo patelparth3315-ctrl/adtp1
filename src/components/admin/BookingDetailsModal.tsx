@@ -510,216 +510,209 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+      <DialogContent className="sm:max-w-[1100px] p-0 overflow-hidden border-none shadow-luxury rounded-[40px] bg-white">
         <DialogHeader className="sr-only">
           <DialogTitle>Booking Details - {booking.bookingId}</DialogTitle>
           <DialogDescription>Detailed view of the booking including passenger and payment information.</DialogDescription>
         </DialogHeader>
-        {/* Header */}
-        <div className="bg-[#1e293b] px-8 py-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-500/20 p-2 rounded-lg">
-                <Calendar className="w-5 h-5 text-blue-400" />
+        {/* ─── Premium Header ─── */}
+        <div className="bg-slate-900 px-12 py-10 text-white relative overflow-hidden">
+          <div className="absolute right-0 top-0 opacity-10 -mr-16 -mt-16 w-64 h-64 bg-white rounded-full" />
+          <div className="relative z-10 flex items-center justify-between mb-8">
+            <div className="flex items-center gap-6">
+              <div className="h-16 w-16 rounded-[24px] bg-white/10 flex items-center justify-center backdrop-blur-xl">
+                <Calendar className="w-7 h-7 text-white" />
               </div>
-              <div>
-                <h2 className="text-xl font-black tracking-tight leading-none uppercase">Booking Details</h2>
-                <p className="text-[10px] font-bold text-white/40 mt-1 uppercase tracking-widest">{booking.bookingId}</p>
+              <div className="space-y-1">
+                <h2 className="text-3xl font-bold tracking-tight">Booking Overview</h2>
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">{booking.bookingId}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <Button 
                 variant="outline" 
-                size="sm" 
                 onClick={() => booking && onEdit?.(booking)}
-                className="text-white bg-white/10 border-white/20 hover:bg-white/20 hover:text-white"
+                className="h-12 px-6 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 font-bold text-[10px] uppercase tracking-widest"
               >
-                <Pencil className="w-4 h-4 mr-2" /> Edit Booking
+                <Pencil className="w-4 h-4 mr-2" /> Modify Booking
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="text-white/60 hover:text-white hover:bg-white/10">
-                <X className="w-5 h-5" />
+              <Button variant="ghost" onClick={() => onOpenChange(false)} className="h-12 w-12 rounded-2xl text-white/40 hover:text-white hover:bg-white/10">
+                <X className="w-6 h-6" />
               </Button>
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-4">
-            <div className={cn("px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border", getStatusColor(booking.paymentStatus))}>
+          <div className="flex flex-wrap gap-3 relative z-10">
+            <div className={cn("px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-white/10 backdrop-blur-md bg-white/5", getStatusColor(booking.paymentStatus))}>
               Payment: {booking.paymentStatus}
             </div>
-            <div className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/10 text-white/80 border border-white/5">
-              {booking.tripId} — {booking.tripName || booking.trip?.title || "No Trip Assigned"}
+            <div className="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-white/10 backdrop-blur-md bg-white/5 text-white/80">
+              {booking.tripId} — {booking.tripName || booking.trip?.title || "Custom Expedition"}
             </div>
-            <div className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/10 text-white/80 border border-white/5">
-              {booking.trainClass} — {booking.ticketStatus}
+            <div className="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-white/10 backdrop-blur-md bg-white/5 text-white/80">
+              {booking.trainClass} Transport
             </div>
           </div>
         </div>
 
-        <div className="p-8 bg-gray-50/50 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto font-sans">
+        <div className="p-12 bg-slate-50/50 grid grid-cols-1 md:grid-cols-2 gap-10 max-h-[70vh] overflow-y-auto no-scrollbar">
           {/* Guest Information */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
-              <User className="w-4 h-4 text-blue-600" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Guest Information</h3>
+          <section className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-blue-500" />
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Guest Dossier</h3>
             </div>
             
-            <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
-              <div>
-                <Label text="Full Name" />
-                <p className="text-sm font-black text-gray-900 uppercase">{booking.fullName}</p>
+            <div className="modern-card p-10 space-y-8">
+              <div className="space-y-1">
+                <Label text="Full Legal Name" />
+                <p className="text-xl font-bold text-slate-900">{booking.fullName}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-1">
                   <Label text="Age" />
-                  <p className="text-sm font-bold text-gray-700">{booking.age} Years</p>
+                  <p className="text-sm font-bold text-slate-600">{booking.age} Years</p>
                 </div>
-                <div>
+                <div className="space-y-1">
                   <Label text="Gender" />
-                  <p className="text-sm font-bold text-gray-700">{booking.gender}</p>
+                  <p className="text-sm font-bold text-slate-600">{booking.gender}</p>
                 </div>
               </div>
-              <div>
-                <Label text="Mobile Number" />
-                <p className="text-sm font-black text-blue-600 flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5" /> +91 {booking.mobile}
-                </p>
+              <div className="space-y-1">
+                <Label text="Contact Identity" />
+                <div className="flex items-center gap-3 text-slate-900 font-bold text-sm">
+                  <Phone className="w-4 h-4 text-blue-500" />
+                  +91 {booking.mobile}
+                </div>
+                {booking.email && (
+                  <p className="text-xs text-slate-400 font-medium mt-1 ml-7">{booking.email}</p>
+                )}
               </div>
             </div>
           </section>
 
           {/* Travel Information */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
-              <MapPin className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Travel & Stay</h3>
+          <section className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-emerald-500" />
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Expedition Logic</h3>
             </div>
             
-            <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <Label text="Trip Destination" />
-                  <p className="text-sm font-black text-gray-900 uppercase">
-                    {booking.tripName || booking.trip?.title || "Not Assigned"}
-                    <span className="ml-2 text-blue-600">({booking.tripId})</span>
-                  </p>
+            <div className="modern-card p-10 space-y-8">
+              <div className="space-y-1">
+                <Label text="Selected Trip" />
+                <p className="text-xl font-bold text-slate-900 uppercase">
+                  {booking.tripName || booking.trip?.title || "Custom Trip"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-1">
+                  <Label text="Transport / Class" />
+                  <p className="text-sm font-bold text-slate-600">{booking.trainClass}</p>
                 </div>
-                <div>
-                  <Label text="Train Class" />
-                  <p className="text-sm font-bold text-gray-700">{booking.trainClass}</p>
-                </div>
-                <div>
+                <div className="space-y-1">
                   <Label text="Ticket Status" />
                   <p className="text-sm font-bold text-emerald-600">{booking.ticketStatus}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
-                <div>
-                  <Label text="Room Type" />
-                  <p className="text-sm font-bold text-gray-700">{booking.roomType}</p>
+              <div className="grid grid-cols-2 gap-8 pt-6 border-t border-slate-50">
+                <div className="space-y-1">
+                  <Label text="Accommodation" />
+                  <p className="text-sm font-bold text-slate-600">{booking.roomType}</p>
                 </div>
-                <div>
-                  <Label text="Departure" />
-                  <p className="text-sm font-medium text-gray-500">{formatDate(booking.createdAt)}</p>
+                <div className="space-y-1">
+                  <Label text="Initial Booking" />
+                  <p className="text-sm font-bold text-slate-400">{formatDate(booking.createdAt)}</p>
                 </div>
               </div>
             </div>
           </section>
 
           {/* Payment Information */}
-          <section className="space-y-4 md:col-span-2">
-            <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
-              <CreditCard className="w-4 h-4 text-amber-600" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Payment Breakdown</h3>
+          <section className="space-y-6 md:col-span-2">
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-amber-500" />
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Financial Ledger</h3>
             </div>
             
-            <div className="bg-white p-8 rounded-2xl border shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="modern-card p-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
               <div className="space-y-1">
-                <Label text="Total Travelers" />
-                <p className="text-xl font-bold text-gray-700">{booking.numberOfTravelers || 1}</p>
-              </div>
-              <div className="space-y-1">
-                <Label text="Base Amount" />
-                <p className="text-xl font-bold text-gray-700">₹{(booking.baseAmount || 0).toLocaleString()}</p>
+                <Label text="Total PAX" />
+                <p className="text-2xl font-bold text-slate-900">{booking.numberOfTravelers || 1}</p>
               </div>
               <div className="space-y-1">
-                <Label text="GST (5%)" />
-                <p className="text-xl font-bold text-gray-400">₹{(booking.gstAmount || 0).toLocaleString()}</p>
+                <Label text="Base Fair" />
+                <p className="text-2xl font-bold text-slate-900">₹{(booking.baseAmount || 0).toLocaleString()}</p>
               </div>
               <div className="space-y-1">
-                <Label text="Total Amount" />
-                <p className="text-2xl font-black text-gray-900">₹{booking.totalAmount.toLocaleString()}</p>
+                <Label text="Total Payable" />
+                <p className="text-2xl font-black text-slate-900">₹{booking.totalAmount.toLocaleString()}</p>
               </div>
-              <div className="bg-emerald-50 p-4 rounded-xl space-y-1 border border-emerald-100 md:col-span-2">
-                <Label text="Advance Paid" />
-                <p className="text-2xl font-black text-emerald-600">₹{booking.advancePaid.toLocaleString()}</p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">via {booking.paymentMode}</p>
+              <div className="space-y-1">
+                <Label text="Status" />
+                <span className={cn("px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest", getStatusColor(booking.paymentStatus))}>
+                  {booking.paymentStatus}
+                </span>
               </div>
-              <div className="bg-red-50 p-4 rounded-xl space-y-1 border border-red-100 md:col-span-2">
+              
+              <div className="bg-emerald-50/50 p-10 rounded-[32px] space-y-3 border border-emerald-100 md:col-span-2">
+                <Label text="Advance Received" />
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-black text-emerald-600">₹{booking.advancePaid.toLocaleString()}</span>
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">via {booking.paymentMode}</span>
+                </div>
+              </div>
+              
+              <div className="bg-rose-50/50 p-10 rounded-[32px] space-y-3 border border-rose-100 md:col-span-2">
                 <Label text="Remaining Balance" />
-                <p className="text-2xl font-black text-red-600">₹{booking.remainingAmount.toLocaleString()}</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-black text-rose-500">₹{booking.remainingAmount.toLocaleString()}</span>
+                  <span className="text-[10px] font-bold text-rose-300 uppercase tracking-widest">Collection Pending</span>
+                </div>
               </div>
             </div>
           </section>
 
-          <section className="space-y-4 md:col-span-2">
-            <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
-              <FileText className="w-4 h-4 text-blue-600" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Automation & Communication</h3>
+          {/* Automation Actions */}
+          <section className="space-y-6 md:col-span-2">
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-slate-900" />
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Automation Engine</h3>
             </div>
             
-            <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-6">
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  onClick={() => handleSendEmail('confirmation')}
-                  variant="outline" 
-                  className="bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100 text-[10px] font-black uppercase tracking-widest px-4 h-10"
-                >
+            <div className="modern-card p-10 space-y-10">
+              <div className="flex flex-wrap gap-4">
+                <Button onClick={() => handleSendEmail('confirmation')} variant="outline" className="h-11 px-6 rounded-xl border-slate-100 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">
                   Resend Confirmation
                 </Button>
-                <Button 
-                  onClick={() => handleSendEmail('reminder')}
-                  variant="outline" 
-                  className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 text-[10px] font-black uppercase tracking-widest px-4 h-10"
-                >
+                <Button onClick={() => handleSendEmail('reminder')} variant="outline" className="h-11 px-6 rounded-xl border-slate-100 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">
                   Send Reminder
                 </Button>
-                <Button 
-                  onClick={() => handleSendEmail('invoice')}
-                  variant="outline" 
-                  className="bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100 text-[10px] font-black uppercase tracking-widest px-4 h-10"
-                >
-                  Send Invoice (Email)
-                </Button>
-                <Button 
-                  onClick={() => handleSendEmail('cancellation')}
-                  variant="outline" 
-                  className="bg-red-50 text-red-700 border-red-100 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest px-4 h-10"
-                >
-                  Send Cancellation
+                <Button onClick={() => handleSendEmail('invoice')} variant="outline" className="h-11 px-6 rounded-xl border-slate-100 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">
+                  Push Invoice
                 </Button>
               </div>
 
-              {/* Email Logs */}
-              <div className="space-y-3">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Email History</h4>
-                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Communication History</h4>
+                <div className="space-y-3">
                   {emailLogs.length === 0 ? (
-                    <p className="text-[10px] text-gray-400 font-bold italic">No emails sent yet.</p>
+                    <p className="text-[11px] text-slate-300 italic font-medium">No system communication recorded.</p>
                   ) : (
                     emailLogs.map((log: any) => (
-                      <div key={log.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <div className="flex items-center gap-3">
-                          <div className={cn("p-1.5 rounded-lg", log.status === 'success' ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600")}>
-                            {log.status === 'success' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                      <div key={log.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] group border border-transparent hover:border-slate-100 transition-all">
+                        <div className="flex items-center gap-5">
+                          <div className={cn("h-10 w-10 rounded-2xl flex items-center justify-center", log.status === 'success' ? "bg-emerald-50 text-emerald-500" : "bg-rose-50 text-rose-500")}>
+                            {log.status === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                           </div>
-                          <div>
-                            <p className="text-[11px] font-black text-gray-700 uppercase">{log.type} Email</p>
-                            <p className="text-[9px] text-gray-400 font-bold">{new Date(log.sentAt).toLocaleString()}</p>
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-bold text-slate-900 uppercase">{log.type} Transmission</p>
+                            <p className="text-[10px] text-slate-400 font-bold">{new Date(log.sentAt).toLocaleString()}</p>
                           </div>
                         </div>
-                        <div className={cn("text-[9px] font-black uppercase px-2 py-0.5 rounded-full border", log.status === 'success' ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-red-600 bg-red-50 border-red-100")}>
+                        <span className={cn("text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg border", log.status === 'success' ? "text-emerald-600 border-emerald-100 bg-white" : "text-rose-500 border-rose-100 bg-white")}>
                           {log.status}
-                        </div>
+                        </span>
                       </div>
                     ))
                   )}
@@ -730,118 +723,105 @@ export default function BookingDetailsModal({ open, onOpenChange, booking, onEdi
 
           {/* Notes */}
           {booking.notes && (
-            <section className="space-y-4 md:col-span-2">
-              <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4">
-                <FileText className="w-4 h-4 text-gray-400" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Special Notes</h3>
+            <section className="space-y-6 md:col-span-2">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-slate-400" />
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Manual Directives</h3>
               </div>
-              <div className="bg-gray-100/50 p-6 rounded-2xl border border-dashed border-gray-300">
-                <p className="text-sm text-gray-600 italic leading-relaxed">"{booking.notes}"</p>
+              <div className="p-10 bg-slate-50 rounded-[40px] border border-dashed border-slate-200">
+                <p className="text-sm text-slate-500 italic leading-relaxed font-medium">"{booking.notes}"</p>
               </div>
             </section>
           )}
 
-          {/* Passengers Section (From Reference Image) */}
-          <section className="space-y-4 md:col-span-2 mt-4">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-2 mb-4">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-indigo-600" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Passengers</h3>
+          {/* Passenger manifest */}
+          <section className="space-y-6 md:col-span-2 mt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-indigo-500" />
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Passenger Manifest</h3>
               </div>
               <Button 
                 variant="outline" 
-                size="sm" 
                 onClick={() => {
                   setEditingPassenger(null);
                   setNewPassenger({ firstName: "", lastName: "", gender: "Male", age: "", phone: "", email: "" });
                   setShowAddPassenger(true);
                 }}
-                className="h-8 text-[10px] font-black uppercase tracking-tight bg-white border shadow-sm flex items-center gap-2"
+                className="h-10 px-5 rounded-xl border-slate-100 font-bold text-[10px] uppercase tracking-widest bg-white shadow-sm flex items-center gap-2 hover:bg-slate-900 hover:text-white transition-all"
               >
-                <Plus className="w-3.5 h-3.5" /> Add passengers
+                <Plus className="w-4 h-4" /> Register Passenger
               </Button>
             </div>
 
-            <div className="bg-white rounded-xl border shadow-sm overflow-hidden overflow-x-auto">
-              <table className="w-full text-[11px] min-w-[1000px]">
-                <thead className="bg-gray-50 border-b text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  <tr>
-                    <th className="px-6 py-4 text-left w-24">Action</th>
-                    <th className="px-6 py-4 text-left">Form Status</th>
-                    <th className="px-6 py-4 text-left whitespace-nowrap">Trip Info / Category</th>
-                    <th className="px-6 py-4 text-left">Title first name and last name</th>
-                    <th className="px-6 py-4 text-left">Gender</th>
-                    <th className="px-6 py-4 text-left">Age</th>
-                    <th className="px-6 py-4 text-left whitespace-nowrap">Country code and phone number</th>
-                    <th className="px-6 py-4 text-left">E-mail</th>
-                    <th className="px-6 py-4 text-left">Newsletter signup</th>
-                    <th className="px-6 py-4 text-left">Status/Ac</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {passengers.map(p => (
-                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center border rounded overflow-hidden w-fit shadow-sm bg-white">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 px-2 text-[10px] font-black border-r rounded-none hover:bg-gray-50 flex items-center gap-1"
-                            onClick={() => handleEditPassenger(p)}
-                          >
-                            <Pencil className="h-3 w-3" /> Edit
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 rounded-none hover:bg-red-50 hover:text-red-500"
-                            onClick={async () => { 
-                              const updated = passengers.filter(x => x.id !== p.id);
-                              setPassengers(updated);
-                              if (booking) {
-                                try { await bookingsService.update(booking.id, { passengers: updated }); } 
-                                catch (e) { toast.error("Failed to save deletion"); }
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                          </Button>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={cn("text-white px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tight", p.status === 'Form complete' ? "bg-[#22c55e]" : "bg-amber-500")}>
-                          {p.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="bg-gray-400 text-white px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tight">{p.type}</span>
-                      </td>
-                      <td className="px-6 py-4 font-bold text-gray-700 uppercase whitespace-nowrap">{p.name}</td>
-                      <td className="px-6 py-4 text-gray-500">{p.gender}</td>
-                      <td className="px-6 py-4 text-gray-500">{p.age}</td>
-                      <td className="px-6 py-4 font-bold text-gray-600 whitespace-nowrap">+91-{p.phone}</td>
-                      <td className="px-6 py-4 text-gray-400 italic">{p.email}</td>
-                      <td className="px-6 py-4 text-center text-gray-400">-</td>
-                      <td className="px-6 py-4 text-center text-gray-400">-</td>
+            <div className="modern-card p-0 overflow-hidden shadow-premium">
+              <div className="responsive-table">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-50">
+                      <th className="px-10 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Entity</th>
+                      <th className="px-10 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</th>
+                      <th className="px-10 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Attributes</th>
+                      <th className="px-10 py-5 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {passengers.map(p => (
+                      <tr key={p.id} className="hover:bg-slate-50/50 transition-all group">
+                        <td className="px-10 py-7">
+                          <div className="space-y-1">
+                            <p className="text-sm font-bold text-slate-900 uppercase">{p.name}</p>
+                            <p className="text-[10px] font-bold text-slate-400 tracking-tight">+91 {p.phone}</p>
+                          </div>
+                        </td>
+                        <td className="px-10 py-7">
+                          <span className={cn("px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-tight", p.status === 'Form complete' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600")}>
+                            {p.status}
+                          </span>
+                        </td>
+                        <td className="px-10 py-7">
+                           <div className="flex gap-2">
+                             <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[9px] font-bold uppercase">{p.gender}</span>
+                             <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[9px] font-bold uppercase">{p.age} Yrs</span>
+                           </div>
+                        </td>
+                        <td className="px-10 py-7 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-slate-900 hover:text-white" onClick={() => handleEditPassenger(p)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-rose-50 text-rose-500" onClick={async () => { 
+                                const updated = passengers.filter(x => x.id !== p.id);
+                                setPassengers(updated);
+                                if (booking) {
+                                  try { await bookingsService.update(booking.id, { passengers: updated }); } 
+                                  catch (e) { toast.error("Failed to sync deletion"); }
+                                }
+                              }}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
         </div>
 
-        <div className="p-8 border-t bg-white flex justify-between items-center">
-          <div className="flex items-center gap-2 text-gray-400">
-            <Clock className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Booked on {formatDate(booking.createdAt)}</span>
+        {/* ─── Footer Action ─── */}
+        <div className="p-10 border-t border-slate-50 bg-white flex justify-between items-center rounded-b-[40px]">
+          <div className="flex items-center gap-3 text-slate-400">
+            <Clock className="w-5 h-5" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Recorded on {formatDate(booking.createdAt)}</span>
           </div>
           <Button 
             onClick={handleDownloadInvoice}
-            variant="outline" 
-            className="px-8 h-12 rounded-xl text-xs font-black uppercase tracking-widest border-2 hover:bg-gray-50"
+            className="px-10 h-14 rounded-2xl text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-200"
           >
-            Download Invoice
+            Generate Invoice PDF
           </Button>
         </div>
       </DialogContent>

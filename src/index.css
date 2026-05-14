@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&family=Inter:wght@100..900&family=Poppins:wght@100..900&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,196 +6,131 @@
 
 @layer base {
   :root {
-    /* Dynamic Theme Variables (HEX) */
-    --primary-hex: #FF5B00;
-    --secondary-hex: #1B2A4A;
-    --background-hex: #F5F5F5;
-    --foreground-hex: #212121;
-    --font-primary: 'Montserrat', sans-serif;
-    --font-heading: 'Montserrat', sans-serif;
-    --font-body: 'Montserrat', sans-serif;
-
-    /* Shadcn Mapping (Approximate conversion or direct hex if tailwind config allows) */
-    --background: 0 0% 96%;        /* #F5F5F5 - Klook Ghost Background */
-    --foreground: 0 0% 13%;        /* #212121 */
+    /* Premium Minimalist Palette */
+    --primary-hex: #FF5400;
+    --background-hex: #FFFFFF;
+    --foreground-hex: #0F172A;
+    
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
-    
-    /* KLOOK VIBRANT ORANGE */
-    --primary: 21 100% 50%;        /* #FF5B00 */
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 20 100% 50%;
     --primary-foreground: 0 0% 100%;
-    
-    --secondary: 181 100% 41%;     /* #00CBD0 Klook Cyan */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 20 100% 50%;
+    --radius: 0.75rem;
 
-    --muted: 0 0% 98%;
-    --muted-foreground: 0 0% 46%;
-    --accent: 21 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --border: 0 0% 93%;
-    --input: 0 0% 100%;
-    --ring: 21 100% 50%;
-    --radius: 1rem;
-    
-    /* SIDEBAR - SLEEK DARK */
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 21 100% 50%;
+    /* Sidebar - Clean & Light */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 27%;
+    --sidebar-primary: 20 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 21 100% 50%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 21 100% 50%;
-    --sidebar-muted: 0 0% 40%;
+    --sidebar-accent: 210 40% 98%;
+    --sidebar-accent-foreground: 20 100% 50%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 20 100% 50%;
   }
 
-  .dark {
-    --background: 0 0% 6%;
-    --foreground: 0 0% 96%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 96%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 96%;
-    --primary: 21 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 16%;
-    --secondary-foreground: 0 0% 96%;
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 21 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 21 100% 50%;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-body) !important;
+    font-family: 'Montserrat', sans-serif !important;
   }
+
+  ::selection {
+    background-color: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading) !important;
+    @apply font-bold tracking-tight text-slate-900;
+    font-family: 'Montserrat', sans-serif !important;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.04)];
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-premium;
   }
-  .font-handwriting {
-    font-family: 'Montserrat', sans-serif !important;
+  
+  .shadow-premium {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02), 0 10px 30px rgba(0, 0, 0, 0.03);
   }
-  .klook-panel {
-    @apply bg-white border border-slate-100 shadow-premium rounded-[32px] p-8;
+  
+  .shadow-luxury {
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.02);
   }
-  .scrollbar-hide::-webkit-scrollbar {
+
+  .modern-card {
+    @apply bg-white border border-slate-100 rounded-[24px] p-6 transition-all duration-300 hover:shadow-luxury;
+    &:hover {
+      border-color: hsl(var(--primary) / 0.1);
+    }
+  }
+
+  .btn-premium {
+    @apply h-11 px-6 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95 disabled:opacity-50;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  .scrollbar-custom::-webkit-scrollbar {
-    width: 6px;
-  }
-  .scrollbar-custom::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  .scrollbar-custom::-webkit-scrollbar-thumb {
-    @apply bg-slate-200/50 rounded-full hover:bg-slate-300 transition-colors;
-  }
-  .shadow-premium {
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 4px 10px -2px rgba(0, 0, 0, 0.02);
-  }
-  .shadow-luxury {
-    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08), 0 8px 20px -6px rgba(0, 0, 0, 0.04);
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 
-/* Smooth Transitions Global */
-* {
-  @apply transition-colors duration-200;
+/* Custom Scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
 }
 
-body {
-  @apply overflow-x-hidden;
+/* Animations */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-input, button, .card, .modal {
-  @apply transition-all duration-300;
+.animate-premium {
+  animation: fadeInScale 0.4s ease-out forwards;
 }
 
-/* ===== RESPONSIVE ADMIN PANEL OVERRIDES ===== */
-
-/* Tables: horizontal scroll on small screens */
-@media (max-width: 768px) {
-  .admin-table-wrap,
-  [role="table"],
-  table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
-  }
+/* Responsive Table Fixes */
+.responsive-table {
+  @apply w-full overflow-x-auto no-scrollbar;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Modals: fit viewport, internal scroll */
-@media (max-width: 640px) {
-  [role="dialog"] {
-    max-height: 95dvh !important;
-    max-width: 95vw !important;
-    margin: auto;
-    border-radius: 1rem !important;
-  }
-  [role="dialog"] > div {
-    max-height: 85dvh;
-    overflow-y: auto;
-  }
+/* Form Layouts */
+.form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
 }
 
-/* Forms: single-column on mobile */
-@media (max-width: 640px) {
-  .grid-cols-2,
-  .grid-cols-3,
-  .md\:grid-cols-2,
-  .md\:grid-cols-3,
-  .lg\:grid-cols-3 {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-/* Cards & grids: prevent overflow */
-@media (max-width: 640px) {
-  .klook-panel {
-    padding: 1rem !important;
-    border-radius: 1rem !important;
-  }
-}
-
-/* Touch target minimum sizes */
-@media (max-width: 768px) {
-  button, a, [role="button"] {
-    min-height: 36px;
-    min-width: 36px;
-  }
-}
-
-/* Prevent body overflow on mobile sidebar */
-body.sidebar-open {
-  overflow: hidden;
+/* Sidebar Hover Transitions */
+.sidebar-item {
+  @apply transition-all duration-200 ease-in-out;
 }
