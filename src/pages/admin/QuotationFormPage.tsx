@@ -174,6 +174,8 @@ ${formData.expert?.designation}`;
             day: (formData.itinerary?.length || 0) + 1,
             title: "",
             description: "",
+            meals: "B, D",
+            stay: "Luxury Stay",
             photos: []
         };
         setFormData({ ...formData, itinerary: [...(formData.itinerary || []), newDay as any] });
@@ -390,6 +392,33 @@ ${formData.expert?.designation}`;
                                             placeholder="What happens on this day?" 
                                             className="bg-white rounded-2xl p-4 text-xs min-h-[100px] border-slate-100"
                                         />
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] font-bold uppercase opacity-50">Meals (e.g. B, D)</Label>
+                                                <Input 
+                                                    value={day.meals} 
+                                                    onChange={e => {
+                                                        const newList = [...formData.itinerary!];
+                                                        newList[idx].meals = e.target.value;
+                                                        setFormData({...formData, itinerary: newList});
+                                                    }}
+                                                    className="rounded-xl h-10 text-xs font-bold"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] font-bold uppercase opacity-50">Stay (e.g. Luxury Resort)</Label>
+                                                <Input 
+                                                    value={day.stay} 
+                                                    onChange={e => {
+                                                        const newList = [...formData.itinerary!];
+                                                        newList[idx].stay = e.target.value;
+                                                        setFormData({...formData, itinerary: newList});
+                                                    }}
+                                                    className="rounded-xl h-10 text-xs font-bold"
+                                                />
+                                            </div>
+                                        </div>
 
                                         <div className="space-y-3">
                                             <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Day Sightseeing Photos</Label>
