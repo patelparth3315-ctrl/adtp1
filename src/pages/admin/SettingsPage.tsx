@@ -134,7 +134,7 @@ export default function SettingsPage() {
         <TabsContent value="social" className="mt-6">
           <Card className="rounded-[32px] border-none shadow-sm">
             <CardContent className="p-10 space-y-8">
-              {['instagram', 'facebook', 'youtube', 'twitter', 'linkedin'].map(platform => (
+              {['instagram', 'facebook', 'youtube'].map(platform => (
                 <div key={platform} className="space-y-4">
                   <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 capitalize">{platform} URL</Label>
                   <Input {...register(`socialLinks.${platform}`)} className="h-14 rounded-2xl border-2" />
