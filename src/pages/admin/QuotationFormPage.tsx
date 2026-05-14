@@ -754,29 +754,48 @@ ${formData.expert?.designation}`;
                         <div className="space-y-4">
                             <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Hero Slider & Experience Gallery</Label>
                             <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                                {(formData.experiencePhotos || []).map((photoUrl: string, pIdx: number) => (
-                                    <div key={pIdx} className="relative aspect-[3/4] rounded-2xl overflow-hidden group/thumb border-2 border-white shadow-sm">
-                                        <img src={formatUrl(photoUrl)} className="w-full h-full object-cover" />
-                                        <button 
-                                            type="button" 
-                                            onClick={() => {
-                                                const newList = (formData.experiencePhotos || []).filter((_: any, i: number) => i !== pIdx);
-                                                setFormData({...formData, experiencePhotos: newList});
-                                            }}
-                                            className="absolute top-2 right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity shadow-lg"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
-                                    </div>
-                                ))}
+                                {(formData.experiencePhotos || []).map((photo: any, pIdx: number) => {
+                                    const photoUrl = typeof photo === 'string' ? photo : photo.url;
+                                    const photoName = typeof photo === 'string' ? "" : photo.name;
+                                    
+                                    return (
+                                        <div key={pIdx} className="space-y-2">
+                                            <div className="relative aspect-[3/4] rounded-2xl overflow-hidden group/thumb border-2 border-white shadow-sm">
+                                                <img src={formatUrl(photoUrl)} className="w-full h-full object-cover" />
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => {
+                                                        const newList = (formData.experiencePhotos || []).filter((_: any, i: number) => i !== pIdx);
+                                                        setFormData({...formData, experiencePhotos: newList});
+                                                    }}
+                                                    className="absolute top-2 right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity shadow-lg"
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                            <Input 
+                                                placeholder="Place Name" 
+                                                value={photoName} 
+                                                onChange={(e) => {
+                                                    const newList = [...(formData.experiencePhotos || [])];
+                                                    newList[pIdx] = { url: photoUrl, name: e.target.value };
+                                                    setFormData({...formData, experiencePhotos: newList});
+                                                }}
+                                                className="h-8 text-[10px] font-bold rounded-lg text-center"
+                                            />
+                                        </div>
+                                    );
+                                })}
                                 <div className="aspect-[3/4]">
                                     <ImageUpload 
                                         multiple={true}
                                         onUpload={(url) => {
                                             setFormData(prev => {
                                                 const experiencePhotos = [...(prev.experiencePhotos || [])];
-                                                if (!experiencePhotos.includes(url)) {
-                                                    experiencePhotos.push(url);
+                                                // Check if it already exists (handling both string and object)
+                                                const exists = experiencePhotos.some(p => (typeof p === 'string' ? p : p.url) === url);
+                                                if (!exists) {
+                                                    experiencePhotos.push({ url, name: "" });
                                                 }
                                                 return { ...prev, experiencePhotos };
                                             });
