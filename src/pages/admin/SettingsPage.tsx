@@ -134,10 +134,10 @@ export default function SettingsPage() {
         <TabsContent value="social" className="mt-6">
           <Card className="rounded-[32px] border-none shadow-sm">
             <CardContent className="p-10 space-y-8">
-              {['instagram', 'facebook', 'youtube', 'whatsapp'].map(platform => (
+              {['instagram', 'facebook', 'youtube', 'twitter', 'linkedin'].map(platform => (
                 <div key={platform} className="space-y-4">
                   <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 capitalize">{platform} URL</Label>
-                  <Input {...register(`social.${platform}`)} className="h-14 rounded-2xl border-2" />
+                  <Input {...register(`socialLinks.${platform}`)} className="h-14 rounded-2xl border-2" />
                 </div>
               ))}
             </CardContent>
@@ -148,16 +148,16 @@ export default function SettingsPage() {
           <Card className="rounded-[32px] border-none shadow-sm">
             <CardContent className="p-10 space-y-8">
               <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Phone</Label>
-                <Input {...register("contact.phone")} className="h-14 rounded-2xl border-2" />
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Contact Phone</Label>
+                <Input {...register("contactPhone")} className="h-14 rounded-2xl border-2" />
               </div>
               <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Email</Label>
-                <Input {...register("contact.email")} className="h-14 rounded-2xl border-2" />
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Contact Email</Label>
+                <Input {...register("contactEmail")} className="h-14 rounded-2xl border-2" />
               </div>
               <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Address</Label>
-                <Input {...register("contact.address")} className="h-14 rounded-2xl border-2" />
+                <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Office Address</Label>
+                <Input {...register("address")} className="h-14 rounded-2xl border-2" />
               </div>
             </CardContent>
           </Card>
